@@ -39,6 +39,7 @@
   }
   .girisLink { display: block; text-align: center; margin-top: 14px; font-size: 12px; color: #5b8fe2; cursor: pointer; }
   .girisHata { color: #d9603f; font-size: 12px; margin-top: 10px; min-height: 14px; }
+  .kullaniciRozeti { font-size: 12px; color: #8996a8; margin-right: 6px; }
 
   #uygulama { display: none; flex-direction: column; height: 100vh; }
   .ustCubuk {
@@ -209,8 +210,31 @@
 </head>
 <body>
 
+<!-- ================= FIREBASE SDK ================= -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- ================= GİRİŞ EKRANI ================= -->
+<div id="girisEkrani" style="height:100vh;display:flex;align-items:center;justify-content:center;background:#0e1116;">
+  <div class="girisKart">
+    <div class="girisLogo">⌁</div>
+    <div class="girisBaslik">Giriş yap</div>
+    <div class="girisAlt">Tesis Yönetim Sistemi</div>
+
+    <label class="girisAlan">E-posta</label>
+    <input class="girisInput" id="girisEposta" type="email" autocomplete="username" />
+
+    <label class="girisAlan">Şifre</label>
+    <input class="girisInput" id="girisSifre" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();girisGonder();}" />
+
+    <button class="girisBtn ty-btn" id="girisButonu" onclick="girisGonder()">Giriş yap</button>
+    <div class="girisHata" id="girisHataMetni"></div>
+  </div>
+</div>
+
 <!-- ================= UYGULAMA ================= -->
-<div id="uygulama" style="display:flex;">
+<div id="uygulama" style="display:none;">
   <div class="ustCubuk">
     <div style="display:flex;align-items:baseline;gap:10px;">
       <span class="logo">⌁</span>
@@ -219,11 +243,13 @@
         <div class="altBaslik" id="ustAltYazi">saha ekipman ve satın alma takibi</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="kullaniciRozeti" id="kullaniciRozeti"></span>
       <button class="ustBtn ty-btn" onclick="malzemeListesiGoster()">Kullanılan Malzemeler</button>
       <button class="ustBtn ty-btn" onclick="disaAktar()">Yedekle (dışa aktar)</button>
-      <button class="ustBtn ty-btn" onclick="document.getElementById('yedekInput').click()">Yedek yükle</button>
+      <button class="ustBtn ty-btn" id="yedekYukleBtn" onclick="document.getElementById('yedekInput').click()">Yedek yükle</button>
       <button class="ustBtn ty-btn" onclick="ayarlarGoster()">⚙ Ayarlar</button>
+      <button class="ustBtn ty-btn" onclick="cikisYap()">Çıkış yap</button>
       <input id="yedekInput" type="file" accept=".json" style="display:none" onchange="iceAktar(this.files[0])" />
     </div>
   </div>
@@ -297,10 +323,6 @@ const suAn = () => {
 };
 function esc(str){ return (str ?? "").toString().replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 
-const KEY_DATA = "tys_data_v1";
-const KEY_AUTH = "tys_auth_v1";
-const KEY_SESSION = "tys_session_v1";
-
 function ornekPompa(ad){
   return { id: uid(), ad, parcalar: [], gecmis: [{ id: uid(), tarih: bugun(), aciklama: "Kayıt oluşturuldu." }] };
 }
@@ -321,31 +343,80 @@ function varsayilanVeri(){
 let state = null;
 let ui = { view: "bos", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {} };
 
-function saveData(){ localStorage.setItem(KEY_DATA, JSON.stringify(state)); }
-function loadData(){
-  const raw = localStorage.getItem(KEY_DATA);
-  if (raw) {
-    try {
-      const v = JSON.parse(raw);
-      if (!v.malzemeGecmisi) v.malzemeGecmisi = [];
-      v.malzemeGecmisi = v.malzemeGecmisi.map(x => typeof x === "string" ? { id: uid(), ad: x } : x);
-      if (!v.satinAlmalar) v.satinAlmalar = [];
-      if (!v.sonIslemler) v.sonIslemler = [];
-      v.tesisler.forEach(t => { if (!Array.isArray(t.depolar)) t.depolar = []; });
-      v.satinAlmalar = v.satinAlmalar.map(s => {
-        if (Array.isArray(s.kalemler)) return s;
-        return {
-          id: s.id, siparisNo: s.siparisNo || "", gelisTarihi: s.gelisTarihi || bugun(),
-          kalemler: [{ id: uid(), urun: s.urun || "", miktar: s.miktar || "", birim: s.birim || "", teslimTarihi: s.teslimTarihi || "", durum: s.durum || "Gelmedi" }],
-          yerler: s.kullanildigiYer ? [{ id: uid(), ad: s.kullanildigiYer }] : [{ id: uid(), ad: "" }],
-          firma: s.firma || "",
-          eklenmeTarihi: s.eklenmeTarihi || bugun(), eklenmeSaati: s.eklenmeSaati || suAn()
-        };
-      });
-      return v;
-    } catch(e) {}
+function sanitizeVeri(v){
+  if (!v) v = varsayilanVeri();
+  if (!v.tesisler) v.tesisler = varsayilanVeri().tesisler;
+  if (!v.malzemeGecmisi) v.malzemeGecmisi = [];
+  v.malzemeGecmisi = v.malzemeGecmisi.map(x => typeof x === "string" ? { id: uid(), ad: x } : x);
+  if (!v.satinAlmalar) v.satinAlmalar = [];
+  if (!v.sonIslemler) v.sonIslemler = [];
+  v.tesisler.forEach(t => { if (!Array.isArray(t.depolar)) t.depolar = []; });
+  v.satinAlmalar = v.satinAlmalar.map(s => {
+    if (Array.isArray(s.kalemler)) return s;
+    return {
+      id: s.id, siparisNo: s.siparisNo || "", gelisTarihi: s.gelisTarihi || bugun(),
+      kalemler: [{ id: uid(), urun: s.urun || "", miktar: s.miktar || "", birim: s.birim || "", teslimTarihi: s.teslimTarihi || "", durum: s.durum || "Gelmedi" }],
+      yerler: s.kullanildigiYer ? [{ id: uid(), ad: s.kullanildigiYer }] : [{ id: uid(), ad: "" }],
+      firma: s.firma || "",
+      eklenmeTarihi: s.eklenmeTarihi || bugun(), eklenmeSaati: s.eklenmeSaati || suAn()
+    };
+  });
+  return v;
+}
+
+/* ---------------- Firebase / Firestore ---------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyC5Jh7at2UmUrNnksDv2jDy5aonh_M3eA4",
+  authDomain: "tesis-yonetim-d7502.firebaseapp.com",
+  projectId: "tesis-yonetim-d7502",
+  storageBucket: "tesis-yonetim-d7502.firebasestorage.app",
+  messagingSenderId: "540630226337",
+  appId: "1:540630226337:web:f1f48b6eab8c92b11127e0"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const veriRef = db.collection("veri").doc("ana");
+
+let mevcutKullanici = null;
+let mevcutRol = "personel";
+let dinleyiciBaslatildi = false;
+
+function adminMi(){ return mevcutRol === "yonetici"; }
+
+function saveData(){
+  if (!state) return;
+  veriRef.set(state).catch(err => console.error("Kaydetme hatası:", err));
+}
+function veriDinlemeyeBasla(){
+  if (dinleyiciBaslatildi) return;
+  dinleyiciBaslatildi = true;
+  veriRef.get().then(snap => {
+    if (!snap.exists) { veriRef.set(varsayilanVeri()); }
+  });
+  veriRef.onSnapshot(snap => {
+    if (!snap.exists) return;
+    state = sanitizeVeri(snap.data());
+    if (document.getElementById("uygulama").style.display !== "none") {
+      if (!ui.acikTesis || ui.acikTesis.size === 0) ui.acikTesis.add(state.tesisler[0]?.id);
+      render();
+    }
+  }, err => {
+    console.error("Veri dinleme hatası:", err);
+    ui.mesaj = "Veri sunucusuna bağlanılamadı. İnternet bağlantınızı kontrol edin.";
+  });
+}
+async function kullaniciRoluAyarla(user){
+  mevcutKullanici = user;
+  const ref = db.collection("kullanicilar").doc(user.uid);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    const hepsi = await db.collection("kullanicilar").get();
+    mevcutRol = hepsi.empty ? "yonetici" : "personel";
+    await ref.set({ eposta: user.email, rol: mevcutRol });
+  } else {
+    mevcutRol = snap.data().rol || "personel";
   }
-  const v = varsayilanVeri(); localStorage.setItem(KEY_DATA, JSON.stringify(v)); return v;
 }
 function malzemeGecmisineEkle(ad){
   if (!ad) return;
@@ -519,18 +590,77 @@ function stokBekleyenIsle(tesisId){
 
 /* ---------------- görünürlük ayarları ---------------- */
 function gorunurTesisler(){ return state.tesisler.filter(t => !t.gizli); }
-function ayarlarGoster(){ ui.view = "ayarlar"; render(); }
+let kullanicilarListesi = [];
+function ayarlarGoster(){
+  ui.view = "ayarlar"; render();
+  if (adminMi()) {
+    db.collection("kullanicilar").get().then(snap => {
+      kullanicilarListesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (ui.view === "ayarlar") render();
+    }).catch(err => console.error(err));
+  }
+}
+function kullaniciRoluDegistir(kullaniciId, yeniRol){
+  db.collection("kullanicilar").doc(kullaniciId).update({ rol: yeniRol }).then(() => {
+    const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (k) k.rol = yeniRol;
+    render();
+  }).catch(err => console.error(err));
+}
 function tesisGizleDegistir(tesisId){
   const t = state.tesisler.find(x => x.id === tesisId); if (!t) return;
   t.gizli = !t.gizli;
   saveData(); render();
 }
 
+/* ---------------- giriş / oturum ---------------- */
+function girisGonder(){
+  const eposta = document.getElementById("girisEposta").value.trim();
+  const sifre = document.getElementById("girisSifre").value;
+  const hataEl = document.getElementById("girisHataMetni");
+  hataEl.textContent = "";
+  if (!eposta || !sifre) { hataEl.textContent = "E-posta ve şifre gerekli."; return; }
+  const btn = document.getElementById("girisButonu");
+  btn.textContent = "Giriş yapılıyor..."; btn.disabled = true;
+  auth.signInWithEmailAndPassword(eposta, sifre)
+    .catch(err => {
+      btn.textContent = "Giriş yap"; btn.disabled = false;
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+        hataEl.textContent = "E-posta veya şifre hatalı.";
+      } else if (err.code === "auth/invalid-email") {
+        hataEl.textContent = "Geçerli bir e-posta adresi girin.";
+      } else if (err.code === "auth/too-many-requests") {
+        hataEl.textContent = "Çok fazla deneme yapıldı. Biraz sonra tekrar deneyin.";
+      } else {
+        hataEl.textContent = "Giriş yapılamadı: " + err.message;
+      }
+    });
+}
+function cikisYap(){
+  auth.signOut();
+}
+async function girisiTamamla(user){
+  await kullaniciRoluAyarla(user);
+  document.getElementById("girisEkrani").style.display = "none";
+  document.getElementById("uygulama").style.display = "flex";
+  document.getElementById("kullaniciRozeti").textContent = `${user.email} (${mevcutRol === "yonetici" ? "Yönetici" : "Personel"})`;
+  document.getElementById("yedekYukleBtn").style.display = adminMi() ? "" : "none";
+  veriDinlemeyeBasla();
+}
+function girisEkraniniGoster(){
+  mevcutKullanici = null; mevcutRol = "personel"; dinleyiciBaslatildi = false; state = null;
+  document.getElementById("uygulama").style.display = "none";
+  document.getElementById("girisEkrani").style.display = "flex";
+  document.getElementById("girisSifre").value = "";
+  const btn = document.getElementById("girisButonu");
+  if (btn) { btn.textContent = "Giriş yap"; btn.disabled = false; }
+}
+
 /* ---------------- başlangıç ---------------- */
 window.addEventListener("DOMContentLoaded", () => {
-  state = loadData();
-  ui.acikTesis.add(state.tesisler[0]?.id);
-  render();
+  auth.onAuthStateChanged(user => {
+    if (user) girisiTamamla(user);
+    else girisEkraniniGoster();
+  });
 });
 
 /* ---------------- tesis / makine / pompa ---------------- */
@@ -910,7 +1040,7 @@ function renderSol(){
     }
     h += `<div class="aksiyonGrup">
         <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${t.id}')">✎</button>
-        <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Tesisi sil" onclick="event.stopPropagation(); silOnayla('Tesisi Sil', ()=>tesisSil('${t.id}'))">×</button>
+        ${adminMi() ? `<button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Tesisi sil" onclick="event.stopPropagation(); silOnayla('Tesisi Sil', ()=>tesisSil('${t.id}'))">×</button>` : ''}
       </div>
     </div>`;
 
@@ -927,7 +1057,7 @@ function renderSol(){
         }
         h += `<div class="aksiyonGrup">
             <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${m.id}')">✎</button>
-            <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Makineyi sil" onclick="event.stopPropagation(); silOnayla('Makineyi Sil', ()=>makineSil('${t.id}','${m.id}'))">×</button>
+            ${adminMi() ? `<button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Makineyi sil" onclick="event.stopPropagation(); silOnayla('Makineyi Sil', ()=>makineSil('${t.id}','${m.id}'))">×</button>` : ''}
           </div>
         </div>`;
 
@@ -943,7 +1073,7 @@ function renderSol(){
             }
             h += `<div class="aksiyonGrup">
                 <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${p.id}')">✎</button>
-                <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Pompayı sil" onclick="event.stopPropagation(); silOnayla('Pompayı Sil', ()=>pompaSil('${t.id}','${m.id}','${p.id}'))">×</button>
+                ${adminMi() ? `<button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Pompayı sil" onclick="event.stopPropagation(); silOnayla('Pompayı Sil', ()=>pompaSil('${t.id}','${m.id}','${p.id}'))">×</button>` : ''}
               </div>
             </div>`;
           });
@@ -1027,7 +1157,7 @@ function renderAna(){
             <span class="tesisIkon" style="font-size:15px">📦</span>
             ${ui.stokDuzenle
               ? `<input class="dugumInput" value="${esc(d.ad)}" onclick="event.stopPropagation()" onchange="depoAdGuncelle('${t.id}','${d.id}',this.value)" />
-                 <div class="aksiyonGrup"><button class="aksiyonBtn aksiyonBtnSil ty-btn" onclick="event.stopPropagation(); silOnayla('Depoyu Sil', ()=>depoSil('${t.id}','${d.id}'))">×</button></div>`
+                 ${adminMi() ? `<div class="aksiyonGrup"><button class="aksiyonBtn aksiyonBtnSil ty-btn" onclick="event.stopPropagation(); silOnayla('Depoyu Sil', ()=>depoSil('${t.id}','${d.id}'))">×</button></div>` : ''}`
               : `<span class="makineAdMetin">${esc(d.ad)}</span>`}
           </div>`;
           if (depoAcik) {
@@ -1046,7 +1176,7 @@ function renderAna(){
                   <input class="parcaGirdi" style="width:110px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
                   <input class="parcaGirdi" style="width:80px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
                   <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:150px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
-                  <span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>
+                  ${adminMi() ? `<span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>` : ''}
                 ` : `
                   <span style="flex:2;color:#e6edf3">${esc(u.ad) || '—'}</span>
                   <span style="width:60px;color:${kritikRenk?'#ff9d84':'#8996a8'};font-weight:${kritikRenk?'700':'400'}">${esc(u.miktar)}</span>
@@ -1081,7 +1211,29 @@ function renderAna(){
       </div>`;
     });
     h += `</div>`;
-    h += `<div class="bosMetin">Gizlenen tesisler; sol menüdeki Tesisler listesinde ve Stok Listesi'nde görünmez. Verileri silinmez, istediğiniz zaman tekrar gösterebilirsiniz.</div>`;
+    h += `<div class="bosMetin" style="margin-bottom:20px">Gizlenen tesisler; sol menüdeki Tesisler listesinde ve Stok Listesi'nde görünmez. Verileri silinmez, istediğiniz zaman tekrar gösterebilirsiniz.</div>`;
+
+    if (adminMi()) {
+      h += `<div class="kart">
+        <div class="kartBaslik" style="margin-bottom:10px">Kullanıcılar ve Yetkiler</div>`;
+      if (kullanicilarListesi.length === 0) {
+        h += `<div class="bosMetin">Yükleniyor...</div>`;
+      } else {
+        kullanicilarListesi.forEach(k => {
+          const benMi = mevcutKullanici && k.id === mevcutKullanici.uid;
+          h += `<div class="ayarSatiri">
+            <span style="flex:1;color:#e6edf3">${esc(k.eposta)}${benMi?' (siz)':''}</span>
+            <select class="girdi" style="width:140px" ${benMi?'disabled':''} onchange="kullaniciRoluDegistir('${k.id}', this.value)">
+              <option value="personel" ${k.rol==='personel'?'selected':''}>Personel</option>
+              <option value="yonetici" ${k.rol==='yonetici'?'selected':''}>Yönetici</option>
+            </select>
+          </div>`;
+        });
+      }
+      h += `</div>`;
+      h += `<div class="bosMetin">Yeni kullanıcı eklemek için Firebase Console → Authentication → Add user yolunu kullanın. Yeni kullanıcı ilk giriş yaptığında otomatik olarak "Personel" yetkisiyle burada listelenir.</div>`;
+    }
+
     el.innerHTML = h;
     return;
   }
@@ -1287,7 +1439,7 @@ function renderAna(){
       <div class="pompaAdBaslik">${esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi'}</div>
       <div style="display:flex;gap:8px">
         <button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
-        <button class="ustBtn ty-btn" style="color:#e2694d" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>
+        ${adminMi() ? `<button class="ustBtn ty-btn" style="color:#e2694d" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : ''}
       </div>
     </div>`;
 
