@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tesis Yönetim Sistemi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'IBM Plex Sans', sans-serif; background: #0e1116; color: #e6edf3; }
+  input, textarea, select, button { font-family: 'IBM Plex Sans', sans-serif; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #2c3542; border-radius: 4px; }
+  .ty-btn { cursor: pointer; transition: all .12s ease; }
+  .ty-btn:hover { filter: brightness(1.15); }
+  .ty-node:hover { background: #1b212b; }
+  .ty-satir:hover { background: #1b212b !important; }
+
+  #girisEkrani {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #0e1116;
+  }
+  .girisKart {
+    width: 340px; background: #12161d; border: 1px solid #1f2630; border-radius: 12px;
+    padding: 28px 26px;
+  }
+  .girisLogo { font-size: 26px; color: #e2a33d; margin-bottom: 4px; }
+  .girisBaslik { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+  .girisAlt { font-size: 12px; color: #5b6579; margin-bottom: 20px; }
+  .girisAlan { display: block; font-size: 11.5px; color: #8996a8; margin: 12px 0 5px; }
+  .girisInput {
+    width: 100%; background: #0e1116; border: 1px solid #2a323f; border-radius: 6px;
+    color: #e6edf3; padding: 9px 10px; font-size: 13.5px; outline: none;
+  }
+  .girisInput:focus { border-color: #e2a33d; }
+  .girisBtn {
+    width: 100%; margin-top: 18px; background: #e2a33d; color: #1a1305; border: none;
+    border-radius: 6px; padding: 10px; font-size: 13.5px; font-weight: 600;
+  }
+  .girisLink { display: block; text-align: center; margin-top: 14px; font-size: 12px; color: #5b8fe2; cursor: pointer; }
+  .girisHata { color: #d9603f; font-size: 12px; margin-top: 10px; min-height: 14px; }
+
+  #uygulama { display: none; flex-direction: column; height: 100vh; }
+  .ustCubuk {
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 20px;
+    border-bottom: 1px solid #1f2630; background: #12161d; flex-shrink: 0;
+  }
+  .logo { font-size: 20px; color: #e2a33d; }
+  .baslik { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
+  .altBaslik { font-size: 11.5px; color: #5b6579; margin-top: 1px; }
+  .altBaslik2 { font-size: 12.5px; color: #8996a8; margin-top: 3px; }
+  .ustBtn {
+    background: #181d25; color: #c7cfdb; border: 1px solid #2a323f; border-radius: 6px;
+    padding: 7px 12px; font-size: 12.5px;
+  }
+  .govde { display: flex; flex: 1; min-height: 0; }
+  .sol {
+    width: 340px; border-right: 1px solid #1f2630; background: #0f1319; overflow-y: auto;
+    padding: 16px 0 24px; flex-shrink: 0;
+  }
+  .sag {
+    width: 260px; border-left: 1px solid #1f2630; background: #0f1319; overflow-y: auto;
+    padding: 16px 0 24px; flex-shrink: 0;
+  }
+  .islemSatir { padding: 12px 16px; border-bottom: 1px solid #171c24; cursor: pointer; }
+  .islemAciklama { font-size: 12.5px; color: #c7cfdb; line-height: 1.4; margin-bottom: 4px; }
+  .islemZaman { font-size: 11px; color: #5b6579; font-family: 'IBM Plex Mono', monospace; }
+  .satinAlmaNav {
+    display: flex; justify-content: space-between; align-items: center; margin: 0 14px 20px;
+    padding: 14px 16px; border-radius: 10px; border: 1px solid #232b37; background: #151b23;
+    color: #dbe2ea; font-size: 15px; font-weight: 600;
+  }
+  .satinAlmaNav i { font-size: 18px; margin-right: 10px; }
+  .satinAlmaNavAktif { border-color: #e2a33d55; background: #20293a; color: #e2a33d; }
+  .rozet { background: #e2a33d; color: #12161d; font-size: 11.5px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
+  .solBaslikSatir { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 10px; }
+  .solBaslik { font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; color: #5b6579; font-weight: 600; }
+  .ekleMini { background: #151b23; color: #e2a33d; border: 1px solid #2a323f; border-radius: 6px; font-size: 12px; padding: 5px 10px; font-weight: 500; }
+  .ekleMiniMakine { background: transparent; color: #5b8fe2; border: none; font-size: 12.5px; padding: 10px 14px 10px 34px; display: block; width: 100%; text-align: left; }
+  .ekleMiniPompa { background: transparent; color: #e2a33d; border: none; font-size: 12.5px; padding: 10px 14px 10px 54px; display: block; width: 100%; text-align: left; }
+
+  .tesisKart { margin: 0 12px 14px; border: 1px solid #1f2630; border-radius: 12px; overflow: hidden; background: #12161d; }
+  .tesisBaslikSatir { display: flex; align-items: center; gap: 10px; padding: 15px 14px; cursor: pointer; }
+  .tesisBaslikSatir:hover { background: #161c25; }
+  .tesisIkon { font-size: 19px; flex-shrink: 0; }
+  .okBuyuk { font-size: 15px; color: #5b6579; transition: transform .15s; width: 12px; display: inline-block; flex-shrink: 0; }
+  .tesisAdMetin, .makineAdMetin, .pompaAdMetin {
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+  }
+  .tesisAdMetin { font-size: 15.5px; font-weight: 600; color: #eef2f7; }
+  .makineSatir { display: flex; align-items: center; gap: 9px; padding: 13px 14px 13px 34px; cursor: pointer; border-top: 1px solid #1a2029; }
+  .makineSatir:hover { background: #161c25; }
+  .makineAdMetin { font-size: 14px; font-weight: 500; color: #c7cfdb; }
+  .pompaSatir { display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 54px; cursor: pointer; border-top: 1px solid #171c24; border-left: 3px solid transparent; }
+  .pompaSatir:hover { background: #161c25; }
+  .pompaSatirSecili { background: #20293a !important; border-left: 3px solid #e2a33d; }
+  .pompaAdMetin { font-size: 13.5px; color: #aab4c2; }
+  .pompaSatirSecili .pompaAdMetin { color: #f0d9ae; font-weight: 500; }
+  .pompaNokta { font-size: 8px; color: #3a4454; flex-shrink: 0; }
+  .pompaSatirSecili .pompaNokta { color: #e2a33d; }
+
+  .aksiyonGrup { display: flex; gap: 4px; flex-shrink: 0; }
+  .aksiyonBtn {
+    width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    color: #5b6579; font-size: 15px; cursor: pointer; border: none; background: transparent;
+  }
+  .aksiyonBtn:hover { background: #232b37; color: #dbe2ea; }
+  .aksiyonBtnSil:hover { background: #3a1c1c; color: #e2694d; }
+  .editInput {
+    flex: 1; background: #0e1116; border: 1px solid #e2a33d; border-radius: 6px;
+    color: #f0f3f7; font-size: 14px; padding: 5px 8px; outline: none; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .silIkon { color: #4a5364; font-size: 15px; cursor: pointer; padding: 0 4px; }
+  .ana { flex: 1; overflow-y: auto; padding: 26px 34px 60px; }
+  .bosDurum { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5b6579; font-size: 13.5px; }
+  .yolIzi { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5b6579; margin-bottom: 14px; }
+  .pompaBaslikSatir { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .pompaAdBaslik { font-size: 21px; font-weight: 600; color: #f0f3f7; }
+  .pompaAdInput { font-size: 21px; font-weight: 600; background: #151b23; border: 1px solid #2a323f; border-radius: 6px; color: #f0f3f7; padding: 4px 10px; }
+  .duzenleBtn { background: #e2a33d; color: #1a1305; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
+  .duzenleBtnAktif { background: #232b37; color: #e6edf3; border: 1px solid #3a4454; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
+  .kart { background: #12161d; border: 1px solid #1f2630; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+  .kartBaslikSatir { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .kartBaslik { font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; color: #6c7789; font-weight: 500; }
+  .deger { font-size: 14px; color: #dbe2ea; }
+  .bosMetin { font-size: 12.5px; color: #4a5364; font-style: italic; }
+  .girdi { width: 100%; background: #0e1116; border: 1px solid #2a323f; border-radius: 6px; color: #e6edf3; padding: 8px 10px; font-size: 13.5px; }
+  .parcaSatir { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid #1a2029; }
+  .parcaGirdi { flex: 1; background: #0e1116; border: 1px solid #2a323f; border-radius: 6px; color: #e6edf3; padding: 7px 9px; font-size: 13px; }
+  .gecmisSatir { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-top: 1px solid #1a2029; }
+  .gecmisKayit { padding: 11px 0; border-top: 1px solid #1a2029; }
+  .gecmisKayit.ty-btn { cursor: pointer; }
+  .gecmisUstSatir { display: flex; gap: 12px; align-items: flex-start; }
+  .gecmisMalzemeListesi { margin: 10px 0 2px 112px; padding: 10px 12px; background: #0e1116; border: 1px solid #1f2630; border-radius: 8px; }
+  .gecmisMalzemeSatir { display: flex; justify-content: space-between; font-size: 12.5px; color: #c7cfdb; padding: 4px 0; }
+  .gecmisTarih { width: 100px; background: #0e1116; border: 1px solid #2a323f; border-radius: 6px; color: #e2a33d; padding: 7px 9px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; flex-shrink: 0; }
+  .gecmisTarihGoster { width: 100px; color: #e2a33d; font-size: 12px; font-family: 'IBM Plex Mono', monospace; flex-shrink: 0; padding-top: 2px; }
+  .gecmisMetin { flex: 1; background: #0e1116; border: 1px solid #2a323f; border-radius: 6px; color: #e6edf3; padding: 7px 9px; font-size: 13px; }
+  .saUstSatir { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .saArama { margin-bottom: 16px; font-size: 14px; padding: 11px 14px; }
+  .filtreSatiri { display: flex; gap: 8px; margin-bottom: 16px; }
+  .filtreBtn { background: #12161d; color: #8996a8; border: 1px solid #1f2630; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 500; }
+  .filtreBtn:hover { border-color: #3a4454; color: #dbe2ea; }
+  .filtreBtnAktif { border-color: var(--filtre-renk, #e2a33d); color: var(--filtre-renk, #e2a33d); background: color-mix(in srgb, var(--filtre-renk, #e2a33d) 12%, #12161d); }
+  .filtreSayi { font-family: 'IBM Plex Mono', monospace; opacity: 0.75; margin-left: 4px; }
+  .saListeSatir { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-bottom: 1px solid #171c24; cursor: pointer; }
+  .saListeUrun { font-size: 14.5px; font-weight: 600; color: #eef2f7; margin-bottom: 3px; }
+  .saListeAltBilgi { font-size: 12px; color: #6c7789; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rozetDurum { flex-shrink: 0; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid; }
+  .geriDon { display: inline-block; font-size: 12.5px; color: #8996a8; margin-bottom: 16px; }
+  .geriDon:hover { color: #dbe2ea; }
+  .kalemBaslikSatir { display: flex; gap: 10px; padding: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #5b6579; }
+  .kalemSatir { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid #1a2029; }
+  .kalemNo { width: 26px; flex-shrink: 0; color: #5b6579; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+  .dugumInput {
+    background: transparent; border: 1px solid transparent; border-radius: 6px;
+    color: #dbe2ea; font-size: 14px; padding: 6px 8px; outline: none; flex: 1;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .dugumInput:hover, .dugumInput:focus { background: #0e1116; border-color: #2a323f; }
+  .kritikNokta { color: #e2694d; font-size: 10px; margin-left: 6px; flex-shrink: 0; }
+  .bekleyenRozet { margin-left: 8px; font-size: 11px; font-weight: 600; color: #e2a33d; background: #e2a33d1a; border: 1px solid #e2a33d55; border-radius: 10px; padding: 2px 9px; flex-shrink: 0; }
+  .bekleyenBanner { display: flex; justify-content: space-between; align-items: center; margin: 0 14px 10px; padding: 11px 14px; background: #e2a33d14; border: 1px solid #e2a33d40; border-radius: 8px; color: #e2a33d; font-size: 12.5px; font-weight: 600; }
+  .bekleyenIcerik { margin: 0 14px 14px; padding: 12px 14px; background: #0e1116; border: 1px solid #1f2630; border-radius: 8px; }
+  .bekleyenAltSatir { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+  .bekleyenCheck { width: 17px; height: 17px; flex-shrink: 0; accent-color: #e2a33d; }
+  .stokUrunSatirTek { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid #1a2029; }
+  .ayarSatiri { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #1a2029; }
+  .ayarSatiri:first-child { border-top: none; }
+  .ayarToggleBtn { flex-shrink: 0; background: transparent; color: #8996a8; border: 1px solid #2a323f; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; }
+  .ayarToggleAktif { color: #3fae74; border-color: #3fae7455; background: #3fae741a; }
+  .modalOverlay {
+    position: fixed; inset: 0; background: rgba(6,8,11,0.72); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modalKutu { width: 360px; background: #12161d; border: 1px solid #2a323f; border-radius: 12px; padding: 24px; }
+  .modalBaslik { font-size: 16px; font-weight: 600; color: #f0f3f7; margin-bottom: 6px; }
+  .modalMetin { font-size: 12.5px; color: #8996a8; margin-bottom: 14px; line-height: 1.5; }
+  .modalSoru { font-size: 20px; font-weight: 600; color: #e2a33d; font-family: 'IBM Plex Mono', monospace; margin-bottom: 12px; text-align: center; background: #0e1116; border: 1px solid #1f2630; border-radius: 8px; padding: 10px; }
+  .modalHata { color: #e2694d; font-size: 12px; min-height: 16px; margin-top: 8px; }
+  .modalBtnSatir { display: flex; gap: 10px; margin-top: 6px; }
+  .modalBtnSatir button { flex: 1; }
+  .beklemeBanner {
+    margin: 12px 14px 0; padding: 10px 12px; background: #e2a33d14; border: 1px solid #e2a33d4d;
+    border-radius: 8px; color: #e2a33d; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .beklemeSatir { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #1a2029; font-size: 13px; }
+  .beklemeSatir input[type=checkbox] { width: 16px; height: 16px; accent-color: #e2a33d; flex-shrink: 0; }
+  .stokUrunSatir { border-top: 1px solid #1a2029; padding: 12px 0; }
+  .stokUrunUst { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .stokUrunAlt { display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; }
+  .stokKullanKutu { display: flex; gap: 6px; align-items: center; width: 210px; flex-shrink: 0; }
+  .stokKullanKutu input { flex: 1; min-width: 0; }
+  .stokKullanBtn { flex-shrink: 0; white-space: nowrap; background: #232b37; color: #dbe2ea; border: 1px solid #2a323f; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 500; }
+  .kritikToggleBtn { flex-shrink: 0; white-space: nowrap; background: transparent; color: #5b6579; border: 1px solid #2a323f; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; }
+  .kritikToggleAktif { background: #e2694d1a; color: #e2694d; border-color: #e2694d55; }
+  .kritikSolukNokta { color: #e2694d66; font-size: 9px; flex-shrink: 0; margin-right: -4px; }
+  .stokKritikGirdi { border-color: #e2694d !important; background: #2a1512 !important; color: #ff9d84 !important; }
+  .kritikMarquee { overflow: hidden; white-space: nowrap; margin: 0 12px 14px; border: 1px solid #e2694d4d; background: #e2694d14; border-radius: 8px; padding: 8px 0; }
+  .kritikMarqueeIc { display: inline-block; padding-left: 100%; animation: kritikKaydir 14s linear infinite; color: #e2694d; font-size: 11.5px; font-weight: 600; }
+  @keyframes kritikKaydir { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  .eklePrimer { background: #e2a33d; color: #1a1305; border: none; border-radius: 6px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; }
+  .bilgiKutu { background: #151b23; border: 1px solid #2a323f; border-radius: 6px; padding: 9px 12px; font-size: 12.5px; color: #aab4c2; margin-bottom: 14px; }
+  .tabloSarici { background: #12161d; border: 1px solid #1f2630; border-radius: 10px; overflow: hidden; }
+  .tabloBaslikSatir { display: flex; gap: 10px; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #5b6579; border-bottom: 1px solid #1f2630; }
+  .tabloSatir { display: flex; gap: 10px; padding: 7px 14px; align-items: center; border-bottom: 1px solid #171c24; }
+  .tabloGirdi { background: transparent; border: 1px solid transparent; border-radius: 5px; color: #dbe2ea; padding: 6px 8px; font-size: 12.5px; min-width: 0; }
+</style>
+</head>
+<body>
+
+<!-- ================= UYGULAMA ================= -->
+<div id="uygulama" style="display:flex;">
+  <div class="ustCubuk">
+    <div style="display:flex;align-items:baseline;gap:10px;">
+      <span class="logo">⌁</span>
+      <div>
+        <div class="baslik">Tesis Yönetim Sistemi</div>
+        <div class="altBaslik" id="ustAltYazi">saha ekipman ve satın alma takibi</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="ustBtn ty-btn" onclick="malzemeListesiGoster()">Kullanılan Malzemeler</button>
+      <button class="ustBtn ty-btn" onclick="disaAktar()">Yedekle (dışa aktar)</button>
+      <button class="ustBtn ty-btn" onclick="document.getElementById('yedekInput').click()">Yedek yükle</button>
+      <button class="ustBtn ty-btn" onclick="ayarlarGoster()">⚙ Ayarlar</button>
+      <input id="yedekInput" type="file" accept=".json" style="display:none" onchange="iceAktar(this.files[0])" />
+    </div>
+  </div>
+  <div class="govde">
+    <div class="sol" id="solMenu"></div>
+    <div class="ana" id="anaPanel"></div>
+    <div class="sag" id="sagMenu"></div>
+  </div>
+</div>
+<datalist id="malzemeListesi"></datalist>
+
+<div id="teyitModal" class="modalOverlay" style="display:none">
+  <div class="modalKutu">
+    <div class="modalBaslik" id="teyitBaslik"></div>
+    <div class="modalMetin" id="teyitMetin"></div>
+    <div class="modalSoru" id="teyitSoru"></div>
+    <input class="girdi" id="teyitGirdi" type="number" placeholder="Cevap" onkeydown="if(event.key==='Enter'){event.preventDefault();teyitOnayla();}" />
+    <div class="modalHata" id="teyitHata"></div>
+    <div class="modalBtnSatir">
+      <button class="ustBtn ty-btn" onclick="teyitIptal()">Vazgeç</button>
+      <button class="eklePrimer ty-btn" id="teyitOnayBtn" onclick="teyitOnayla()">Onayla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- yardımcılar ---------------- */
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* ---------------- genel onay modalı (silme / stok onayı) ---------------- */
+let teyitState = null;
+function teyitIste(baslik, aciklama, geriCagirFn){
+  const a = Math.floor(Math.random() * 8) + 2;
+  const b = Math.floor(Math.random() * 8) + 2;
+  teyitState = { cevap: a + b, fn: geriCagirFn };
+  document.getElementById("teyitBaslik").textContent = baslik;
+  document.getElementById("teyitMetin").textContent = aciklama;
+  document.getElementById("teyitSoru").textContent = `${a} + ${b} = ?`;
+  document.getElementById("teyitGirdi").value = "";
+  document.getElementById("teyitHata").textContent = "";
+  document.getElementById("teyitModal").style.display = "flex";
+  setTimeout(() => document.getElementById("teyitGirdi").focus(), 50);
+}
+function teyitIptal(){
+  document.getElementById("teyitModal").style.display = "none";
+  teyitState = null;
+}
+function teyitOnayla(){
+  const girdi = document.getElementById("teyitGirdi");
+  const deger = parseInt(girdi.value, 10);
+  if (teyitState && deger === teyitState.cevap) {
+    const fn = teyitState.fn;
+    document.getElementById("teyitModal").style.display = "none";
+    teyitState = null;
+    fn();
+  } else {
+    document.getElementById("teyitHata").textContent = "Yanlış cevap, tekrar deneyin.";
+    girdi.value = ""; girdi.focus();
+  }
+}
+function silOnayla(baslik, geriCagirFn){
+  teyitIste(baslik, "Bu kaydı silmek üzeresiniz. Onaylamak için işlemi çözün:", geriCagirFn);
+}
+const bugun = () => {
+  const d = new Date(); const p = n => String(n).padStart(2, "0");
+  return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`;
+};
+const suAn = () => {
+  const d = new Date(); const p = n => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+function esc(str){ return (str ?? "").toString().replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+const KEY_DATA = "tys_data_v1";
+const KEY_AUTH = "tys_auth_v1";
+const KEY_SESSION = "tys_session_v1";
+
+function ornekPompa(ad){
+  return { id: uid(), ad, parcalar: [], gecmis: [{ id: uid(), tarih: bugun(), aciklama: "Kayıt oluşturuldu." }] };
+}
+function varsayilanVeri(){
+  return {
+    tesisler: Array.from({length:6}).map((_,i)=>({
+      id: uid(), ad: `Tesis ${i+1}`,
+      makineler: [{ id: uid(), ad: "Pompa İstasyonu", pompalar: [ornekPompa("1. Pompa"), ornekPompa("2. Pompa")] }],
+      depolar: []
+    })),
+    satinAlmalar: [],
+    malzemeGecmisi: [],
+    sonIslemler: []
+  };
+}
+
+/* ---------------- durum ---------------- */
+let state = null;
+let ui = { view: "bos", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {} };
+
+function saveData(){ localStorage.setItem(KEY_DATA, JSON.stringify(state)); }
+function loadData(){
+  const raw = localStorage.getItem(KEY_DATA);
+  if (raw) {
+    try {
+      const v = JSON.parse(raw);
+      if (!v.malzemeGecmisi) v.malzemeGecmisi = [];
+      v.malzemeGecmisi = v.malzemeGecmisi.map(x => typeof x === "string" ? { id: uid(), ad: x } : x);
+      if (!v.satinAlmalar) v.satinAlmalar = [];
+      if (!v.sonIslemler) v.sonIslemler = [];
+      v.tesisler.forEach(t => { if (!Array.isArray(t.depolar)) t.depolar = []; });
+      v.satinAlmalar = v.satinAlmalar.map(s => {
+        if (Array.isArray(s.kalemler)) return s;
+        return {
+          id: s.id, siparisNo: s.siparisNo || "", gelisTarihi: s.gelisTarihi || bugun(),
+          kalemler: [{ id: uid(), urun: s.urun || "", miktar: s.miktar || "", birim: s.birim || "", teslimTarihi: s.teslimTarihi || "", durum: s.durum || "Gelmedi" }],
+          yerler: s.kullanildigiYer ? [{ id: uid(), ad: s.kullanildigiYer }] : [{ id: uid(), ad: "" }],
+          firma: s.firma || "",
+          eklenmeTarihi: s.eklenmeTarihi || bugun(), eklenmeSaati: s.eklenmeSaati || suAn()
+        };
+      });
+      return v;
+    } catch(e) {}
+  }
+  const v = varsayilanVeri(); localStorage.setItem(KEY_DATA, JSON.stringify(v)); return v;
+}
+function malzemeGecmisineEkle(ad){
+  if (!ad) return;
+  const temiz = ad.trim();
+  if (!temiz) return;
+  const varMi = state.malzemeGecmisi.some(x => x.ad.toLowerCase() === temiz.toLowerCase());
+  if (!varMi) state.malzemeGecmisi.push({ id: uid(), ad: temiz });
+}
+function malzemeListesiEkle(){
+  state.malzemeGecmisi.unshift({ id: uid(), ad: "" });
+  saveData(); render();
+}
+function malzemeListesiGuncelle(id, deger){
+  const m = state.malzemeGecmisi.find(x => x.id === id); if (m) m.ad = deger;
+  saveData(); render();
+}
+function malzemeListesindenSil(id){
+  state.malzemeGecmisi = state.malzemeGecmisi.filter(x => x.id !== id);
+  saveData(); render();
+}
+function malzemeListesiGoster(){ ui.view = "malzemeler"; render(); }
+
+/* ---------------- son işlemler ---------------- */
+function kaydetIslem(aciklama, hedef){
+  if (!state.sonIslemler) state.sonIslemler = [];
+  state.sonIslemler.unshift({ id: uid(), aciklama, hedef, tarih: bugun(), saat: suAn() });
+  if (state.sonIslemler.length > 30) state.sonIslemler.length = 30;
+  saveData();
+}
+function islemeGitById(id){
+  const islem = (state.sonIslemler || []).find(x => x.id === id);
+  if (!islem || !islem.hedef) return;
+  const h = islem.hedef;
+  if (h.view === "pompa") pompaSec(h.tesisId, h.makineId, h.pompaId);
+  else if (h.view === "satinalma-detay") satinAlmaSec(h.satId);
+  else if (h.view === "rapor") raporGoster();
+  else if (h.view === "malzemeler") malzemeListesiGoster();
+  else if (h.view === "stok") stokGoster();
+  else if (h.view === "satinalma") satinAlmaGoster();
+}
+
+/* ---------------- stok ---------------- */
+function stokGoster(){ ui.view = "stok"; render(); }
+function stokDuzenleAcKapat(){ ui.stokDuzenle = !ui.stokDuzenle; render(); }
+function stokTesisAcKapat(id){ ui.stokAcikTesis.has(id) ? ui.stokAcikTesis.delete(id) : ui.stokAcikTesis.add(id); render(); }
+function stokDepoAcKapat(id){ ui.stokAcikDepo.has(id) ? ui.stokAcikDepo.delete(id) : ui.stokAcikDepo.add(id); render(); }
+function depoEkle(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const yeni = { id: uid(), ad: "Yeni Depo", urunler: [] };
+  t.depolar.push(yeni);
+  ui.stokAcikDepo.add(yeni.id);
+  kaydetIslem(`Yeni depo eklendi: ${yeni.ad} (${t.ad})`, { view: "stok" });
+  saveData(); render();
+}
+function depoSil(tesisId, depoId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  t.depolar = t.depolar.filter(d => d.id !== depoId);
+  saveData(); render();
+}
+function depoAdGuncelle(tesisId, depoId, ad){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const d = t.depolar.find(x => x.id === depoId); if (d) d.ad = ad;
+  saveData(); render();
+}
+function stokUrunBul(tesisId, depoId, urunId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const d = t?.depolar.find(x => x.id === depoId);
+  const u = d?.urunler.find(x => x.id === urunId);
+  return { t, d, u };
+}
+function stokUrunEkle(tesisId, depoId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const d = t.depolar.find(x => x.id === depoId);
+  d.urunler.push({ id: uid(), ad: "", miktar: 0, birim: "", kritikTakip: false, kritikEsik: 0 });
+  saveData(); render();
+}
+function stokUrunSil(tesisId, depoId, urunId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const d = t.depolar.find(x => x.id === depoId);
+  d.urunler = d.urunler.filter(x => x.id !== urunId);
+  saveData(); render();
+}
+function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
+  const { u } = stokUrunBul(tesisId, depoId, urunId); if (u) u[alan] = deger;
+  if (alan === "ad") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function stokKritikDegistir(tesisId, depoId, urunId){
+  const { u } = stokUrunBul(tesisId, depoId, urunId); if (!u) return;
+  u.kritikTakip = !u.kritikTakip;
+  saveData(); render();
+}
+function tesisKritikMi(t){
+  return (t.depolar || []).some(d => (d.urunler || []).some(u => u.kritikTakip && (parseFloat(u.miktar) || 0) <= (parseFloat(u.kritikEsik) || 0)));
+}
+function kritikTesisAdlari(){
+  return state.tesisler.filter(tesisKritikMi).map(t => t.ad);
+}
+function urunKritikMi(ad){
+  if (!ad) return false;
+  const q = ad.trim().toLowerCase();
+  if (!q) return false;
+  return state.tesisler.some(t => (t.depolar || []).some(d => (d.urunler || []).some(u =>
+    u.ad.trim().toLowerCase() === q && u.kritikTakip && (parseFloat(u.miktar) || 0) <= (parseFloat(u.kritikEsik) || 0)
+  )));
+}
+
+/* ---------------- satın almadan stoğa bekleyen ürünler ---------------- */
+function bekleyenStokKalemleri(tesisAdi){
+  const sonuc = [];
+  state.satinAlmalar.forEach(sat => {
+    if (!(sat.yerler || []).some(y => y.ad === tesisAdi)) return;
+    (sat.kalemler || []).forEach(k => {
+      if (!k.stokaAktarildi && k.urun && k.urun.trim()) {
+        sonuc.push({ satId: sat.id, kalemId: k.id, urun: k.urun, miktar: k.miktar, birim: k.birim });
+      }
+    });
+  });
+  return sonuc;
+}
+function stokBekleyenAcKapat(tesisId){ ui.stokBekleyenAcik.has(tesisId) ? ui.stokBekleyenAcik.delete(tesisId) : ui.stokBekleyenAcik.add(tesisId); render(); }
+function stokBekleyenSecToggle(tesisId, satId, kalemId){
+  const anahtar = satId + "|" + kalemId;
+  if (!ui.stokBekleyenSecim[tesisId]) ui.stokBekleyenSecim[tesisId] = new Set();
+  const s = ui.stokBekleyenSecim[tesisId];
+  s.has(anahtar) ? s.delete(anahtar) : s.add(anahtar);
+  render();
+}
+function stokBekleyenDepoSec(tesisId, depoId){ ui.stokBekleyenDepo[tesisId] = depoId; render(); }
+function stokBekleyenAlanGuncelle(satId, kalemId, alan, deger){
+  const sat = satinAlmaBul(satId); const k = sat?.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
+  if (alan === "urun") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function stokBekleyenOnayla(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const secilenler = ui.stokBekleyenSecim[tesisId];
+  if (!secilenler || secilenler.size === 0) { ui.mesaj = "Lütfen stoğa eklenecek en az bir ürün seçin."; render(); return; }
+  teyitIste("Stok Onayı", "Seçilen ürünleri stoğa eklemek üzeresiniz. Onaylamak için işlemi çözün:", () => stokBekleyenIsle(tesisId));
+}
+function stokBekleyenIsle(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const secilenler = ui.stokBekleyenSecim[tesisId] || new Set();
+  let depoId = ui.stokBekleyenDepo[tesisId];
+  let depo = t.depolar.find(d => d.id === depoId);
+  if (!depo) {
+    depo = t.depolar.find(d => d.ad === "Genel Depo");
+    if (!depo) { depo = { id: uid(), ad: "Genel Depo", urunler: [] }; t.depolar.push(depo); }
+  }
+  const bekleyenler = bekleyenStokKalemleri(t.ad);
+  let sayac = 0;
+  bekleyenler.forEach(b => {
+    const anahtar = b.satId + "|" + b.kalemId;
+    malzemeGecmisineEkle(b.urun);
+    if (!secilenler.has(anahtar)) return;
+    const sat = satinAlmaBul(b.satId); const k = sat?.kalemler.find(x => x.id === b.kalemId);
+    if (!k) return;
+    const adTemiz = (k.urun || "").trim();
+    const mevcut = depo.urunler.find(u => u.ad.trim().toLowerCase() === adTemiz.toLowerCase());
+    const miktar = parseFloat(k.miktar) || 0;
+    if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar) || 0) + miktar; }
+    else { depo.urunler.push({ id: uid(), ad: adTemiz, miktar, birim: k.birim || "", kritikTakip: false, kritikEsik: 0 }); }
+    k.stokaAktarildi = true;
+    sayac++;
+  });
+  delete ui.stokBekleyenSecim[tesisId];
+  kaydetIslem(`Stok onaylandı: ${sayac} ürün → ${t.ad} / ${depo.ad}`, { view: "stok" });
+  ui.mesaj = `${sayac} ürün ${t.ad} / ${depo.ad} stoğuna eklendi.`;
+  saveData(); render();
+}
+
+/* ---------------- görünürlük ayarları ---------------- */
+function gorunurTesisler(){ return state.tesisler.filter(t => !t.gizli); }
+function ayarlarGoster(){ ui.view = "ayarlar"; render(); }
+function tesisGizleDegistir(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId); if (!t) return;
+  t.gizli = !t.gizli;
+  saveData(); render();
+}
+
+/* ---------------- başlangıç ---------------- */
+window.addEventListener("DOMContentLoaded", () => {
+  state = loadData();
+  ui.acikTesis.add(state.tesisler[0]?.id);
+  render();
+});
+
+/* ---------------- tesis / makine / pompa ---------------- */
+function pompaBul(){
+  const t = state.tesisler.find(x => x.id === ui.secim.tesisId);
+  const m = t?.makineler.find(x => x.id === ui.secim.makineId);
+  const p = m?.pompalar.find(x => x.id === ui.secim.pompaId);
+  return { t, m, p };
+}
+function tesisEkle(){
+  const yeni = { id: uid(), ad: "Yeni Tesis", makineler: [] };
+  state.tesisler.push(yeni); ui.acikTesis.add(yeni.id); saveData(); render();
+}
+function tesisSil(tesisId){
+  state.tesisler = state.tesisler.filter(t => t.id !== tesisId);
+  if (ui.secim.tesisId === tesisId) { ui.secim = {}; ui.view = "bos"; }
+  saveData(); render();
+}
+function tesisAdGuncelle(tesisId, ad){
+  const t = state.tesisler.find(x => x.id === tesisId); if (t) t.ad = ad;
+  saveData(); render();
+}
+function makineEkle(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const yeni = { id: uid(), ad: "Yeni Makine", pompalar: [] };
+  t.makineler.push(yeni); ui.acikMakine.add(yeni.id); saveData(); render();
+}
+function makineSil(tesisId, makineId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  t.makineler = t.makineler.filter(m => m.id !== makineId);
+  if (ui.secim.makineId === makineId) { ui.secim = {}; ui.view = "bos"; }
+  saveData(); render();
+}
+function makineAdGuncelle(tesisId, makineId, ad){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const m = t.makineler.find(x => x.id === makineId); if (m) m.ad = ad;
+  saveData(); render();
+}
+function pompaEkle(tesisId, makineId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const m = t.makineler.find(x => x.id === makineId);
+  const yeni = ornekPompa(`${m.pompalar.length+1}. Pompa`);
+  m.pompalar.push(yeni);
+  kaydetIslem(`Yeni pompa eklendi: ${yeni.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId, makineId, pompaId: yeni.id });
+  saveData(); render();
+}
+function pompaSil(tesisId, makineId, pompaId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const m = t.makineler.find(x => x.id === makineId);
+  m.pompalar = m.pompalar.filter(p => p.id !== pompaId);
+  if (ui.secim.pompaId === pompaId) { ui.secim = {}; ui.view = "bos"; }
+  saveData(); render();
+}
+function pompaAdGuncelle(ad){
+  const { p } = pompaBul(); if (p) p.ad = ad; saveData(); render();
+}
+function parcaEkle(){
+  const { p } = pompaBul(); p.parcalar.push({ id: uid(), ad: "", malzeme: "", adet: 1 }); saveData(); render();
+}
+function parcaGuncelle(parcaId, alan, deger){
+  const { p } = pompaBul(); const pr = p.parcalar.find(x => x.id === parcaId); if (pr) pr[alan] = deger;
+  if (alan === "ad") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function parcaSil(parcaId){
+  const { p } = pompaBul(); p.parcalar = p.parcalar.filter(x => x.id !== parcaId); saveData(); render();
+}
+function gecmisEkle(){
+  const { p } = pompaBul(); p.gecmis.unshift({ id: uid(), tarih: bugun(), aciklama: "" }); saveData(); render();
+}
+function gecmisGuncelle(girdiId, alan, deger){
+  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === girdiId); if (g) g[alan] = deger;
+  saveData(); render();
+}
+function gecmisSil(girdiId){
+  const { p } = pompaBul(); p.gecmis = p.gecmis.filter(x => x.id !== girdiId); saveData(); render();
+}
+function gecmisAcKapat(id){ ui.acikGecmis.has(id) ? ui.acikGecmis.delete(id) : ui.acikGecmis.add(id); render(); }
+function gecmisMalzemeEkle(gecmisId){
+  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
+  if (!g.malzemeler) g.malzemeler = [];
+  g.malzemeler.push({ id: uid(), ad: "", adet: 1 });
+  saveData(); render();
+}
+function gecmisMalzemeGuncelle(gecmisId, malzemeId, alan, deger){
+  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
+  const m = g.malzemeler.find(x => x.id === malzemeId); if (m) m[alan] = deger;
+  if (alan === "ad") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function gecmisMalzemeSil(gecmisId, malzemeId){
+  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
+  g.malzemeler = g.malzemeler.filter(x => x.id !== malzemeId);
+  saveData(); render();
+}
+function pompaSec(tesisId, makineId, pompaId){
+  ui.secim = { tesisId, makineId, pompaId }; ui.view = "pompa"; ui.duzenle = false; render();
+}
+function acikTesisToggle(id){ ui.acikTesis.has(id) ? ui.acikTesis.delete(id) : ui.acikTesis.add(id); render(); }
+function acikMakineToggle(id){ ui.acikMakine.has(id) ? ui.acikMakine.delete(id) : ui.acikMakine.add(id); render(); }
+function duzenleAcKapat(){ ui.duzenle = !ui.duzenle; render(); }
+
+/* ---------------- rapor ekle ---------------- */
+let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", adet: 1 }] };
+function raporGoster(){
+  raporForm = { tesisId: state.tesisler[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", adet: 1 }] };
+  if (raporForm.tesisId) {
+    const t = state.tesisler.find(x => x.id === raporForm.tesisId);
+    raporForm.makineId = t?.makineler[0]?.id || "";
+    const m = t?.makineler.find(x => x.id === raporForm.makineId);
+    raporForm.pompaId = m?.pompalar[0]?.id || "";
+  }
+  ui.view = "rapor"; render();
+}
+function raporTesisSec(tesisId){
+  raporForm.tesisId = tesisId;
+  const t = state.tesisler.find(x => x.id === tesisId);
+  raporForm.makineId = t?.makineler[0]?.id || "";
+  const m = t?.makineler.find(x => x.id === raporForm.makineId);
+  raporForm.pompaId = m?.pompalar[0]?.id || "";
+  render();
+}
+function raporMakineSec(makineId){
+  raporForm.makineId = makineId;
+  const t = state.tesisler.find(x => x.id === raporForm.tesisId);
+  const m = t?.makineler.find(x => x.id === makineId);
+  raporForm.pompaId = m?.pompalar[0]?.id || "";
+  render();
+}
+function raporPompaSec(pompaId){ raporForm.pompaId = pompaId; render(); }
+function raporAlanGuncelle(alan, deger){ raporForm[alan] = deger; }
+function raporMalzemeEkle(){ raporForm.malzemeler.push({ id: uid(), ad: "", adet: 1 }); render(); }
+function raporMalzemeSil(id){ raporForm.malzemeler = raporForm.malzemeler.filter(x => x.id !== id); render(); }
+function raporMalzemeGuncelle(id, alan, deger){
+  const x = raporForm.malzemeler.find(x => x.id === id); if (x) x[alan] = deger;
+}
+function raporKaydet(){
+  const t = state.tesisler.find(x => x.id === raporForm.tesisId);
+  const m = t?.makineler.find(x => x.id === raporForm.makineId);
+  const p = m?.pompalar.find(x => x.id === raporForm.pompaId);
+  if (!t || !m || !p) { ui.mesaj = "Lütfen tesis, makine ve pompa seçin."; render(); return; }
+  const tarih = raporForm.tarih || bugun();
+  const kullanilanlar = raporForm.malzemeler
+    .map(x => ({ id: uid(), ad: x.ad.trim(), adet: x.adet || 1 }))
+    .filter(x => x.ad);
+
+  kullanilanlar.forEach(({ ad }) => malzemeGecmisineEkle(ad));
+
+  const aciklama = raporForm.sebep ? `${raporForm.sebep}: ${raporForm.is}` : raporForm.is;
+  p.gecmis.unshift({ id: uid(), tarih, aciklama: aciklama.trim() || "—", malzemeler: kullanilanlar });
+
+  kaydetIslem(`Rapor eklendi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  saveData();
+  ui.mesaj = "Rapor kaydedildi.";
+  pompaSec(t.id, m.id, p.id);
+}
+
+/* ---------------- satın alma ---------------- */
+function bosKalem(){ return { id: uid(), urun: "", miktar: "", birim: "", teslimTarihi: "", durum: "Gelmedi", stokaAktarildi: false }; }
+function bosYer(){ return { id: uid(), ad: "" }; }
+function bosSatinAlmaKaydi(){
+  return {
+    id: uid(), siparisNo: "", gelisTarihi: bugun(),
+    kalemler: [bosKalem()], yerler: [bosYer()],
+    firma: "",
+    eklenmeTarihi: bugun(), eklenmeSaati: suAn()
+  };
+}
+function satinAlmaEkle(){
+  const yeni = bosSatinAlmaKaydi();
+  state.satinAlmalar.unshift(yeni);
+  kaydetIslem("Yeni satın alma talebi oluşturuldu", { view: "satinalma-detay", satId: yeni.id });
+  saveData();
+  ui.saSecim = yeni.id; ui.saDuzenle = true; ui.view = "satinalma-detay"; render();
+}
+function satinAlmaBul(id){ return state.satinAlmalar.find(x => x.id === id); }
+function satinAlmaGuncelle(id, alan, deger){
+  const s = satinAlmaBul(id); if (s) s[alan] = deger; saveData(); render();
+}
+function satinAlmaSil(id){
+  state.satinAlmalar = state.satinAlmalar.filter(x => x.id !== id);
+  if (ui.saSecim === id) { ui.view = "satinalma"; ui.saSecim = null; }
+  saveData(); render();
+}
+function satinAlmaGoster(){ ui.view = "satinalma"; ui.saArama = ""; render(); }
+function satinAlmaSec(id){ ui.saSecim = id; ui.saDuzenle = false; ui.view = "satinalma-detay"; render(); }
+function satinAlmaDuzenleAcKapat(){ ui.saDuzenle = !ui.saDuzenle; render(); }
+function saAramaGuncelle(deger){ ui.saArama = deger; saListesiRender(); }
+
+/* kalemler (ürün satırları) */
+function saKalemEkle(satId){
+  const s = satinAlmaBul(satId); s.kalemler.push(bosKalem()); saveData(); render();
+}
+function saKalemSil(satId, kalemId){
+  const s = satinAlmaBul(satId); s.kalemler = s.kalemler.filter(x => x.id !== kalemId);
+  if (s.kalemler.length === 0) s.kalemler.push(bosKalem());
+  saveData(); render();
+}
+function saKalemGuncelle(satId, kalemId, alan, deger){
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
+  if (alan === "urun") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function saKalemDurumDegistir(satId, kalemId){
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
+  k.durum = k.durum === "Geldi" ? "Gelmedi" : "Geldi";
+  saveData(); render();
+}
+/* kullanıldığı yer satırları */
+function saYerEkle(satId){
+  const s = satinAlmaBul(satId); s.yerler.push(bosYer()); saveData(); render();
+}
+function saYerSil(satId, yerId){
+  const s = satinAlmaBul(satId); s.yerler = s.yerler.filter(x => x.id !== yerId);
+  if (s.yerler.length === 0) s.yerler.push(bosYer());
+  saveData(); render();
+}
+function saYerGuncelle(satId, yerId, deger){
+  const s = satinAlmaBul(satId); const y = s.yerler.find(x => x.id === yerId); if (y) y.ad = deger;
+  saveData(); render();
+}
+
+function saTumKalemler(){
+  return state.satinAlmalar.flatMap(s => s.kalemler.map(k => ({ ...k, satId: s.id })));
+}
+function saDurumFiltreDegistir(f){ ui.saFiltre = f; render(); }
+function saFiltreliListe(){
+  const q = (ui.saArama || "").trim().toLowerCase();
+  let liste = state.satinAlmalar;
+  if (q) {
+    liste = liste.filter(s =>
+      [s.siparisNo, s.firma,
+       ...(s.kalemler || []).map(k => k.urun),
+       ...(s.yerler || []).map(y => y.ad)]
+        .some(alan => (alan || "").toLowerCase().includes(q))
+    );
+  }
+  if (ui.saFiltre === "gelen") {
+    liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
+  } else if (ui.saFiltre === "gelmeyen") {
+    liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
+  }
+  return liste;
+}
+function saListesiRender(){
+  const kap = document.getElementById("saListesiKapsayici");
+  if (!kap) return;
+  const liste = saFiltreliListe();
+  let h = `<div class="tabloSarici">`;
+  if (liste.length === 0) {
+    h += `<div class="bosMetin" style="padding:16px">${state.satinAlmalar.length===0 ? "Henüz satın alma kaydı yok. \"+ satın alma ekle\" ile başlayın." : "Aramanla eşleşen bir kayıt bulunamadı."}</div>`;
+  } else {
+    liste.forEach(sat => {
+      const urunler = (sat.kalemler || []).map(k => k.urun).filter(Boolean);
+      const gelenSayi = (sat.kalemler || []).filter(k => k.durum === "Geldi").length;
+      const toplam = (sat.kalemler || []).length;
+      const yerMetni = (sat.yerler || []).map(y => y.ad).filter(Boolean).join(", ");
+      const renk = gelenSayi === toplam ? durumRenk.Geldi : durumRenk.Gelmedi;
+      h += `<div class="saListeSatir ty-satir" onclick="satinAlmaSec('${sat.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="saListeUrun">${esc(urunler.slice(0,3).join(", ")) || "(ürün adı girilmedi)"}${urunler.length>3?` <span style="color:#5b6579">+${urunler.length-3} diğer</span>`:''}</div>
+          <div class="saListeAltBilgi">${[sat.siparisNo && ('Sipariş No: '+sat.siparisNo), yerMetni].filter(Boolean).map(esc).join(' · ') || '—'}</div>
+        </div>
+        <span class="rozetDurum" style="color:${renk};border-color:${renk}55;background:${renk}1a">${gelenSayi}/${toplam} geldi</span>
+      </div>`;
+    });
+  }
+  h += `</div>`;
+  kap.innerHTML = h;
+}
+
+/* ---------------- yedekleme ---------------- */
+function disaAktar(){
+  const veri = { ...state, olusturma: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `tesis-yedek-${bugun().replaceAll(".", "-")}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function iceAktar(dosya){
+  if (!dosya) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const veri = JSON.parse(reader.result);
+      if (veri.tesisler) state.tesisler = veri.tesisler;
+      if (veri.satinAlmalar) state.satinAlmalar = veri.satinAlmalar;
+      ui.mesaj = "Yedek başarıyla geri yüklendi.";
+      saveData(); render();
+    } catch(e){ ui.mesaj = "Yedek dosyası okunamadı. Geçerli bir JSON dosyası seçin."; render(); }
+  };
+  reader.readAsText(dosya);
+}
+
+/* ---------------- render ---------------- */
+const durumRenk = { Geldi: "#3fae74", Gelmedi: "#d9603f" };
+
+function render(){ renderSol(); renderAna(); renderSag(); guncelleMalzemeListesi(); }
+function renderSag(){
+  const el = document.getElementById("sagMenu");
+  if (!el) return;
+  const liste = (state.sonIslemler || []).slice(0, 10);
+  let h = `<div class="solBaslikSatir" style="padding-top:6px"><span class="solBaslik">Son İşlemler</span></div>`;
+  if (liste.length === 0) {
+    h += `<div class="bosMetin" style="padding:14px">Henüz bir işlem yapılmadı.</div>`;
+  } else {
+    liste.forEach(islem => {
+      h += `<div class="islemSatir ty-node" onclick="islemeGitById('${islem.id}')">
+        <div class="islemAciklama">${esc(islem.aciklama)}</div>
+        <div class="islemZaman">${esc(islem.tarih)} · ${esc(islem.saat)}</div>
+      </div>`;
+    });
+  }
+  el.innerHTML = h;
+}
+function guncelleMalzemeListesi(){
+  const dl = document.getElementById("malzemeListesi");
+  if (dl) dl.innerHTML = state.malzemeGecmisi.map(x => `<option value="${esc(x.ad)}">`).join("");
+}
+
+function duzenlemeBaslat(id){ ui.duzenlenenId = id; render(); }
+function duzenlemeIptal(){ ui.duzenlenenId = null; render(); }
+function tesisAdKaydet(inputEl, tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  if (t && inputEl.value.trim()) t.ad = inputEl.value.trim();
+  ui.duzenlenenId = null; saveData(); render();
+}
+function makineAdKaydet(inputEl, tesisId, makineId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const m = t.makineler.find(x => x.id === makineId);
+  if (m && inputEl.value.trim()) m.ad = inputEl.value.trim();
+  ui.duzenlenenId = null; saveData(); render();
+}
+function pompaAdKaydetSol(inputEl, tesisId, makineId, pompaId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  const m = t.makineler.find(x => x.id === makineId);
+  const p = m.pompalar.find(x => x.id === pompaId);
+  if (p && inputEl.value.trim()) p.ad = inputEl.value.trim();
+  ui.duzenlenenId = null; saveData(); render();
+}
+function enterIleKaydet(e){ if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") { ui.duzenlenenId = null; render(); } }
+
+function renderSol(){
+  const kritikTesisler = kritikTesisAdlari();
+  let h = `
+    <div class="satinAlmaNav ${ui.view==='stok'?'satinAlmaNavAktif':''} ty-btn" onclick="stokGoster()">
+      <span>📦 Stok Listesi</span>
+    </div>`;
+  if (kritikTesisler.length > 0) {
+    const metin = `⚠ Kritik stok: ${kritikTesisler.join(' • ')}`;
+    h += `<div class="kritikMarquee"><div class="kritikMarqueeIc">${esc(metin)} &nbsp;&nbsp;•&nbsp;&nbsp; ${esc(metin)}</div></div>`;
+  }
+  h += `
+    <div class="satinAlmaNav ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'satinAlmaNavAktif':''} ty-btn" onclick="satinAlmaGoster()">
+      <span>🛒 Satın Almalar</span>
+      ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
+    </div>
+    <div class="satinAlmaNav ${ui.view==='rapor'?'satinAlmaNavAktif':''} ty-btn" onclick="raporGoster()">
+      <span>📝 Rapor ekle</span>
+    </div>
+    <div class="solBaslikSatir">
+      <span class="solBaslik">Tesisler</span>
+      <button class="ekleMini ty-btn" onclick="tesisEkle()">+ Tesis ekle</button>
+    </div>`;
+
+  gorunurTesisler().forEach(t => {
+    const acikT = ui.acikTesis.has(t.id);
+    h += `<div class="tesisKart">`;
+    h += `<div class="tesisBaslikSatir" onclick="acikTesisToggle('${t.id}')">
+      <span class="okBuyuk" style="transform:${acikT?'rotate(90deg)':'none'}">›</span>
+      <span class="tesisIkon">🏭</span>`;
+    if (ui.duzenlenenId === t.id) {
+      h += `<input class="editInput" id="editInput_${t.id}" value="${esc(t.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="tesisAdKaydet(this,'${t.id}')" />`;
+    } else {
+      h += `<span class="tesisAdMetin">${esc(t.ad)}</span>`;
+    }
+    h += `<div class="aksiyonGrup">
+        <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${t.id}')">✎</button>
+        <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Tesisi sil" onclick="event.stopPropagation(); silOnayla('Tesisi Sil', ()=>tesisSil('${t.id}'))">×</button>
+      </div>
+    </div>`;
+
+    if (acikT) {
+      t.makineler.forEach(m => {
+        const acikM = ui.acikMakine.has(m.id);
+        h += `<div class="makineSatir" onclick="acikMakineToggle('${m.id}')">
+          <span class="okBuyuk" style="transform:${acikM?'rotate(90deg)':'none'}">›</span>
+          <span class="tesisIkon" style="font-size:15px">⚙</span>`;
+        if (ui.duzenlenenId === m.id) {
+          h += `<input class="editInput" id="editInput_${m.id}" value="${esc(m.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="makineAdKaydet(this,'${t.id}','${m.id}')" />`;
+        } else {
+          h += `<span class="makineAdMetin">${esc(m.ad)}</span>`;
+        }
+        h += `<div class="aksiyonGrup">
+            <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${m.id}')">✎</button>
+            <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Makineyi sil" onclick="event.stopPropagation(); silOnayla('Makineyi Sil', ()=>makineSil('${t.id}','${m.id}'))">×</button>
+          </div>
+        </div>`;
+
+        if (acikM) {
+          m.pompalar.forEach(p => {
+            const secili = ui.secim.pompaId === p.id && ui.view === 'pompa';
+            h += `<div class="pompaSatir ${secili?'pompaSatirSecili':''}" onclick="pompaSec('${t.id}','${m.id}','${p.id}')">
+              <span class="pompaNokta">●</span>`;
+            if (ui.duzenlenenId === p.id) {
+              h += `<input class="editInput" id="editInput_${p.id}" value="${esc(p.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="pompaAdKaydetSol(this,'${t.id}','${m.id}','${p.id}')" />`;
+            } else {
+              h += `<span class="pompaAdMetin">${esc(p.ad) || '(isimsiz)'}</span>`;
+            }
+            h += `<div class="aksiyonGrup">
+                <button class="aksiyonBtn ty-btn" title="Adını düzenle" onclick="event.stopPropagation(); duzenlemeBaslat('${p.id}')">✎</button>
+                <button class="aksiyonBtn aksiyonBtnSil ty-btn" title="Pompayı sil" onclick="event.stopPropagation(); silOnayla('Pompayı Sil', ()=>pompaSil('${t.id}','${m.id}','${p.id}'))">×</button>
+              </div>
+            </div>`;
+          });
+          h += `<button class="ekleMiniPompa ty-btn" onclick="pompaEkle('${t.id}','${m.id}')">+ Pompa ekle</button>`;
+        }
+      });
+      h += `<button class="ekleMiniMakine ty-btn" onclick="makineEkle('${t.id}')">+ Makine ekle</button>`;
+    }
+    h += `</div>`;
+  });
+  document.getElementById("solMenu").innerHTML = h;
+
+  if (ui.duzenlenenId) {
+    const inp = document.getElementById("editInput_" + ui.duzenlenenId);
+    if (inp) { inp.focus(); inp.select(); }
+  }
+}
+
+function renderAna(){
+  const el = document.getElementById("anaPanel");
+
+  if (ui.view === "stok") {
+    let h = `<div class="pompaBaslikSatir" style="margin-bottom:4px">
+      <div>
+        <div class="pompaAdBaslik">Stok Listesi</div>
+        <div class="altBaslik2">tesis ve depo bazında stok takibi</div>
+      </div>
+      <button class="${ui.stokDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="stokDuzenleAcKapat()">${ui.stokDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
+    </div>`;
+    if (ui.mesaj) { h += `<div class="bilgiKutu" style="margin-top:16px">${esc(ui.mesaj)}</div>`; ui.mesaj = ""; }
+    h += `<div style="height:8px"></div>`;
+    gorunurTesisler().forEach(t => {
+      const acik = ui.stokAcikTesis.has(t.id);
+      const kritik = tesisKritikMi(t);
+      const bekleyenler = bekleyenStokKalemleri(t.ad);
+      h += `<div class="tesisKart">
+        <div class="tesisBaslikSatir" onclick="stokTesisAcKapat('${t.id}')">
+          <span class="okBuyuk" style="transform:${acik?'rotate(90deg)':'none'}">›</span>
+          <span class="tesisIkon">🏭</span>
+          <span class="tesisAdMetin">${esc(t.ad)}</span>
+          ${kritik ? `<span class="kritikNokta" title="Kritik stok var">●</span>` : ''}
+          ${bekleyenler.length ? `<span class="bekleyenRozet">${bekleyenler.length} bekleyen</span>` : ''}
+        </div>`;
+      if (acik) {
+        if (bekleyenler.length > 0) {
+          const bekAcik = ui.stokBekleyenAcik.has(t.id);
+          const secim = ui.stokBekleyenSecim[t.id] || new Set();
+          h += `<div class="bekleyenBanner ty-btn" onclick="stokBekleyenAcKapat('${t.id}')">
+            <span>🕓 Beklenen yeni stok var (${bekleyenler.length} ürün)</span>
+            <span class="okBuyuk" style="transform:${bekAcik?'rotate(90deg)':'none'}">›</span>
+          </div>`;
+          if (bekAcik) {
+            h += `<div class="bekleyenIcerik">`;
+            h += `<div class="kalemBaslikSatir" style="padding-left:0">
+              <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="width:80px">Miktar</span><span style="width:120px">Birim</span>
+            </div>`;
+            bekleyenler.forEach(b => {
+              const anahtar = b.satId + "|" + b.kalemId;
+              const secili = secim.has(anahtar);
+              h += `<div class="kalemSatir" style="padding-left:0">
+                <input type="checkbox" class="bekleyenCheck" ${secili?'checked':''} onchange="stokBekleyenSecToggle('${t.id}','${b.satId}','${b.kalemId}')" />
+                <input class="parcaGirdi" style="flex:2" value="${esc(b.urun)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','urun',this.value)" />
+                <input class="parcaGirdi" style="width:80px;flex:none" value="${esc(b.miktar)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','miktar',this.value)" />
+                <input class="parcaGirdi" style="width:120px;flex:none" value="${esc(b.birim)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)" />
+              </div>`;
+            });
+            h += `<div class="bekleyenAltSatir">
+              <select class="girdi" style="width:220px" onchange="stokBekleyenDepoSec('${t.id}', this.value)">
+                <option value="">Depo seç (boşsa Genel Depo)</option>
+                ${(t.depolar||[]).map(d => `<option value="${d.id}" ${ui.stokBekleyenDepo[t.id]===d.id?'selected':''}>${esc(d.ad)}</option>`).join('')}
+              </select>
+              <button class="eklePrimer ty-btn" onclick="stokBekleyenOnayla('${t.id}')">Seçilenleri Stoğa Ekle</button>
+            </div>`;
+            h += `</div>`;
+          }
+        }
+        (t.depolar || []).forEach(d => {
+          const depoAcik = ui.stokAcikDepo.has(d.id);
+          h += `<div class="makineSatir" onclick="stokDepoAcKapat('${d.id}')">
+            <span class="okBuyuk" style="transform:${depoAcik?'rotate(90deg)':'none'}">›</span>
+            <span class="tesisIkon" style="font-size:15px">📦</span>
+            ${ui.stokDuzenle
+              ? `<input class="dugumInput" value="${esc(d.ad)}" onclick="event.stopPropagation()" onchange="depoAdGuncelle('${t.id}','${d.id}',this.value)" />
+                 <div class="aksiyonGrup"><button class="aksiyonBtn aksiyonBtnSil ty-btn" onclick="event.stopPropagation(); silOnayla('Depoyu Sil', ()=>depoSil('${t.id}','${d.id}'))">×</button></div>`
+              : `<span class="makineAdMetin">${esc(d.ad)}</span>`}
+          </div>`;
+          if (depoAcik) {
+            h += `<div style="padding:10px 14px 16px 54px">`;
+            if ((d.urunler || []).length === 0) h += `<div class="bosMetin">Henüz ürün eklenmedi.</div>`;
+            else h += `<div class="kalemBaslikSatir" style="padding-left:0">
+              <span style="flex:2">Ürün</span><span style="width:60px">Miktar</span><span style="width:110px">Birim</span>
+              <span style="width:80px">Kritik Eşik</span><span style="width:150px">Kritik</span>
+            </div>`;
+            (d.urunler || []).forEach(u => {
+              const kritikRenk = u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0);
+              h += `<div class="stokUrunSatirTek">
+                ${ui.stokDuzenle ? `
+                  <input class="parcaGirdi" style="flex:2" list="malzemeListesi" placeholder="Ürün adı" value="${esc(u.ad)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','ad',this.value)" />
+                  <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''}" style="width:60px;flex:none" type="number" min="0" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
+                  <input class="parcaGirdi" style="width:110px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
+                  <input class="parcaGirdi" style="width:80px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
+                  <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:150px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
+                  <span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>
+                ` : `
+                  <span style="flex:2;color:#e6edf3">${esc(u.ad) || '—'}</span>
+                  <span style="width:60px;color:${kritikRenk?'#ff9d84':'#8996a8'};font-weight:${kritikRenk?'700':'400'}">${esc(u.miktar)}</span>
+                  <span style="width:110px;color:#8996a8">${esc(u.birim) || '—'}</span>
+                  <span style="width:80px;color:#8996a8">${esc(u.kritikEsik)}</span>
+                  <span style="width:150px;color:${u.kritikTakip?'#e2694d':'#5b6579'};font-size:11.5px">${u.kritikTakip?'● İzleniyor':'—'}</span>
+                `}
+              </div>`;
+            });
+            if (ui.stokDuzenle) h += `<button class="ekleMini ty-btn" style="margin-top:8px" onclick="stokUrunEkle('${t.id}','${d.id}')">+ ürün ekle</button>`;
+            h += `</div>`;
+          }
+        });
+        if (ui.stokDuzenle) h += `<button class="ekleMiniMakine ty-btn" onclick="depoEkle('${t.id}')">+ depo ekle</button>`;
+      }
+      h += `</div>`;
+    });
+    el.innerHTML = h;
+    return;
+  }
+
+  if (ui.view === "ayarlar") {
+    let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Ayarlar</div>
+      <div class="altBaslik2" style="margin-bottom:20px">görmek istemediğiniz tesisleri buradan gizleyebilirsiniz</div>`;
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:10px">Tesis Görünürlüğü</div>`;
+    state.tesisler.forEach(t => {
+      h += `<div class="ayarSatiri">
+        <span class="tesisIkon">🏭</span>
+        <span style="flex:1;color:${t.gizli?'#5b6579':'#e6edf3'}">${esc(t.ad)}${t.gizli?' (gizli)':''}</span>
+        <button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>
+      </div>`;
+    });
+    h += `</div>`;
+    h += `<div class="bosMetin">Gizlenen tesisler; sol menüdeki Tesisler listesinde ve Stok Listesi'nde görünmez. Verileri silinmez, istediğiniz zaman tekrar gösterebilirsiniz.</div>`;
+    el.innerHTML = h;
+    return;
+  }
+
+  if (ui.view === "malzemeler") {
+    let h = `<div class="pompaBaslikSatir">
+      <div>
+        <div class="pompaAdBaslik">Kullanılan Malzemeler</div>
+        <div class="altBaslik2">daha önce kullanılmış / kayıtlı tüm malzemeler — pompa ve rapor kayıtlarında otomatik tamamlama için kullanılır</div>
+      </div>
+      <button class="eklePrimer ty-btn" onclick="malzemeListesiEkle()">+ malzeme ekle</button>
+    </div>`;
+    h += `<div class="kart">`;
+    if (state.malzemeGecmisi.length === 0) h += `<div class="bosMetin">Henüz malzeme eklenmedi.</div>`;
+    state.malzemeGecmisi.forEach(m => {
+      h += `<div class="parcaSatir">
+        <input class="parcaGirdi" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}',this.value)" />
+        <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>malzemeListesindenSil('${m.id}'))">×</span>
+      </div>`;
+    });
+    h += `</div>`;
+    el.innerHTML = h;
+    return;
+  }
+
+  if (ui.view === "bos") {
+    el.innerHTML = `<div class="bosDurum"><div style="font-size:32px;opacity:.3;margin-bottom:8px;">⌁</div><div>Soldan bir pompa seçin ya da Satın Almalar bölümüne geçin.</div></div>`;
+    return;
+  }
+
+  if (ui.view === "pompa") {
+    const { t, m, p } = pompaBul();
+    if (!p) { ui.view = "bos"; renderAna(); return; }
+    let h = `<div class="yolIzi">${esc(t.ad)} <span style="opacity:.4">/</span> ${esc(m.ad)} <span style="opacity:.4">/</span> <span style="color:#e2a33d">${esc(p.ad)}</span></div>`;
+    h += `<div class="pompaBaslikSatir">`;
+    h += ui.duzenle
+      ? `<input class="pompaAdInput" value="${esc(p.ad)}" onchange="pompaAdGuncelle(this.value)" />`
+      : `<div class="pompaAdBaslik">${esc(p.ad)}</div>`;
+    h += `<button class="${ui.duzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="duzenleAcKapat()">${ui.duzenle?'Düzenlemeyi bitir':'Düzenle'}</button>`;
+    h += `</div>`;
+
+    h += `<div class="kart"><div class="kartBaslikSatir"><span class="kartBaslik">Parçalar ve malzemeler</span>${ui.duzenle?'<button class="ekleMini ty-btn" onclick="parcaEkle()">+ parça ekle</button>':''}</div>`;
+    if (p.parcalar.length === 0) h += `<div class="bosMetin">Henüz parça eklenmedi.</div>`;
+    p.parcalar.forEach(pr => {
+      h += `<div class="parcaSatir">`;
+      if (ui.duzenle) {
+        h += `<input class="parcaGirdi" list="malzemeListesi" placeholder="Parça adı" value="${esc(pr.ad)}" onchange="parcaGuncelle('${pr.id}','ad',this.value)" />`;
+        h += `<input class="parcaGirdi" placeholder="Malzeme" value="${esc(pr.malzeme)}" onchange="parcaGuncelle('${pr.id}','malzeme',this.value)" />`;
+        h += `<input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(pr.adet)}" onchange="parcaGuncelle('${pr.id}','adet',this.value)" />`;
+        h += `<span class="silIkon" onclick="silOnayla('Parçayı Sil', ()=>parcaSil('${pr.id}'))">×</span>`;
+      } else {
+        h += `<span style="flex:1;color:#e6edf3">${esc(pr.ad) || '(isimsiz)'}</span>`;
+        h += `<span style="flex:1;color:#8996a8">${esc(pr.malzeme) || '—'}</span>`;
+        h += `<span style="width:70px;color:#8996a8;font-family:'IBM Plex Mono',monospace">× ${esc(pr.adet)}</span>`;
+      }
+      h += `</div>`;
+    });
+    h += `</div>`;
+
+    h += `<div class="kart"><div class="kartBaslikSatir"><span class="kartBaslik">İşlem geçmişi</span>${ui.duzenle?'<button class="ekleMini ty-btn" onclick="gecmisEkle()">+ kayıt ekle</button>':''}</div>`;
+    p.gecmis.forEach(g => {
+      const malzemeVar = g.malzemeler && g.malzemeler.length > 0;
+      const acik = ui.acikGecmis.has(g.id);
+      if (ui.duzenle) {
+        h += `<div class="gecmisSatir" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;gap:12px;align-items:center">
+            <input class="gecmisTarih" placeholder="gg.aa.yyyy" value="${esc(g.tarih)}" onchange="gecmisGuncelle('${g.id}','tarih',this.value)" />
+            <input class="gecmisMetin" placeholder="Yapılan işin içeriği" value="${esc(g.aciklama)}" onchange="gecmisGuncelle('${g.id}','aciklama',this.value)" />
+            <span class="silIkon" onclick="silOnayla('Kaydı Sil', ()=>gecmisSil('${g.id}'))">×</span>
+          </div>
+          <div style="margin-left:112px;padding:10px 12px;background:#0e1116;border:1px solid #1f2630;border-radius:8px">
+            <div class="kartBaslikSatir" style="margin-bottom:${(g.malzemeler&&g.malzemeler.length)?'8px':'0'}">
+              <span class="kartBaslik" style="font-size:11px">Kullanılan malzemeler</span>
+              <button class="ekleMini ty-btn" onclick="gecmisMalzemeEkle('${g.id}')">+ malzeme ekle</button>
+            </div>
+            ${(g.malzemeler || []).map(x => `
+              <div class="parcaSatir" style="border-top:1px solid #1a2029">
+                <input class="parcaGirdi" list="malzemeListesi" placeholder="Malzeme adı" value="${esc(x.ad)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','ad',this.value)" />
+                <input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(x.adet)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','adet',this.value)" />
+                <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>gecmisMalzemeSil('${g.id}','${x.id}'))">×</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+      } else {
+        h += `<div class="gecmisKayit ${malzemeVar?'ty-btn':''}" ${malzemeVar?`onclick="gecmisAcKapat('${g.id}')"`:''}>
+          <div class="gecmisUstSatir">
+            <span class="gecmisTarihGoster">${esc(g.tarih)}</span>
+            <span style="flex:1;color:#c7cfdb">${esc(g.aciklama) || '—'}</span>
+            ${malzemeVar ? `<span class="okBuyuk" style="transform:${acik?'rotate(90deg)':'none'}">›</span>` : ''}
+          </div>`;
+        if (acik && malzemeVar) {
+          h += `<div class="gecmisMalzemeListesi">
+            <div class="kartBaslik" style="margin-bottom:8px">Kullanılan malzemeler</div>
+            ${g.malzemeler.map(x => `<div class="gecmisMalzemeSatir"><span>${esc(x.ad)}</span><span style="font-family:'IBM Plex Mono',monospace;color:#8996a8">× ${esc(x.adet)}</span></div>`).join('')}
+          </div>`;
+        }
+        h += `</div>`;
+      }
+    });
+    h += `</div>`;
+    el.innerHTML = h;
+    return;
+  }
+
+  if (ui.view === "rapor") {
+    const t = state.tesisler.find(x => x.id === raporForm.tesisId);
+    const m = t?.makineler.find(x => x.id === raporForm.makineId);
+
+    let h = `<div class="pompaAdBaslik">Rapor Ekle</div><div class="altBaslik2" style="margin-bottom:20px">bir tesis / makine / pompa için yapılan işi kaydet</div>`;
+
+    if (ui.mesaj) { h += `<div class="bilgiKutu">${esc(ui.mesaj)}</div>`; ui.mesaj = ""; }
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:10px">Konum</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="flex:1">
+          <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tesis</div>
+          <select class="girdi" onchange="raporTesisSec(this.value)">
+            ${gorunurTesisler().map(x => `<option value="${x.id}" ${x.id===raporForm.tesisId?'selected':''}>${esc(x.ad)}</option>`).join('')}
+          </select>
+        </div>
+        <div style="flex:1">
+          <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Makine</div>
+          <select class="girdi" onchange="raporMakineSec(this.value)">
+            ${(t?.makineler || []).map(x => `<option value="${x.id}" ${x.id===raporForm.makineId?'selected':''}>${esc(x.ad)}</option>`).join('')}
+          </select>
+        </div>
+        <div style="flex:1">
+          <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Pompa</div>
+          <select class="girdi" onchange="raporPompaSec(this.value)">
+            ${(m?.pompalar || []).map(x => `<option value="${x.id}" ${x.id===raporForm.pompaId?'selected':''}>${esc(x.ad)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="width:160px">
+        <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tarih</div>
+        <input class="girdi" placeholder="gg.aa.yyyy" value="${esc(raporForm.tarih)}" onchange="raporAlanGuncelle('tarih', this.value)" />
+      </div>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:10px">Rapor içeriği</div>
+      <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Rapor sebebi</div>
+      <input class="girdi" style="margin-bottom:12px" placeholder="Örn: periyodik bakım, arıza müdahalesi" value="${esc(raporForm.sebep)}" onchange="raporAlanGuncelle('sebep', this.value)" />
+      <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Yapılan iş</div>
+      <textarea class="girdi" rows="4" placeholder="Yapılan işin içeriğini yazın" onchange="raporAlanGuncelle('is', this.value)">${esc(raporForm.is)}</textarea>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslikSatir"><span class="kartBaslik">Kullanılan malzemeler</span><button class="ekleMini ty-btn" onclick="raporMalzemeEkle()">+ malzeme ekle</button></div>`;
+    raporForm.malzemeler.forEach(x => {
+      h += `<div class="parcaSatir">
+        <input class="parcaGirdi" list="malzemeListesi" placeholder="Malzeme adı (örn: 6305 rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
+        <input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
+        <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>raporMalzemeSil('${x.id}'))">×</span>
+      </div>`;
+    });
+    h += `<div class="bosMetin" style="margin-top:8px">Yazmaya başladığında daha önce kullanılmış malzemeler öneri olarak çıkar.</div>`;
+    h += `</div>`;
+
+    h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;
+
+    el.innerHTML = h;
+    return;
+  }
+
+  if (ui.view === "satinalma") {
+    let h = `<div class="saUstSatir">
+      <div><div class="pompaAdBaslik">Satın Almalar</div><div class="altBaslik2">satınalma talep formu formatında kayıt ve takip</div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="eklePrimer ty-btn" onclick="satinAlmaEkle()">+ satın alma ekle</button>
+      </div>
+    </div>`;
+    if (ui.mesaj) { h += `<div class="bilgiKutu">${esc(ui.mesaj)}</div>`; }
+    h += `<input class="girdi saArama" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />`;
+    const tumSayi = state.satinAlmalar.length;
+    const gelenSayi = state.satinAlmalar.filter(s => s.kalemler.length>0 && s.kalemler.every(k=>k.durum==='Geldi')).length;
+    const gelmeyenSayi = state.satinAlmalar.filter(s => s.kalemler.some(k=>k.durum==='Gelmedi')).length;
+    h += `<div class="filtreSatiri">
+      <button class="filtreBtn ${ui.saFiltre==='tumu'?'filtreBtnAktif':''} ty-btn" onclick="saDurumFiltreDegistir('tumu')">Tümü <span class="filtreSayi">${tumSayi}</span></button>
+      <button class="filtreBtn ${ui.saFiltre==='gelen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Geldi}" onclick="saDurumFiltreDegistir('gelen')">Gelenler <span class="filtreSayi">${gelenSayi}</span></button>
+      <button class="filtreBtn ${ui.saFiltre==='gelmeyen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Gelmedi}" onclick="saDurumFiltreDegistir('gelmeyen')">Gelmeyenler <span class="filtreSayi">${gelmeyenSayi}</span></button>
+    </div>`;
+    h += `<div id="saListesiKapsayici"></div>`;
+    el.innerHTML = h;
+    saListesiRender();
+    return;
+  }
+
+  if (ui.view === "satinalma-detay") {
+    const sat = state.satinAlmalar.find(x => x.id === ui.saSecim);
+    if (!sat) { ui.view = "satinalma"; renderAna(); return; }
+    const baslikAlan = (etiket, key, genislik) => `
+      <div style="${genislik?`width:${genislik}px`:'flex:1'}">
+        <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}</div>
+        ${ui.saDuzenle
+          ? `<input class="girdi" value="${esc(sat[key])}" onchange="satinAlmaGuncelle('${sat.id}','${key}',this.value)" />`
+          : `<div class="deger">${esc(sat[key]) || '—'}</div>`}
+      </div>`;
+
+    let h = `<div class="geriDon ty-btn" onclick="satinAlmaGoster()">‹ Satın Almalar listesine dön</div>`;
+    h += `<div class="pompaBaslikSatir">
+      <div class="pompaAdBaslik">${esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi'}</div>
+      <div style="display:flex;gap:8px">
+        <button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
+        <button class="ustBtn ty-btn" style="color:#e2694d" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>
+      </div>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:12px">Satınalma Talep Formu</div>
+      <div style="display:flex;gap:14px;margin-bottom:14px">
+        ${baslikAlan('Geliş Tarihi', 'gelisTarihi', 140)}
+        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo')}
+      </div>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslikSatir">
+        <span class="kartBaslik">Malzemenin Cinsi ve Özellikleri (Ürün)</span>
+        ${ui.saDuzenle?`<button class="ekleMini ty-btn" onclick="saKalemEkle('${sat.id}')">+ satır ekle</button>`:''}
+      </div>
+      <div class="kalemBaslikSatir">
+        <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="flex:1">Miktar</span><span style="flex:1">Birim</span><span style="width:120px">Teslim Tarihi</span><span style="width:90px">Durum</span><span style="width:20px"></span>
+      </div>
+      ${sat.kalemler.map((k, i) => `
+        <div class="kalemSatir">
+          <span class="kalemNo">${i+1}</span>
+          ${urunKritikMi(k.urun) ? `<span class="kritikSolukNokta" title="Bu ürün kritik stokta">●</span>` : ''}
+          ${ui.saDuzenle ? `
+            <input class="parcaGirdi" style="flex:2" list="malzemeListesi" placeholder="Ürün adı" value="${esc(k.urun)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','urun',this.value)" />
+            <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
+            <input class="parcaGirdi" style="flex:1" placeholder="Birim" value="${esc(k.birim)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)" />
+            <input class="parcaGirdi" style="width:120px;flex:none" placeholder="gg.aa.yyyy" value="${esc(k.teslimTarihi)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','teslimTarihi',this.value)" />
+          ` : `
+            <span style="flex:2;color:#e6edf3">${esc(k.urun) || '—'}</span>
+            <span style="flex:1;color:#8996a8">${esc(k.miktar) || '—'}</span>
+            <span style="flex:1;color:#8996a8">${esc(k.birim) || '—'}</span>
+            <span style="width:120px;color:#8996a8;font-family:'IBM Plex Mono',monospace">${esc(k.teslimTarihi) || '—'}</span>
+          `}
+          <button class="ty-btn" style="width:90px;flex:none;background:${durumRenk[k.durum]}1a;color:${durumRenk[k.durum]};font-weight:600;border:1px solid ${durumRenk[k.durum]}55;border-radius:6px;padding:6px 0;font-size:11.5px" onclick="saKalemDurumDegistir('${sat.id}','${k.id}')">${k.durum}</button>
+          ${ui.saDuzenle ? `<span class="silIkon" style="width:20px" onclick="silOnayla('Ürünü Sil', ()=>saKalemSil('${sat.id}','${k.id}'))">×</span>` : `<span style="width:20px"></span>`}
+        </div>`).join('')}
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslikSatir">
+        <span class="kartBaslik">Kullanıldığı Yer</span>
+        ${ui.saDuzenle?`<button class="ekleMini ty-btn" onclick="saYerEkle('${sat.id}')">+ satır ekle</button>`:''}
+      </div>
+      ${sat.yerler.map((y, i) => `
+        <div class="kalemSatir">
+          <span class="kalemNo">${i+1}</span>
+          ${ui.saDuzenle
+            ? `<select class="parcaGirdi" style="flex:1" onchange="saYerGuncelle('${sat.id}','${y.id}',this.value)">
+                 <option value="">— tesis seç —</option>
+                 ${gorunurTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+               </select>
+               <span class="silIkon" style="width:20px" onclick="silOnayla('Satırı Sil', ()=>saYerSil('${sat.id}','${y.id}'))">×</span>`
+            : `<span style="flex:1;color:#c7cfdb">${esc(y.ad) || '—'}</span>`}
+        </div>`).join('')}
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:12px">Sipariş Bilgileri</div>
+      <div>${baslikAlan('Sipariş Edilmesi İstenen Firma / Firmalar', 'firma')}</div>
+    </div>`;
+
+    h += `<div class="bosMetin">Kayıt zamanı: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
+
+    el.innerHTML = h;
+  }
+}
+</script>
+</body>
+</html>
