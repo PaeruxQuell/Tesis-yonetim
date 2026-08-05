@@ -530,7 +530,7 @@ function bekleyenStokKalemleri(tesisAdi){
   state.satinAlmalar.forEach(sat => {
     if (!(sat.yerler || []).some(y => y.ad === tesisAdi)) return;
     (sat.kalemler || []).forEach(k => {
-      if (!k.stokaAktarildi && k.urun && k.urun.trim()) {
+      if (!k.stokaAktarildi && k.durum === "Geldi" && k.urun && k.urun.trim()) {
         sonuc.push({ satId: sat.id, kalemId: k.id, urun: k.urun, miktar: k.miktar, birim: k.birim });
       }
     });
