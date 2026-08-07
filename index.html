@@ -416,7 +416,7 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <span class="kullaniciRozeti" id="kullaniciRozeti"></span>
-      <button class="ustBtn ty-btn" onclick="malzemeListesiGoster()">Kullanılan Malzemeler</button>
+      <button class="ustBtn ty-btn" id="malzemelerBtn" onclick="malzemeListesiGoster()">Kullanılan Malzemeler</button>
       <button class="ustBtn ty-btn" onclick="ayarlarGoster()">⚙ Ayarlar</button>
       <button class="ustBtn ty-btn" onclick="cikisYap()">Çıkış yap</button>
     </div>
@@ -596,6 +596,7 @@ const veriRef = db.collection("veri").doc("ana");
 let mevcutKullanici = null;
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
+let mevcutIzinler = null;
 let dinleyiciBaslatildi = false;
 
 function adminMi(){ return mevcutRol === "yonetici"; }
@@ -634,10 +635,12 @@ async function kullaniciRoluAyarla(user){
     mevcutRol = hepsi.empty ? "yonetici" : "personel";
     await ref.set({ eposta: user.email, rol: mevcutRol });
     mevcutTesisErisimi = null;
+    mevcutIzinler = null;
   } else {
     mevcutRol = snap.data().rol || "personel";
     const liste = snap.data().tesisErisimi;
     mevcutTesisErisimi = Array.isArray(liste) && liste.length > 0 ? liste : null;
+    mevcutIzinler = snap.data().izinler || null;
   }
 }
 function tarayiciAdi(){
@@ -679,7 +682,7 @@ function malzemeListesindenSil(id){
   state.malzemeGecmisi = state.malzemeGecmisi.filter(x => x.id !== id);
   saveData(); render();
 }
-function malzemeListesiGoster(){ ui.view = "malzemeler"; render(); }
+function malzemeListesiGoster(){ if (!izinVar('kullanilanMalzemeler')) return; ui.view = "malzemeler"; render(); }
 
 /* ---------------- son işlemler ---------------- */
 function kaydetIslem(aciklama, hedef){
@@ -708,7 +711,7 @@ function islemeGitById(id){
 }
 
 /* ---------------- stok ---------------- */
-function stokGoster(){ ui.view = "stok"; render(); }
+function stokGoster(){ if (!izinVar('stokListesi')) return; ui.view = "stok"; render(); }
 function stokDuzenleAcKapat(){ ui.stokDuzenle = !ui.stokDuzenle; render(); }
 function stokTesisAcKapat(id){ ui.stokAcikTesis.has(id) ? ui.stokAcikTesis.delete(id) : ui.stokAcikTesis.add(id); render(); }
 function stokDepoAcKapat(id){ ui.stokAcikDepo.has(id) ? ui.stokAcikDepo.delete(id) : ui.stokAcikDepo.add(id); render(); }
@@ -763,7 +766,7 @@ function tesisKritikMi(t){
   return (t.depolar || []).some(d => (d.urunler || []).some(u => u.kritikTakip && (parseFloat(u.miktar) || 0) <= (parseFloat(u.kritikEsik) || 0)));
 }
 function kritikTesisAdlari(){
-  return state.tesisler.filter(tesisKritikMi).map(t => t.ad);
+  return kapsamTesisler().filter(tesisKritikMi).map(t => t.ad);
 }
 function urunKritikMi(ad){
   if (!ad) return false;
@@ -938,7 +941,7 @@ function aramaSonucunaGit(i){
   hedefeGit(hedef);
 }
 function kayitlarGoster(){ if (!adminMi()) return; ayarlarGoster(); }
-function bakimGoster(){ ui.view = "bakim"; render(); }
+function bakimGoster(){ if (!izinVar('periyodikBakim')) return; ui.view = "bakim"; render(); }
 function bakimTesisAcKapat(id){ ui.bakimAcikTesis.has(id) ? ui.bakimAcikTesis.delete(id) : ui.bakimAcikTesis.add(id); render(); }
 function bakimMakineAcKapat(id){ ui.bakimAcikMakine.has(id) ? ui.bakimAcikMakine.delete(id) : ui.bakimAcikMakine.add(id); render(); }
 function bakimPompaAcKapat(id){ ui.bakimAcikPompa.has(id) ? ui.bakimAcikPompa.delete(id) : ui.bakimAcikPompa.add(id); render(); }
@@ -1014,7 +1017,7 @@ function bakimDurum(b){
 }
 function tumBakimlar(){
   const sonuc = [];
-  state.tesisler.forEach(t => (t.makineler || []).forEach(m => {
+  kapsamTesisler().forEach(t => (t.makineler || []).forEach(m => {
     (m.bakimlar || []).forEach(b => {
       if (!b.ad) return;
       sonuc.push({ tesisId: t.id, makineId: m.id, tesis: t.ad, makine: m.ad, bakim: b, durum: bakimDurum(b) });
@@ -1044,6 +1047,28 @@ function erisilenTesisler(){
   const liste = gorunurTesisler();
   if (adminMi() || !mevcutTesisErisimi) return liste;
   return liste.filter(t => mevcutTesisErisimi.includes(t.id));
+}
+function kapsamTesisler(){
+  if (adminMi() || !mevcutTesisErisimi) return state.tesisler;
+  return state.tesisler.filter(t => mevcutTesisErisimi.includes(t.id));
+}
+function erisilenTesisAdlari(){ return new Set(erisilenTesisler().map(t => t.ad)); }
+function izinVar(ad){
+  if (adminMi()) return true;
+  if (!mevcutIzinler) return true;
+  return mevcutIzinler[ad] !== false;
+}
+function islemGorunurMu(islem){
+  if (adminMi() || !mevcutTesisErisimi) return true;
+  const tId = islem.hedef && islem.hedef.tesisId;
+  if (!tId) return true;
+  return mevcutTesisErisimi.includes(tId);
+}
+function satinAlmaGorunurMu(sat){
+  if (adminMi() || !mevcutTesisErisimi) return true;
+  if (!sat.yerler || sat.yerler.length === 0) return true;
+  const adlar = erisilenTesisAdlari();
+  return sat.yerler.some(y => adlar.has(y.ad));
 }
 
 /* ---------------- kişiye özel sıralama (localStorage) ---------------- */
@@ -1156,6 +1181,15 @@ function kullaniciTesisErisimiDegistir(kullaniciId, tesisId){
     render();
   }).catch(err => { console.error(err); toastGoster("Erişim güncellenemedi.", "hata"); });
 }
+function kullaniciIzinDegistir(kullaniciId, izinAdi){
+  const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (!k) return;
+  const mevcut = { ...(k.izinler || {}) };
+  mevcut[izinAdi] = mevcut[izinAdi] === false ? true : false;
+  db.collection("kullanicilar").doc(kullaniciId).update({ izinler: mevcut }).then(() => {
+    k.izinler = mevcut;
+    render();
+  }).catch(err => { console.error(err); toastGoster("İzin güncellenemedi.", "hata"); });
+}
 function tesisGizleDegistir(tesisId){
   const t = state.tesisler.find(x => x.id === tesisId); if (!t) return;
   t.gizli = !t.gizli;
@@ -1200,11 +1234,12 @@ async function girisiTamamla(user){
   document.getElementById("girisEkrani").style.display = "none";
   document.getElementById("uygulama").style.display = "flex";
   document.getElementById("kullaniciRozeti").textContent = `${user.email} (${mevcutRol === "yonetici" ? "Yönetici" : "Personel"})`;
+  document.getElementById("malzemelerBtn").style.display = izinVar("kullanilanMalzemeler") ? "" : "none";
   document.getElementById("anaPanel").innerHTML = `<div class="yukleniyorKutu"><div class="spinner"></div><div>Veriler yükleniyor...</div></div>`;
   veriDinlemeyeBasla();
 }
 function girisEkraniniGoster(){
-  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; dinleyiciBaslatildi = false; state = null;
+  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; dinleyiciBaslatildi = false; state = null;
   document.getElementById("uygulama").style.display = "none";
   document.getElementById("girisEkrani").style.display = "flex";
   document.getElementById("girisSifre").value = "";
@@ -1339,7 +1374,8 @@ function duzenleAcKapat(){ ui.duzenle = !ui.duzenle; render(); }
 /* ---------------- rapor ekle ---------------- */
 let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", adet: 1 }] };
 function raporGoster(){
-  raporForm = { tesisId: state.tesisler[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", adet: 1 }] };
+  if (!izinVar('raporEkle')) return;
+  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", adet: 1 }] };
   if (raporForm.tesisId) {
     const t = state.tesisler.find(x => x.id === raporForm.tesisId);
     raporForm.makineId = t?.makineler[0]?.id || "";
@@ -1420,7 +1456,7 @@ function satinAlmaSil(id){
   if (sat) kaydetIslem(`Satın alma talebi silindi: ${sat.siparisNo || 'sipariş no yok'}`, { view: "anasayfa" });
   saveData(); render();
 }
-function satinAlmaGoster(){ ui.view = "satinalma"; ui.saArama = ""; render(); }
+function satinAlmaGoster(){ if (!izinVar('satinAlmalar')) return; ui.view = "satinalma"; ui.saArama = ""; render(); }
 function satinAlmaSec(id){ ui.saSecim = id; ui.saDuzenle = false; ui.view = "satinalma-detay"; render(); }
 function satinAlmaDuzenleAcKapat(){ ui.saDuzenle = !ui.saDuzenle; render(); }
 function saAramaGuncelle(deger){ ui.saArama = deger; saListesiRender(); }
@@ -1460,12 +1496,12 @@ function saYerGuncelle(satId, yerId, deger){
 }
 
 function saTumKalemler(){
-  return state.satinAlmalar.flatMap(s => s.kalemler.map(k => ({ ...k, satId: s.id })));
+  return state.satinAlmalar.filter(satinAlmaGorunurMu).flatMap(s => s.kalemler.map(k => ({ ...k, satId: s.id })));
 }
 function saDurumFiltreDegistir(f){ ui.saFiltre = f; render(); }
 function saFiltreliListe(){
   const q = (ui.saArama || "").trim().toLowerCase();
-  let liste = state.satinAlmalar;
+  let liste = state.satinAlmalar.filter(satinAlmaGorunurMu);
   if (q) {
     liste = liste.filter(s =>
       [s.siparisNo, s.firma,
@@ -1551,7 +1587,7 @@ function islemBadge(aciklama){
 function renderSag(){
   const el = document.getElementById("sagMenu");
   if (!el) return;
-  const liste = (state.sonIslemler || []).slice(0, 10);
+  const liste = (state.sonIslemler || []).filter(islemGorunurMu).slice(0, 10);
   let h = `<div class="solBaslikSatir" style="padding-top:6px"><span class="solBaslik">Son İşlemler</span></div>`;
   if (liste.length === 0) {
     h += `<div class="bosMetin" style="padding:14px">Henüz bir işlem yapılmadı.</div>`;
@@ -1599,7 +1635,8 @@ function renderSol(){
   let h = `
     <div class="satinAlmaNav ${ui.view==='anasayfa'?'satinAlmaNavAktif':''} ty-btn" onclick="anaSayfaGoster()">
       <span>🏠 Ana Sayfa</span>
-    </div>
+    </div>`;
+  if (izinVar('stokListesi')) h += `
     <div class="satinAlmaNav ${ui.view==='stok'?'satinAlmaNavAktif':''} ty-btn" onclick="stokGoster()">
       <span>📦 Stok Listesi</span>
     </div>`;
@@ -1607,19 +1644,21 @@ function renderSol(){
     const metin = `⚠ Kritik stok: ${kritikTesisler.join(' • ')}`;
     h += `<div class="kritikMarquee"><div class="kritikMarqueeIc">${esc(metin)} &nbsp;&nbsp;•&nbsp;&nbsp; ${esc(metin)}</div></div>`;
   }
-  h += `
+  if (izinVar('satinAlmalar')) h += `
     <div class="satinAlmaNav ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'satinAlmaNavAktif':''} ty-btn" onclick="satinAlmaGoster()">
       <span>🛒 Satın Almalar</span>
       ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
-    </div>
+    </div>`;
+  if (izinVar('raporEkle')) h += `
     <div class="satinAlmaNav ${ui.view==='rapor'?'satinAlmaNavAktif':''} ty-btn" onclick="raporGoster()">
       <span>📝 Rapor ekle</span>
-    </div>
+    </div>`;
+  if (izinVar('periyodikBakim')) h += `
     <div class="satinAlmaNav ${ui.view==='bakim'?'satinAlmaNavAktif':''} ty-btn" onclick="bakimGoster()">
       <span>🔧 Periyodik Bakım</span>
       ${bakimUyariSayisi() > 0 ? `<span class="rozet">${bakimUyariSayisi()}</span>` : ''}
     </div>`;
-  {
+  if (izinVar('periyodikBakim')) {
     const bakimTesisleri = bakimUyariTesisAdlari();
     if (bakimTesisleri.gecti.length > 0 || bakimTesisleri.yaklasan.length > 0) {
       const parcalar = [];
@@ -1899,10 +1938,22 @@ function renderAna(){
             </div>
             <div class="bosMetin">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>`;
           if (k.rol !== 'yonetici') {
+            const kIzinler = k.izinler || {};
+            const izinListesi = [
+              { anahtar: 'stokListesi', etiket: '📦 Stok Listesi (kritik stok, depo)' },
+              { anahtar: 'satinAlmalar', etiket: '🛒 Satın Almalar' },
+              { anahtar: 'raporEkle', etiket: '📝 Rapor Ekle' },
+              { anahtar: 'periyodikBakim', etiket: '🔧 Periyodik Bakım' },
+              { anahtar: 'kullanilanMalzemeler', etiket: '🧾 Kullanılan Malzemeler' },
+            ];
             h += `<div style="margin-top:4px">
               <div class="bosMetin" style="margin-bottom:6px">Görebileceği tesisler ${kErisimi.length===0?'<b style="color:var(--yazi-dim)">(hiçbiri seçilmedi = tümünü görür)</b>':''}</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
                 ${state.tesisler.map(t => `<button class="ty-btn tesisErisimBtn ${kErisimi.includes(t.id)?'tesisErisimBtnAktif':''}" onclick="kullaniciTesisErisimiDegistir('${k.id}','${t.id}')">${esc(t.ad)}</button>`).join('')}
+              </div>
+              <div class="bosMetin" style="margin-bottom:6px">Görebileceği bölümler</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${izinListesi.map(iz => `<button class="ty-btn tesisErisimBtn ${kIzinler[iz.anahtar]!==false?'tesisErisimBtnAktif':''}" onclick="kullaniciIzinDegistir('${k.id}','${iz.anahtar}')">${iz.etiket}</button>`).join('')}
               </div>
             </div>`;
           }
@@ -1971,7 +2022,8 @@ function renderAna(){
   }
 
   if (ui.view === "anasayfa") {
-    const kritikSayisi = state.tesisler.reduce((top, t) => top + (t.depolar||[]).reduce((d, dep) => d + (dep.urunler||[]).filter(u => u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)).length, 0), 0);
+    const kapsam = kapsamTesisler();
+    const kritikSayisi = kapsam.reduce((top, t) => top + (t.depolar||[]).reduce((d, dep) => d + (dep.urunler||[]).filter(u => u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)).length, 0), 0);
     const bekleyenSatinAlma = saTumKalemler().filter(k => k.durum === "Gelmedi").length;
     const bekleyenBakim = bakimUyariSayisi();
 
@@ -2020,7 +2072,7 @@ function renderAna(){
 
     h += `<div class="kart">
       <div class="kartBaslik" style="margin-bottom:10px">Son İşlemler</div>`;
-    const sonlar = (state.sonIslemler || []).slice(0, 15);
+    const sonlar = (state.sonIslemler || []).filter(islemGorunurMu).slice(0, 15);
     if (sonlar.length === 0) h += `<div class="bosMetin">Henüz bir işlem yapılmadı.</div>`;
     sonlar.forEach(islem => {
       const rozet = islemBadge(islem.aciklama);
