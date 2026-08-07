@@ -324,6 +324,8 @@
   .ayarSatiri:first-child { border-top: none; }
   .ayarToggleBtn { flex-shrink: 0; background: transparent; color: var(--yazi-dim); border: 1px solid var(--sinir2); border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; }
   .ayarToggleAktif { color: var(--yesil); border-color: rgba(var(--yesil-rgb),0.33); background: rgba(var(--yesil-rgb),0.10); }
+  .tesisErisimBtn { background: var(--bg-yuzey2); color: var(--yazi-dim); border: 1px solid var(--sinir2); border-radius: 16px; padding: 5px 12px; font-size: 12px; font-weight: 500; }
+  .tesisErisimBtnAktif { color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.5); background: rgba(var(--vurgu-rgb),0.12); }
   .modalOverlay {
     position: fixed; inset: 0; background: rgba(6,8,11,0.72); z-index: 1000;
     display: flex; align-items: center; justify-content: center;
@@ -548,7 +550,7 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -593,6 +595,7 @@ const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
 let mevcutRol = "personel";
+let mevcutTesisErisimi = null;
 let dinleyiciBaslatildi = false;
 
 function adminMi(){ return mevcutRol === "yonetici"; }
@@ -630,8 +633,11 @@ async function kullaniciRoluAyarla(user){
     const hepsi = await db.collection("kullanicilar").get();
     mevcutRol = hepsi.empty ? "yonetici" : "personel";
     await ref.set({ eposta: user.email, rol: mevcutRol });
+    mevcutTesisErisimi = null;
   } else {
     mevcutRol = snap.data().rol || "personel";
+    const liste = snap.data().tesisErisimi;
+    mevcutTesisErisimi = Array.isArray(liste) && liste.length > 0 ? liste : null;
   }
 }
 function tarayiciAdi(){
@@ -867,7 +873,7 @@ function genelAramaGuncelle(sorgu){
 }
 function genelAramaSonuclariHesapla(q){
   const sonuc = [];
-  state.tesisler.forEach(t => {
+  erisilenTesisler().forEach(t => {
     if (t.ad.toLowerCase().includes(q)) sonuc.push({ tip: "Tesis", baslik: t.ad, alt: "", hedef: { view: "tesis-vurgula", tesisId: t.id } });
     (t.makineler || []).forEach(m => {
       if (m.ad.toLowerCase().includes(q)) sonuc.push({ tip: "Makine", baslik: m.ad, alt: t.ad, hedef: { view: "tesis-vurgula", tesisId: t.id, makineId: m.id } });
@@ -1034,6 +1040,11 @@ function bakimUyariTesisAdlari(){
 
 /* ---------------- görünürlük ayarları ---------------- */
 function gorunurTesisler(){ return state.tesisler.filter(t => !t.gizli); }
+function erisilenTesisler(){
+  const liste = gorunurTesisler();
+  if (adminMi() || !mevcutTesisErisimi) return liste;
+  return liste.filter(t => mevcutTesisErisimi.includes(t.id));
+}
 
 /* ---------------- kişiye özel sıralama (localStorage) ---------------- */
 function siraOku(){
@@ -1048,7 +1059,7 @@ function siraliListe(idler, kayitliSira){
 }
 function siraliTesisler(){
   const sira = siraOku();
-  const idler = gorunurTesisler().map(t => t.id);
+  const idler = erisilenTesisler().map(t => t.id);
   const idSirasi = siraliListe(idler, sira.tesisler);
   const harita = {}; state.tesisler.forEach(t => harita[t.id] = t);
   return idSirasi.map(id => harita[id]).filter(Boolean);
@@ -1063,7 +1074,7 @@ function siraliMakineler(tesisId, makineler){
 function siralamaModuAcKapat(){ ui.siralaModu = !ui.siralaModu; render(); }
 function tesisTasi(tesisId, yon){
   const sira = siraOku();
-  const liste = siraliListe(gorunurTesisler().map(t => t.id), sira.tesisler);
+  const liste = siraliListe(erisilenTesisler().map(t => t.id), sira.tesisler);
   const i = liste.indexOf(tesisId), j = i + yon;
   if (i < 0 || j < 0 || j >= liste.length) return;
   [liste[i], liste[j]] = [liste[j], liste[i]];
@@ -1119,6 +1130,7 @@ function lambaTikla(){
   }
 }
 
+function sistemKayitlariAcKapat(){ ui.sistemKayitlariAcik = !ui.sistemKayitlariAcik; render(); }
 function ayarlarGoster(){
   ui.view = "ayarlar"; render();
   if (adminMi()) {
@@ -1133,6 +1145,16 @@ function kullaniciRoluDegistir(kullaniciId, yeniRol){
     const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (k) k.rol = yeniRol;
     render();
   }).catch(err => console.error(err));
+}
+function kullaniciTesisErisimiDegistir(kullaniciId, tesisId){
+  const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (!k) return;
+  const mevcut = Array.isArray(k.tesisErisimi) ? k.tesisErisimi.slice() : [];
+  const idx = mevcut.indexOf(tesisId);
+  if (idx === -1) mevcut.push(tesisId); else mevcut.splice(idx, 1);
+  db.collection("kullanicilar").doc(kullaniciId).update({ tesisErisimi: mevcut }).then(() => {
+    k.tesisErisimi = mevcut;
+    render();
+  }).catch(err => { console.error(err); toastGoster("Erişim güncellenemedi.", "hata"); });
 }
 function tesisGizleDegistir(tesisId){
   const t = state.tesisler.find(x => x.id === tesisId); if (!t) return;
@@ -1182,7 +1204,7 @@ async function girisiTamamla(user){
   veriDinlemeyeBasla();
 }
 function girisEkraniniGoster(){
-  mevcutKullanici = null; mevcutRol = "personel"; dinleyiciBaslatildi = false; state = null;
+  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; dinleyiciBaslatildi = false; state = null;
   document.getElementById("uygulama").style.display = "none";
   document.getElementById("girisEkrani").style.display = "flex";
   document.getElementById("girisSifre").value = "";
@@ -1714,7 +1736,7 @@ function renderAna(){
       <button class="${ui.stokDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="stokDuzenleAcKapat()">${ui.stokDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
     </div>`;
     h += `<div style="height:8px"></div>`;
-    gorunurTesisler().forEach(t => {
+    erisilenTesisler().forEach(t => {
       const acik = ui.stokAcikTesis.has(t.id);
       const kritik = tesisKritikMi(t);
       const bekleyenler = bekleyenStokKalemleri(t.ad);
@@ -1866,6 +1888,7 @@ function renderAna(){
       } else {
         kullanicilarListesi.forEach(k => {
           const benMi = mevcutKullanici && k.id === mevcutKullanici.uid;
+          const kErisimi = Array.isArray(k.tesisErisimi) ? k.tesisErisimi : [];
           h += `<div class="ayarSatiri" style="flex-direction:column;align-items:stretch;gap:6px">
             <div style="display:flex;align-items:center;gap:10px">
               <span style="flex:1;color:var(--yazi)">${esc(k.eposta)}${benMi?' (siz)':''}</span>
@@ -1874,32 +1897,47 @@ function renderAna(){
                 <option value="yonetici" ${k.rol==='yonetici'?'selected':''}>Yönetici</option>
               </select>
             </div>
-            <div class="bosMetin">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>
-          </div>`;
+            <div class="bosMetin">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>`;
+          if (k.rol !== 'yonetici') {
+            h += `<div style="margin-top:4px">
+              <div class="bosMetin" style="margin-bottom:6px">Görebileceği tesisler ${kErisimi.length===0?'<b style="color:var(--yazi-dim)">(hiçbiri seçilmedi = tümünü görür)</b>':''}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${state.tesisler.map(t => `<button class="ty-btn tesisErisimBtn ${kErisimi.includes(t.id)?'tesisErisimBtnAktif':''}" onclick="kullaniciTesisErisimiDegistir('${k.id}','${t.id}')">${esc(t.ad)}</button>`).join('')}
+              </div>
+            </div>`;
+          }
+          h += `</div>`;
         });
       }
       h += `</div>`;
       h += `<div class="bosMetin" style="margin-bottom:20px">Yeni kullanıcı eklemek için Firebase Console → Authentication → Add user yolunu kullanın. Yeni kullanıcı ilk giriş yaptığında otomatik olarak "Personel" yetkisiyle burada listelenir.</div>`;
 
       h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">Sistem Kayıtları</div>
-        <div class="bosMetin" style="margin-bottom:12px">Tüm ekleme, silme ve onay işlemlerinin günlüğü — sadece yöneticiler görür.</div>
+        <div class="kartBaslikSatir ty-btn" style="cursor:pointer;margin-bottom:0" onclick="sistemKayitlariAcKapat()">
+          <span class="kartBaslik">Sistem Kayıtları ${state.sonIslemler&&state.sonIslemler.length?`<span class="bosMetin" style="display:inline;font-style:normal">(${state.sonIslemler.length})</span>`:''}</span>
+          <span class="okBuyuk" style="transform:${ui.sistemKayitlariAcik?'rotate(90deg)':'none'}">›</span>
+        </div>`;
+      if (ui.sistemKayitlariAcik) {
+        h += `<div class="acilirIcerik">
+        <div class="bosMetin" style="margin:12px 0">Tüm ekleme, silme ve onay işlemlerinin günlüğü — sadece yöneticiler görür.</div>
         <div class="tabloSarici"><div class="tabloBaslikSatir">
           <span style="width:96px">Tür</span><span style="flex:1">İşlem</span><span style="width:170px">Kullanıcı</span><span style="width:110px">Tarih</span><span style="width:70px">Saat</span>
         </div>`;
-      const kayitlar = state.sonIslemler || [];
-      if (kayitlar.length === 0) h += `<div class="bosMetin" style="padding:16px">Henüz kayıt yok.</div>`;
-      kayitlar.forEach(k => {
-        const rozet = islemBadge(k.aciklama);
-        h += `<div class="tabloSatir ty-satir" style="border-left:3px solid ${rozet.renk}">
-          <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
-          <span style="flex:1;color:var(--yazi-ikincil)">${esc(k.aciklama)}</span>
-          <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
-          <span style="width:110px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.tarih)}</span>
-          <span style="width:70px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.saat)}</span>
-        </div>`;
-      });
-      h += `</div></div>`;
+        const kayitlar = state.sonIslemler || [];
+        if (kayitlar.length === 0) h += `<div class="bosMetin" style="padding:16px">Henüz kayıt yok.</div>`;
+        kayitlar.forEach(k => {
+          const rozet = islemBadge(k.aciklama);
+          h += `<div class="tabloSatir ty-satir" style="border-left:3px solid ${rozet.renk}">
+            <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
+            <span style="flex:1;color:var(--yazi-ikincil)">${esc(k.aciklama)}</span>
+            <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
+            <span style="width:110px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.tarih)}</span>
+            <span style="width:70px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.saat)}</span>
+          </div>`;
+        });
+        h += `</div></div>`;
+      }
+      h += `</div>`;
     }
 
     anaPanelYaz(h);
@@ -2004,7 +2042,7 @@ function renderAna(){
   if (ui.view === "bakim") {
     let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Periyodik Bakım</div>
       <div class="altBaslik2" style="margin-bottom:20px">tesis ve makine bazında bakım planı</div>`;
-    gorunurTesisler().forEach(t => {
+    erisilenTesisler().forEach(t => {
       const acik = ui.bakimAcikTesis.has(t.id);
       const tesisBakimlari = tumBakimlar().filter(x => x.tesisId === t.id);
       const tesisGecti = tesisBakimlari.filter(x => x.durum.durum === 'gecti').length;
@@ -2204,7 +2242,7 @@ function renderAna(){
         <div style="flex:1">
           <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tesis</div>
           <select class="girdi" onchange="raporTesisSec(this.value)">
-            ${gorunurTesisler().map(x => `<option value="${x.id}" ${x.id===raporForm.tesisId?'selected':''}>${esc(x.ad)}</option>`).join('')}
+            ${erisilenTesisler().map(x => `<option value="${x.id}" ${x.id===raporForm.tesisId?'selected':''}>${esc(x.ad)}</option>`).join('')}
           </select>
         </div>
         <div style="flex:1">
@@ -2341,7 +2379,7 @@ function renderAna(){
           ${ui.saDuzenle
             ? `<select class="parcaGirdi" style="flex:1" onchange="saYerGuncelle('${sat.id}','${y.id}',this.value)">
                  <option value="">— tesis seç —</option>
-                 ${gorunurTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+                 ${erisilenTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
                </select>
                <span class="silIkon" style="width:20px" onclick="silOnayla('Satırı Sil', ()=>saYerSil('${sat.id}','${y.id}'))">×</span>`
             : `<span style="flex:1;color:var(--yazi-ikincil)">${esc(y.ad) || '—'}</span>`}
