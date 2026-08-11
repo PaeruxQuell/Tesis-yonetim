@@ -159,21 +159,6 @@ function renderAnaSayfa(){
       h += `</div>`;
     }
 
-    const makineSayisi = kapsam.reduce((n,t)=>n+(t.makineler||[]).length,0);
-    const pompaSayisi = kapsam.reduce((n,t)=>n+(t.makineler||[]).reduce((n2,m)=>n2+(m.pompalar||[]).length,0),0);
-    const depoSayisi = kapsam.reduce((n,t)=>n+(t.depolar||[]).length,0);
-    const bekleyenSatinAlmaAdet = saTumKalemler().filter(k=>k.durum==='Gelmedi').length;
-    h += `<div class="kart">
-      <div class="kartBaslik" style="margin-bottom:12px">Genel Durum</div>
-      <div style="display:flex;flex-wrap:wrap;gap:24px">
-        <div><div style="font-size:22px;font-weight:700;color:var(--yazi)">${kapsam.length}</div><div class="bosMetin" style="margin:0">Tesis</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:var(--yazi)">${makineSayisi}</div><div class="bosMetin" style="margin:0">Makine</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:var(--yazi)">${pompaSayisi}</div><div class="bosMetin" style="margin:0">Pompa</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:var(--yazi)">${depoSayisi}</div><div class="bosMetin" style="margin:0">Depo</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:${bekleyenSatinAlmaAdet>0?'var(--vurgu)':'var(--yazi)'}">${bekleyenSatinAlmaAdet}</div><div class="bosMetin" style="margin:0">Bekleyen Satın Alma Kalemi</div></div>
-      </div>
-    </div>`;
-
     const depoDurumlari = [];
     kapsam.forEach(t => (t.depolar||[]).forEach(d => {
       const kritikSayisiDepo = (d.urunler||[]).filter(u => u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)).length;
