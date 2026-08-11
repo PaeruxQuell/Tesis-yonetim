@@ -665,8 +665,6 @@ function renderUstNav(){
     <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">🔧 Periyodik Bakım
       ${bakimUyariSayisi() > 0 ? `<span class="rozet">${bakimUyariSayisi()}</span>` : ''}
     </div>`;
-  if (izinVar('kullanilanMalzemeler')) h += `
-    <div class="ustNavBtn ${ui.view==='malzemeler'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeListesiGoster()">🧾 Kullanılan Malzeme</div>`;
   if (izinVar('malzemeCikis')) h += `
     <div class="ustNavBtn ${ui.view==='malzemecikis'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeCikisGoster()">📉 Malzeme Kullan</div>`;
   if (izinVar('transfer')) h += `

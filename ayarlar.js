@@ -100,6 +100,18 @@ function renderAyarlar(){
     let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Ayarlar</div>
       <div class="altBaslik2" style="margin-bottom:20px">görmek istemediğiniz tesisleri gizleyebilir, yazı boyutunu ayarlayabilirsiniz</div>`;
 
+    if (izinVar('kullanilanMalzemeler')) {
+      h += `<div class="kart ty-btn" style="cursor:pointer" onclick="malzemeListesiGoster()">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="kartBaslik" style="margin-bottom:4px">🧾 Kullanılan Malzemeler</div>
+            <div class="bosMetin" style="margin:0">Ürün adı, kodu ve birimini içeren malzeme listesini görüntüleyin ve düzenleyin (${state.malzemeGecmisi.length} ürün)</div>
+          </div>
+          <span class="okBuyuk" style="transform:rotate(90deg)">›</span>
+        </div>
+      </div>`;
+    }
+
     h += `<div class="kart">
       <div class="kartBaslik" style="margin-bottom:14px">Yazı Boyutu</div>
       <div style="display:flex;align-items:center;gap:16px">
@@ -249,7 +261,8 @@ function renderAyarlar(){
     return;
 }
 function renderMalzemeler(){
-    let h = `<div class="pompaBaslikSatir">
+    let h = `<div class="bosMetin ty-btn" style="cursor:pointer;margin-bottom:10px;display:inline-block" onclick="ayarlarGoster()">← Ayarlar'a dön</div>`;
+    h += `<div class="pompaBaslikSatir">
       <div>
         <div class="pompaAdBaslik">Kullanılan Malzemeler</div>
         <div class="altBaslik2">daha önce kullanılmış / kayıtlı tüm malzemeler — pompa ve rapor kayıtlarında otomatik tamamlama için kullanılır</div>
