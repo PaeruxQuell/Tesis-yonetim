@@ -403,11 +403,13 @@ function bildirimSil(anahtar){
   bildirimGizlenenler.add(anahtar);
   bildirimGuncelle();
 }
+let bildirimGorulenler = new Set();
 function bildirimGuncelle(){
   const rozet = document.getElementById("canRozet");
   if (!rozet) return;
   const liste = bildirimleriTopla();
-  if (liste.length > 0) { rozet.textContent = liste.length > 99 ? "99+" : liste.length; rozet.style.display = ""; }
+  const yeniSayi = liste.filter(b => !bildirimGorulenler.has(b.anahtar)).length;
+  if (yeniSayi > 0) { rozet.textContent = yeniSayi > 99 ? "99+" : yeniSayi; rozet.style.display = ""; }
   else rozet.style.display = "none";
   if (bildirimPaneliAcik) bildirimPaneliRender();
   if (!ilkBildirimAnimasyonuYapildi) {
@@ -420,7 +422,12 @@ function bildirimPaneliAcKapat(){
   bildirimPaneliAcik = !bildirimPaneliAcik;
   const panel = document.getElementById("bildirimPaneli");
   if (!panel) return;
-  if (bildirimPaneliAcik) { bildirimPaneliRender(); panel.style.display = "block"; }
+  if (bildirimPaneliAcik) {
+    bildirimPaneliRender();
+    panel.style.display = "block";
+    bildirimleriTopla().forEach(b => bildirimGorulenler.add(b.anahtar));
+    bildirimGuncelle();
+  }
   else panel.style.display = "none";
 }
 function bildirimPaneliRender(){
@@ -431,9 +438,10 @@ function bildirimPaneliRender(){
   let h = `<div class="bildirimBaslikSatir">Bildirimler</div>`;
   if (liste.length === 0) h += `<div class="bosMetin" style="padding:14px">Şu an bir bildirim yok.</div>`;
   else liste.forEach((b, i) => {
+    const yeniMi = !bildirimGorulenler.has(b.anahtar);
     h += `<div class="bildirimSatir" onclick="bildirimeTikla(${i})">
-      <span class="bildirimNokta" style="color:${b.renk}">●</span>
-      <span style="flex:1;font-size:12.5px;color:var(--yazi-ikincil)">${esc(b.mesaj)}</span>
+      <span class="bildirimNokta" style="color:${b.renk}">${yeniMi?'●':'○'}</span>
+      <span style="flex:1;font-size:12.5px;color:${yeniMi?'var(--yazi-ikincil)':'var(--yazi-soluk)'}">${esc(b.mesaj)}</span>
       <span class="bildirimSilBtn" title="Bildirimi kaldır" onclick="event.stopPropagation(); bildirimSil('${b.anahtar}')">×</span>
     </div>`;
   });
