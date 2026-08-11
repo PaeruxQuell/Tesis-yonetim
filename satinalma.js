@@ -1,0 +1,265 @@
+function bosKalem(){ return { id: uid(), urun: "", miktar: "", birim: "", gelisTarihi: "", durum: "Gelmedi", stokaAktarildi: false }; }
+function bosYer(){ return { id: uid(), ad: "" }; }
+function bosSatinAlmaKaydi(){
+  return {
+    id: uid(), siparisNo: "", gelisTarihi: bugun(),
+    kalemler: [bosKalem()], yerler: [bosYer()],
+    firma: "",
+    eklenmeTarihi: bugun(), eklenmeSaati: suAn()
+  };
+}
+function satinAlmaEkle(){
+  const yeni = bosSatinAlmaKaydi();
+  state.satinAlmalar.unshift(yeni);
+  kaydetIslem("Yeni satın alma talebi oluşturuldu", { view: "satinalma-detay", satId: yeni.id });
+  saveData();
+  ui.saSecim = yeni.id; ui.saDuzenle = true; ui.view = "satinalma-detay"; render();
+}
+function satinAlmaBul(id){ return state.satinAlmalar.find(x => x.id === id); }
+function satinAlmaGuncelle(id, alan, deger){
+  const s = satinAlmaBul(id); if (s) s[alan] = deger; saveData(); render();
+}
+function satinAlmaSil(id){
+  const sat = satinAlmaBul(id);
+  state.satinAlmalar = state.satinAlmalar.filter(x => x.id !== id);
+  if (ui.saSecim === id) { ui.view = "satinalma"; ui.saSecim = null; }
+  if (sat) kaydetIslem(`Satın alma talebi silindi: ${sat.siparisNo || 'sipariş no yok'}`, { view: "anasayfa" });
+  saveData(); render();
+}
+function satinAlmaGoster(){ if (!izinVar('satinAlmalar')) return; ui.view = "satinalma"; ui.saArama = ""; render(); }
+function satinAlmaSec(id){ ui.saSecim = id; ui.saDuzenle = false; ui.view = "satinalma-detay"; render(); }
+function satinAlmaDuzenleAcKapat(){ ui.saDuzenle = !ui.saDuzenle; render(); }
+function saAramaGuncelle(deger){ ui.saArama = deger; saListesiRender(); }
+
+/* kalemler (ürün satırları) */
+function saKalemEkle(satId){
+  const s = satinAlmaBul(satId); s.kalemler.push(bosKalem());
+  kaydetIslem(`Satın alma kalemi eklendi (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+  saveData(); render();
+}
+function saKalemSil(satId, kalemId){
+  const s = satinAlmaBul(satId);
+  const k = s.kalemler.find(x => x.id === kalemId);
+  s.kalemler = s.kalemler.filter(x => x.id !== kalemId);
+  if (s.kalemler.length === 0) s.kalemler.push(bosKalem());
+  if (k) kaydetIslem(`Satın alma kalemi silindi: ${k.urun || '(isimsiz)'} (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+  saveData(); render();
+}
+function saKalemGuncelle(satId, kalemId, alan, deger){
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
+  if (alan === "urun") malzemeGecmisineEkle(deger);
+  saveData(); render();
+}
+function saKalemDurumDegistir(satId, kalemId){
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
+  if (k.stokaAktarildi) { toastGoster("Bu ürün zaten stoğa eklendi, durumu değiştirilemez.", "hata"); return; }
+  k.durum = k.durum === "Geldi" ? "Gelmedi" : "Geldi";
+  k.gelisTarihi = k.durum === "Geldi" ? bugun() : "";
+  kaydetIslem(`Satın alma durumu değiştirildi: ${k.urun || '(isimsiz)'} → ${k.durum}`, { view: "satinalma-detay", satId: s.id });
+  saveData(); render();
+}
+/* kullanıldığı yer satırları */
+function saYerEkle(satId){
+  const s = satinAlmaBul(satId); s.yerler.push(bosYer());
+  saveData(); render();
+}
+function saYerSil(satId, yerId){
+  const s = satinAlmaBul(satId); s.yerler = s.yerler.filter(x => x.id !== yerId);
+  if (s.yerler.length === 0) s.yerler.push(bosYer());
+  saveData(); render();
+}
+function saYerGuncelle(satId, yerId, deger){
+  const s = satinAlmaBul(satId); const y = s.yerler.find(x => x.id === yerId); if (y) y.ad = deger;
+  saveData(); render();
+}
+
+function saTumKalemler(){
+  return state.satinAlmalar.filter(satinAlmaGorunurMu).flatMap(s => s.kalemler.map(k => ({ ...k, satId: s.id })));
+}
+function saDurumFiltreDegistir(f){ ui.saFiltre = f; render(); }
+function saFiltreliListe(){
+  const q = (ui.saArama || "").trim().toLowerCase();
+  let liste = state.satinAlmalar.filter(satinAlmaGorunurMu);
+  if (q) {
+    liste = liste.filter(s =>
+      [s.siparisNo, s.firma,
+       ...(s.kalemler || []).map(k => k.urun),
+       ...(s.yerler || []).map(y => y.ad)]
+        .some(alan => (alan || "").toLowerCase().includes(q))
+    );
+  }
+  if (ui.saFiltre === "gelen") {
+    liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
+  } else if (ui.saFiltre === "gelmeyen") {
+    liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
+  }
+  return liste;
+}
+function saListesiRender(){
+  const kap = document.getElementById("saListesiKapsayici");
+  if (!kap) return;
+  const liste = saFiltreliListe();
+  let h = `<div class="tabloSarici">`;
+  if (liste.length === 0) {
+    h += `<div class="bosMetin" style="padding:16px">${state.satinAlmalar.length===0 ? "Henüz satın alma kaydı yok. \"+ satın alma ekle\" ile başlayın." : "Aramanla eşleşen bir kayıt bulunamadı."}</div>`;
+  } else {
+    liste.forEach(sat => {
+      const urunler = (sat.kalemler || []).map(k => k.urun).filter(Boolean);
+      const gelenSayi = (sat.kalemler || []).filter(k => k.durum === "Geldi").length;
+      const toplam = (sat.kalemler || []).length;
+      const yerMetni = (sat.yerler || []).map(y => y.ad).filter(Boolean).join(", ");
+      const renk = gelenSayi === toplam ? durumRenk.Geldi : durumRenk.Gelmedi;
+      const renkRgb = gelenSayi === toplam ? durumRenkRgb.Geldi : durumRenkRgb.Gelmedi;
+      h += `<div class="saListeSatir ty-satir" onclick="satinAlmaSec('${sat.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="saListeUrun">${esc(urunler.slice(0,3).join(", ")) || "(ürün adı girilmedi)"}${urunler.length>3?` <span style="color:var(--yazi-soluk)">+${urunler.length-3} diğer</span>`:''}</div>
+          <div class="saListeAltBilgi">${[sat.siparisNo && ('Sipariş No: '+sat.siparisNo), yerMetni].filter(Boolean).map(esc).join(' · ') || '—'}</div>
+        </div>
+        <span class="rozetDurum" style="color:${renk};border-color:rgba(${renkRgb},0.33);background:rgba(${renkRgb},0.1)">${gelenSayi}/${toplam} geldi</span>
+      </div>`;
+    });
+  }
+  h += `</div>`;
+  kap.innerHTML = h;
+}
+
+/* ---------------- yedekleme ---------------- */
+function disaAktar(){
+  const veri = { ...state, olusturma: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `tesis-yedek-${bugun().replaceAll(".", "-")}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function iceAktar(dosya){
+  if (!dosya) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const veri = JSON.parse(reader.result);
+      if (veri.tesisler) state.tesisler = veri.tesisler;
+      if (veri.satinAlmalar) state.satinAlmalar = veri.satinAlmalar;
+      toastGoster("Yedek başarıyla geri yüklendi.", "basari");
+      saveData(); render();
+    } catch(e){ toastGoster("Yedek dosyası okunamadı. Geçerli bir JSON dosyası seçin.", "hata"); }
+  };
+  reader.readAsText(dosya);
+}
+
+/* ---------------- render ---------------- */
+const durumRenk = { Geldi: "var(--yesil)", Gelmedi: "var(--kirmizi2)" };
+const durumRenkRgb = { Geldi: "var(--yesil-rgb)", Gelmedi: "var(--kirmizi2-rgb)" };
+
+
+function renderSatinAlma(){
+    let h = `<div class="saUstSatir">
+      <div><div class="pompaAdBaslik">Satın Almalar</div><div class="altBaslik2">satınalma talep formu formatında kayıt ve takip</div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="eklePrimer ty-btn" onclick="satinAlmaEkle()">+ satın alma ekle</button>
+      </div>
+    </div>`;
+    h += `<input class="girdi saArama" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />`;
+    const tumSayi = state.satinAlmalar.length;
+    const gelenSayi = state.satinAlmalar.filter(s => s.kalemler.length>0 && s.kalemler.every(k=>k.durum==='Geldi')).length;
+    const gelmeyenSayi = state.satinAlmalar.filter(s => s.kalemler.some(k=>k.durum==='Gelmedi')).length;
+    h += `<div class="filtreSatiri">
+      <button class="filtreBtn ${ui.saFiltre==='tumu'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:var(--vurgu);--filtre-bg:rgba(var(--vurgu-rgb),0.12)" onclick="saDurumFiltreDegistir('tumu')">Tümü <span class="filtreSayi">${tumSayi}</span></button>
+      <button class="filtreBtn ${ui.saFiltre==='gelen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Geldi};--filtre-bg:rgba(${durumRenkRgb.Geldi},0.12)" onclick="saDurumFiltreDegistir('gelen')">Gelenler <span class="filtreSayi">${gelenSayi}</span></button>
+      <button class="filtreBtn ${ui.saFiltre==='gelmeyen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Gelmedi};--filtre-bg:rgba(${durumRenkRgb.Gelmedi},0.12)" onclick="saDurumFiltreDegistir('gelmeyen')">Gelmeyenler <span class="filtreSayi">${gelmeyenSayi}</span></button>
+    </div>`;
+    h += `<div id="saListesiKapsayici"></div>`;
+    anaPanelYaz(h);
+    saListesiRender();
+    return;
+}
+function renderSatinAlmaDetay(){
+    const sat = state.satinAlmalar.find(x => x.id === ui.saSecim);
+    if (!sat) { ui.view = "satinalma"; renderAna(); return; }
+    const baslikAlan = (etiket, key, genislik) => `
+      <div style="${genislik?`width:${genislik}px`:'flex:1'}">
+        <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}</div>
+        ${ui.saDuzenle
+          ? `<input class="girdi" value="${esc(sat[key])}" onchange="satinAlmaGuncelle('${sat.id}','${key}',this.value)" />`
+          : `<div class="deger">${esc(sat[key]) || '—'}</div>`}
+      </div>`;
+
+    let h = `<div class="geriDon ty-btn" onclick="satinAlmaGoster()"><span style="font-size:17px;line-height:1">‹</span> Satın Almalar listesine dön</div>`;
+    h += `<div class="pompaBaslikSatir">
+      <div class="pompaAdBaslik">${esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi'}</div>
+      <div style="display:flex;gap:8px">
+        <button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
+        ${adminMi() ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : ''}
+      </div>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:12px">Satınalma Talep Formu</div>
+      <div style="display:flex;gap:14px;margin-bottom:14px">
+        ${baslikAlan('Geliş Tarihi', 'gelisTarihi', 140)}
+        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo')}
+      </div>
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslikSatir">
+        <span class="kartBaslik">Malzemenin Cinsi ve Özellikleri (Ürün)</span>
+        ${ui.saDuzenle?`<button class="ekleMini ty-btn" onclick="saKalemEkle('${sat.id}')">+ satır ekle</button>`:''}
+      </div>
+      <div class="kalemBaslikSatir">
+        <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="flex:1">Miktar</span><span style="flex:1">Birim</span><span style="width:150px">Durum</span><span style="width:20px"></span>
+      </div>
+      ${sat.kalemler.map((k, i) => `
+        <div class="kalemSatir">
+          <span class="kalemNo">${i+1}</span>
+          ${urunKritikMi(k.urun) ? `<span class="kritikSolukNokta" title="Bu ürün kritik stokta">●</span>` : ''}
+          ${ui.saDuzenle ? `
+            <input class="parcaGirdi" style="flex:2" list="malzemeListesi" placeholder="Ürün adı" value="${esc(k.urun)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','urun',this.value)" />
+            <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
+            <input class="parcaGirdi" style="flex:1" placeholder="Birim" value="${esc(k.birim)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)" />
+            <span style="width:150px"></span>
+          ` : `
+            <span style="flex:2;color:var(--yazi)">${esc(k.urun) || '—'}</span>
+            <span style="flex:1;color:var(--yazi-dim)">${esc(k.miktar) || '—'}</span>
+            <span style="flex:1;color:var(--yazi-dim)">${esc(k.birim) || '—'}</span>
+            <span style="width:150px;flex:none">
+              ${k.stokaAktarildi ? `
+                <span style="color:var(--yesil);font-weight:600;font-size:11.5px">✓ Depoya eklendi</span>
+                ${k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'IBM Plex Mono',monospace">${esc(k.gelisTarihi)}</div>` : ''}
+              ` : `
+                <button class="ty-btn" style="width:110px;background:rgba(${durumRenkRgb[k.durum]},0.1);color:${durumRenk[k.durum]};font-weight:600;border:1px solid rgba(${durumRenkRgb[k.durum]},0.33);border-radius:6px;padding:6px 0;font-size:11.5px" onclick="saKalemDurumDegistir('${sat.id}','${k.id}')">${k.durum}</button>
+                ${k.durum==='Geldi' && k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'IBM Plex Mono',monospace;margin-top:2px">${esc(k.gelisTarihi)}</div>` : ''}
+              `}
+            </span>
+          `}
+          ${ui.saDuzenle ? `<span class="silIkon" style="width:20px" onclick="silOnayla('Ürünü Sil', ()=>saKalemSil('${sat.id}','${k.id}'))">×</span>` : `<span style="width:20px"></span>`}
+        </div>`).join('')}
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslikSatir">
+        <span class="kartBaslik">Kullanıldığı Yer</span>
+        ${ui.saDuzenle?`<button class="ekleMini ty-btn" onclick="saYerEkle('${sat.id}')">+ satır ekle</button>`:''}
+      </div>
+      ${sat.yerler.map((y, i) => `
+        <div class="kalemSatir">
+          <span class="kalemNo">${i+1}</span>
+          ${ui.saDuzenle
+            ? `<select class="parcaGirdi" style="flex:1" onchange="saYerGuncelle('${sat.id}','${y.id}',this.value)">
+                 <option value="">— tesis seç —</option>
+                 ${erisilenTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+               </select>
+               <span class="silIkon" style="width:20px" onclick="silOnayla('Satırı Sil', ()=>saYerSil('${sat.id}','${y.id}'))">×</span>`
+            : `<span style="flex:1;color:var(--yazi-ikincil)">${esc(y.ad) || '—'}</span>`}
+        </div>`).join('')}
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:12px">Sipariş Bilgileri</div>
+      <div>${baslikAlan('Sipariş Edilmesi İstenen Firma / Firmalar', 'firma')}</div>
+    </div>`;
+
+    h += `<div class="bosMetin">Kayıt zamanı: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
+
+    anaPanelYaz(h);
+}
