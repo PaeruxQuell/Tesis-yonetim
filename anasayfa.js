@@ -127,15 +127,15 @@ function renderAnaSayfa(){
     h += `<div class="ozetSatiri">
       <div class="ozetKart ${kritikSayisi>0?'ozetKartKirmizi':''} ty-btn" onclick="stokGoster()">
         <div class="ozetSayi" id="ozetKritikSayi">${ozetOnceki.kritik}</div>
-        <div class="ozetEtiket">Kritik Stok</div>
+        <div class="ozetEtiket">📦 Kritik Stok</div>
       </div>
       <div class="ozetKart ${bekleyenSatinAlma>0?'ozetKartAmber':''} ty-btn" onclick="satinAlmaGoster()">
         <div class="ozetSayi" id="ozetSatinAlmaSayi">${ozetOnceki.satinAlma}</div>
-        <div class="ozetEtiket">Bekleyen Satın Alma</div>
+        <div class="ozetEtiket">🛒 Bekleyen Satın Alma</div>
       </div>
       <div class="ozetKart ${bekleyenBakim>0?'ozetKartAmber':''} ty-btn" onclick="bakimGoster()">
         <div class="ozetSayi" id="ozetBakimSayi">${ozetOnceki.bakim}</div>
-        <div class="ozetEtiket">Yaklaşan / Geciken Bakım</div>
+        <div class="ozetEtiket">🔧 Yaklaşan / Geciken Bakım</div>
       </div>
     </div>`;
 
@@ -166,7 +166,7 @@ function renderAnaSayfa(){
     }));
     if (depoDurumlari.length > 0) {
       h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">Depo Durumu</div>`;
+        <div class="kartBaslik" style="margin-bottom:10px;color:var(--kirmizi)">📦 Depo Durumu</div>`;
       depoDurumlari.forEach(dd => {
         h += `<div class="ayarSatiri" style="border-left:3px solid var(--kirmizi);padding-left:11px">
           <span style="flex:1;color:var(--yazi)">${esc(dd.tesis)} / ${esc(dd.depo)}</span>
@@ -179,7 +179,7 @@ function renderAnaSayfa(){
     const sonMalzemeler = sonKullanilanMalzemeler(8);
     if (sonMalzemeler.length > 0) {
       h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">Son Kullanılan Malzemeler</div>`;
+        <div class="kartBaslik" style="margin-bottom:10px;color:var(--yesil)">🧾 Son Kullanılan Malzemeler</div>`;
       sonMalzemeler.forEach(sm => {
         h += `<div class="ayarSatiri ty-btn" onclick="pompaSec('${sm.tesisId}','${sm.makineId}','${sm.pompaId}')">
           <span style="flex:1">

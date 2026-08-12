@@ -370,7 +370,12 @@ function temaDegistir(acikMi){
 }
 function lambaGuncelle(){
   const btn = document.getElementById("lambaBtn");
-  if (btn) btn.classList.toggle("yanik", temaOku() === "acik");
+  const acikMi = temaOku() === "acik";
+  if (btn) btn.classList.toggle("yanik", acikMi);
+  const ikon = document.getElementById("lambaIkon");
+  const metin = document.getElementById("lambaMetin");
+  if (ikon) ikon.textContent = acikMi ? "☀️" : "🌙";
+  if (metin) metin.textContent = acikMi ? "Açık Tema" : "Koyu Tema";
 }
 
 /* ---------------- bildirimler ---------------- */
@@ -606,7 +611,7 @@ function renderSag(){
   } else {
     liste.forEach(islem => {
       const rozet = islemBadge(islem.aciklama);
-      h += `<div class="islemSatir ty-node" onclick="islemeGitById('${islem.id}')">
+      h += `<div class="islemSatir ty-node" style="border-left:3px solid ${rozet.renk};background:rgba(${rozet.renkRgb},0.045)" onclick="islemeGitById('${islem.id}')">
         <span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4)">${rozet.etiket}</span>
         <div class="islemAciklama">${esc(aciklamaGoster(islem.aciklama))}</div>
         <div class="islemZaman">${esc(islem.tarih)} · ${esc(islem.saat)}</div>
@@ -651,24 +656,25 @@ function enterIleKaydet(e){ if (e.key === "Enter") e.target.blur(); if (e.key ==
 function renderUstNav(){
   const el = document.getElementById("ustNav");
   if (!el) return;
+  const ikon = (emoji, renkVar) => `<span class="navIkon" style="background:rgba(var(--${renkVar}-rgb),.16);color:var(--${renkVar})">${emoji}</span>`;
   let h = `
-    <div class="ustNavBtn ${ui.view==='anasayfa'?'ustNavBtnAktif':''} ty-btn" onclick="anaSayfaGoster()">🏠 Ana Sayfa</div>`;
+    <div class="ustNavBtn ${ui.view==='anasayfa'?'ustNavBtnAktif':''} ty-btn" onclick="anaSayfaGoster()">${ikon('🏠','mavi')} Ana Sayfa</div>`;
   if (izinVar('stokListesi')) h += `
-    <div class="ustNavBtn ${ui.view==='stok'?'ustNavBtnAktif':''} ty-btn" onclick="stokGoster()">📦 Stok Listesi</div>`;
+    <div class="ustNavBtn ${ui.view==='stok'?'ustNavBtnAktif':''} ty-btn" onclick="stokGoster()">${ikon('📦','yesil')} Stok Listesi</div>`;
   if (izinVar('satinAlmalar')) h += `
-    <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">🛒 Satın Almalar
+    <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">${ikon('🛒','mor')} Satın Almalar
       ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
     </div>`;
   if (izinVar('raporEkle')) h += `
-    <div class="ustNavBtn ${ui.view==='rapor'?'ustNavBtnAktif':''} ty-btn" onclick="raporGoster()">📝 Rapor ekle</div>`;
+    <div class="ustNavBtn ${ui.view==='rapor'?'ustNavBtnAktif':''} ty-btn" onclick="raporGoster()">${ikon('📝','vurgu')} Rapor ekle</div>`;
   if (izinVar('periyodikBakim')) h += `
-    <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">🔧 Periyodik Bakım
+    <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">${ikon('🔧','kirmizi')} Periyodik Bakım
       ${bakimUyariSayisi() > 0 ? `<span class="rozet">${bakimUyariSayisi()}</span>` : ''}
     </div>`;
   if (izinVar('malzemeCikis')) h += `
-    <div class="ustNavBtn ${ui.view==='malzemecikis'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeCikisGoster()">📉 Malzeme Kullan</div>`;
+    <div class="ustNavBtn ${ui.view==='malzemecikis'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeCikisGoster()">${ikon('📉','turkuaz')} Malzeme Kullan</div>`;
   if (izinVar('transfer')) h += `
-    <div class="ustNavBtn ${ui.view==='transfer'?'ustNavBtnAktif':''} ty-btn" onclick="transferGoster()">🔄 Transfer Et
+    <div class="ustNavBtn ${ui.view==='transfer'?'ustNavBtnAktif':''} ty-btn" onclick="transferGoster()">${ikon('🔄','mavi')} Transfer Et
       ${bekleyenTransferSayisi() > 0 ? `<span class="rozet">${bekleyenTransferSayisi()}</span>` : ''}
     </div>`;
   el.innerHTML = h;
@@ -731,7 +737,7 @@ function tesisAgaciHTML(){
     h += `<div class="tesisKart">`;
     h += `<div class="tesisBaslikSatir" onclick="acikTesisToggle('${t.id}')">
       <span class="okBuyuk" style="transform:${acikT?'rotate(90deg)':'none'}">›</span>
-      <span class="tesisIkon">🏭</span>`;
+      <span class="tesisIkon tesisIkonRenkli">🏭</span>`;
     if (ui.duzenlenenId === t.id) {
       h += `<input class="editInput" id="editInput_${t.id}" value="${esc(t.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="tesisAdKaydet(this,'${t.id}')" />`;
     } else {
@@ -755,7 +761,7 @@ function tesisAgaciHTML(){
         const acikM = ui.acikMakine.has(m.id);
         h += `<div class="makineSatir" onclick="acikMakineToggle('${m.id}')">
           <span class="okBuyuk" style="transform:${acikM?'rotate(90deg)':'none'}">›</span>
-          <span class="tesisIkon" style="font-size:15px">⚙</span>`;
+          <span class="tesisIkon makineIkonRenkli" style="font-size:12px">⚙</span>`;
         if (ui.duzenlenenId === m.id) {
           h += `<input class="editInput" id="editInput_${m.id}" value="${esc(m.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="makineAdKaydet(this,'${t.id}','${m.id}')" />`;
         } else {
