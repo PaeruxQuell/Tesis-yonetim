@@ -253,6 +253,7 @@
   .satinAlmaNav i { font-size: 18px; margin-right: 10px; }
   .satinAlmaNavAktif { border-color: rgba(var(--vurgu-rgb),0.33); background: var(--bg-secili); color: var(--vurgu); }
   .rozet { background: var(--vurgu); color: var(--bg-yuzey); font-size: 11.5px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
+  .surumRozeti { background: rgba(var(--turkuaz-rgb),0.14); color: var(--turkuaz); border: 1px solid rgba(var(--turkuaz-rgb),0.35); font-size: 11.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; border-radius: 20px; padding: 4px 11px; }
   .solBaslikSatir { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 10px; }
   .solBaslik { font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--yazi-soluk); font-weight: 600; }
   .ekleMini { background: var(--bg-yuzey2); color: var(--vurgu); border: 1px solid var(--sinir2); border-radius: 6px; font-size: 12px; padding: 5px 10px; font-weight: 500; }

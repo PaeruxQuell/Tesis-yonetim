@@ -154,6 +154,8 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
+const UYGULAMA_SURUMU = "v9";
+const UYGULAMA_SURUM_TARIHI = "12 Ağustos 2026";
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
 let mevcutIzinler = null;
