@@ -323,6 +323,8 @@
   .gecmisAcButonu:hover { background: var(--bg-hover3); }
   .gecmisMalzemeListesi { margin: 10px 0 2px 112px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--sinir); border-radius: 8px; }
   .gecmisMalzemeSatir { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--yazi-ikincil); padding: 6px 8px; border-radius: 5px; }
+  .parcayaEkleBtn { font-size: 10.5px; font-weight: 600; color: var(--vurgu); background: rgba(var(--vurgu-rgb),0.12); border: 1px solid rgba(var(--vurgu-rgb),0.3); border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+  .parcayaEkleBtn:hover { background: rgba(var(--vurgu-rgb),0.22); }
   .gecmisMalzemeSatir:nth-child(even) { background: var(--bg-zebra); }
   .gecmisMalzemeSatir:nth-child(odd) { background: var(--bg-yuzey2); }
   .gecmisTarih { width: 100px; background: var(--bg); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--vurgu); padding: 7px 9px; font-size: 12px; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
@@ -389,6 +391,8 @@
   .ayarToggleBtn { flex-shrink: 0; background: transparent; color: var(--yazi-dim); border: 1px solid var(--sinir2); border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; }
   .ayarToggleAktif { color: var(--yesil); border-color: rgba(var(--yesil-rgb),0.33); background: rgba(var(--yesil-rgb),0.10); }
   .tesisErisimBtn { background: var(--bg-yuzey2); color: var(--yazi-dim); border: 1px solid var(--sinir2); border-radius: 16px; padding: 5px 12px; font-size: 12px; font-weight: 500; }
+  .raporFiltreBtn { background: var(--bg-yuzey2); color: var(--yazi-ikincil); border: 1px solid var(--sinir2); border-radius: 8px; padding: 8px 16px; font-size: 12.5px; font-weight: 600; }
+  .raporFiltreBtnAktif { background: rgba(var(--vurgu-rgb),0.16); color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.4); }
   .tesisErisimBtnAktif { color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.5); background: rgba(var(--vurgu-rgb),0.12); }
   .modalOverlay {
     position: fixed; inset: 0; background: rgba(6,8,11,0.72); z-index: 1000;

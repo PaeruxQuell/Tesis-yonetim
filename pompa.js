@@ -3,6 +3,16 @@ function parcaEkle(){
   kaydetIslem(`Parça eklendi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
   saveData(); render();
 }
+function gecmisMalzemeyiParcayaEkle(gecmisId, malzemeId){
+  const { t, m, p } = pompaBul();
+  const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
+  const x = (g.malzemeler||[]).find(y => y.id === malzemeId); if (!x) return;
+  p.parcalar.push({ id: uid(), ad: x.ad, malzeme: x.kod || "", adet: x.adet || 1 });
+  malzemeGecmisineEkle(x.ad, x.birim, x.kod);
+  kaydetIslem(`Geçmişten parçaya eklendi: ${x.ad} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  toastGoster(`"${x.ad}" Parçalar listesine eklendi.`, "basari");
+  saveData(); render();
+}
 function parcaGuncelle(parcaId, alan, deger){
   const { p } = pompaBul(); const pr = p.parcalar.find(x => x.id === parcaId); if (pr) pr[alan] = deger;
   if (alan === "ad") malzemeGecmisineEkle(deger);
@@ -119,7 +129,7 @@ function renderPompa(){
         if (acik && malzemeVar) {
           h += `<div class="gecmisMalzemeListesi">
             <div class="kartBaslik" style="margin-bottom:8px">Kullanılan malzemeler</div>
-            ${g.malzemeler.map(x => `<div class="gecmisMalzemeSatir"><span>${esc(x.ad)}${x.kod?` <span style="color:var(--yazi-soluk)">(${esc(x.kod)})</span>`:''}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--yazi-dim)">× ${esc(x.adet)} ${esc(x.birim||'adet')}</span></div>`).join('')}
+            ${g.malzemeler.map(x => `<div class="gecmisMalzemeSatir"><span>${esc(x.ad)}${x.kod?` <span style="color:var(--yazi-soluk)">(${esc(x.kod)})</span>`:''}</span><span style="display:flex;align-items:center;gap:8px"><span style="font-family:'JetBrains Mono',monospace;color:var(--yazi-dim)">× ${esc(x.adet)} ${esc(x.birim||'adet')}</span><span class="parcayaEkleBtn ty-btn" title="Bu malzemeyi yukarıdaki Parçalar listesine ekle" onclick="gecmisMalzemeyiParcayaEkle('${g.id}','${x.id}')">↑ Parçalara ekle</span></span></div>`).join('')}
           </div>`;
         }
         h += `</div>`;

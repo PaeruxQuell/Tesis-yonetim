@@ -106,7 +106,7 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "" };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik" };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -158,7 +158,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUMU = "v10";
+const UYGULAMA_SURUMU = "v11";
 const UYGULAMA_SURUM_TARIHI = "12 Ağustos 2026";
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
@@ -684,6 +684,8 @@ function renderUstNav(){
     <div class="ustNavBtn ${ui.view==='transfer'?'ustNavBtnAktif':''} ty-btn" onclick="transferGoster()">${ikon('🔄','mavi')} Transfer Et
       ${bekleyenTransferSayisi() > 0 ? `<span class="rozet">${bekleyenTransferSayisi()}</span>` : ''}
     </div>`;
+  if (izinVar('raporGor')) h += `
+    <div class="ustNavBtn ${ui.view==='raporlar'?'ustNavBtnAktif':''} ty-btn" onclick="raporlarGoster()">${ikon('📊','vurgu')} Raporu</div>`;
   el.innerHTML = h;
 
   const marqueeEl = document.getElementById("ustMarquee");
@@ -840,4 +842,5 @@ function renderAna(){
   else if (ui.view === "satinalma-detay") renderSatinAlmaDetay();
   else if (ui.view === "malzemecikis") renderMalzemeCikis();
   else if (ui.view === "transfer") renderTransfer();
+  else if (ui.view === "raporlar") renderRaporlar();
 }
