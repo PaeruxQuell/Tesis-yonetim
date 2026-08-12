@@ -100,11 +100,11 @@
     --turkuaz: #1c8a90;
     --turkuaz-rgb: 28,138,144;
   }
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
   * { box-sizing: border-box; }
   *, *::before, *::after { transition: background-color .5s ease, color .5s ease, border-color .5s ease; }
-  body { margin: 0; font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--yazi); }
-  input, textarea, select, button { font-family: 'IBM Plex Sans', sans-serif; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--yazi); }
+  input, textarea, select, button { font-family: 'Inter', sans-serif; }
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
   .ty-btn { cursor: pointer; transition: all .12s ease; }
@@ -213,7 +213,7 @@
     opacity: 0.55;
   }
   .logo { font-size: 20px; color: var(--vurgu); }
-  .baslik { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
+  .baslik { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; }
   .altBaslik { font-size: 11.5px; color: var(--yazi-soluk); margin-top: 1px; }
   .altBaslik2 { font-size: 12.5px; color: var(--yazi-dim); margin-top: 3px; }
   .logoAlani { width: 320px; height: 85px; flex-shrink: 0; display: flex; align-items: center; overflow: hidden; padding: 0; background: none; border: none; }
@@ -244,7 +244,7 @@
   .islemSatir:hover { transform: translateX(4px); background: var(--bg-hover); }
   .islemRozet { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid; border-radius: 5px; padding: 2px 7px; margin-bottom: 5px; }
   .islemAciklama { font-size: 12.5px; color: var(--yazi-ikincil); line-height: 1.35; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .islemZaman { font-size: 11px; color: var(--yazi-soluk); font-family: 'IBM Plex Mono', monospace; }
+  .islemZaman { font-size: 11px; color: var(--yazi-soluk); font-family: 'JetBrains Mono', monospace; }
   .satinAlmaNav {
     display: flex; justify-content: space-between; align-items: center; margin: 0 14px 20px;
     padding: 14px 16px; border-radius: 10px; border: 1px solid var(--bg-yukseltilmis3); background: var(--bg-yuzey2);
@@ -291,14 +291,14 @@
   .aksiyonBtnSil:hover { background: var(--bg-tehlike-hover); color: var(--kirmizi); }
   .editInput {
     flex: 1; background: var(--bg); border: 1px solid var(--vurgu); border-radius: 6px;
-    color: var(--yazi3); font-size: 14px; padding: 5px 8px; outline: none; font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--yazi3); font-size: 14px; padding: 5px 8px; outline: none; font-family: 'Inter', sans-serif;
   }
   .silIkon { color: var(--ikon-soluk); font-size: 15px; cursor: pointer; padding: 0 4px; }
   .ana { flex: 1; overflow-y: auto; padding: 26px 34px 60px; }
   .bosDurum { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--yazi-soluk); font-size: 13.5px; }
-  .yolIzi { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--yazi-soluk); margin-bottom: 14px; }
+  .yolIzi { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yazi-soluk); margin-bottom: 14px; }
   .pompaBaslikSatir { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-  .pompaAdBaslik { font-size: 21px; font-weight: 600; color: var(--yazi3); }
+  .pompaAdBaslik { font-size: 22px; font-weight: 800; color: var(--yazi3); letter-spacing: -0.3px; }
   .pompaAdInput { font-size: 21px; font-weight: 600; background: var(--bg-yuzey2); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--yazi3); padding: 4px 10px; }
   .duzenleBtn { background: var(--vurgu); color: var(--vurgu-uzeri-yazi); border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
   .duzenleBtnAktif { background: var(--bg-yukseltilmis3); color: var(--yazi); border: 1px solid var(--yazi-soluk2); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
@@ -320,8 +320,8 @@
   .gecmisMalzemeSatir { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--yazi-ikincil); padding: 6px 8px; border-radius: 5px; }
   .gecmisMalzemeSatir:nth-child(even) { background: var(--bg-zebra); }
   .gecmisMalzemeSatir:nth-child(odd) { background: var(--bg-yuzey2); }
-  .gecmisTarih { width: 100px; background: var(--bg); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--vurgu); padding: 7px 9px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; flex-shrink: 0; }
-  .gecmisTarihGoster { width: 100px; color: var(--vurgu); font-size: 12px; font-family: 'IBM Plex Mono', monospace; flex-shrink: 0; padding-top: 2px; }
+  .gecmisTarih { width: 100px; background: var(--bg); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--vurgu); padding: 7px 9px; font-size: 12px; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+  .gecmisTarihGoster { width: 100px; color: var(--vurgu); font-size: 12px; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; padding-top: 2px; }
   .gecmisMetin { flex: 1; background: var(--bg); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--yazi); padding: 7px 9px; font-size: 13px; }
   .saUstSatir { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
   .saArama { margin-bottom: 16px; font-size: 14px; padding: 11px 14px; }
@@ -329,7 +329,7 @@
   .filtreBtn { background: var(--bg-yuzey); color: var(--yazi-dim); border: 1px solid var(--sinir); border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 500; }
   .filtreBtn:hover { border-color: var(--filtre-renk, var(--yazi-soluk2)); color: var(--filtre-renk, var(--yazi-ikincil2)); background: var(--filtre-bg, var(--bg-hover2)); }
   .filtreBtnAktif { border-color: var(--filtre-renk, var(--vurgu)); color: var(--filtre-renk, var(--vurgu)); background: var(--filtre-bg, rgba(226,163,61,0.12)); }
-  .filtreSayi { font-family: 'IBM Plex Mono', monospace; opacity: 0.75; margin-left: 4px; }
+  .filtreSayi { font-family: 'JetBrains Mono', monospace; opacity: 0.75; margin-left: 4px; }
   .saListeSatir { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--bg-satir-sinir); cursor: pointer; transition: transform .15s ease, background-color .15s ease; }
   .saListeSatir:hover { transform: translateX(4px); background: var(--bg-hover); }
   .saListeUrun { font-size: 14.5px; font-weight: 600; color: var(--yazi2); margin-bottom: 3px; }
@@ -343,11 +343,11 @@
   .geriDon:hover { border-color: var(--vurgu); color: var(--vurgu); background: var(--bg-yukseltilmis2); }
   .kalemBaslikSatir { display: flex; gap: 10px; padding: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--yazi-soluk); }
   .kalemSatir { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--sinir-soluk); }
-  .kalemNo { width: 26px; flex-shrink: 0; color: var(--yazi-soluk); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+  .kalemNo { width: 26px; flex-shrink: 0; color: var(--yazi-soluk); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
   .dugumInput {
     background: transparent; border: 1px solid transparent; border-radius: 6px;
     color: var(--yazi-ikincil2); font-size: 14px; padding: 6px 8px; outline: none; flex: 1;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
   .dugumInput:hover, .dugumInput:focus { background: var(--bg); border-color: var(--sinir2); }
   .kritikNokta { color: var(--kirmizi); font-size: 10px; margin-left: 6px; flex-shrink: 0; }
@@ -369,7 +369,7 @@
   .tesisKartButonuAktif { border-color: var(--vurgu); background: rgba(var(--vurgu-rgb),0.1); color: var(--vurgu); font-weight: 700; }
   .ozetKartKirmizi { border-color: rgba(var(--kirmizi-rgb),0.33); background: rgba(var(--kirmizi-rgb),0.06); }
   .ozetKartAmber { border-color: rgba(var(--vurgu-rgb),0.33); background: rgba(var(--vurgu-rgb),0.06); }
-  .ozetSayi { font-size: 32px; font-weight: 700; color: var(--yazi3); font-family: 'IBM Plex Mono', monospace; }
+  .ozetSayi { font-size: 32px; font-weight: 700; color: var(--yazi3); font-family: 'JetBrains Mono', monospace; }
   .ozetEtiket { font-size: 12.5px; color: var(--yazi-dim); margin-top: 6px; }
   .bekleyenRozet { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--vurgu); background: rgba(var(--vurgu-rgb),0.10); border: 1px solid rgba(var(--vurgu-rgb),0.33); border-radius: 10px; padding: 2px 9px; flex-shrink: 0; }
   .bekleyenBanner { display: flex; justify-content: space-between; align-items: center; margin: 0 14px 10px; padding: 11px 14px; background: rgba(var(--vurgu-rgb),0.08); border: 1px solid rgba(var(--vurgu-rgb),0.25); border-radius: 8px; color: var(--vurgu); font-size: 12.5px; font-weight: 600; }
@@ -402,7 +402,7 @@
   @keyframes modalKutuCik { to { opacity: 0; transform: scale(.94); } }
   .modalBaslik { font-size: 16px; font-weight: 600; color: var(--yazi3); margin-bottom: 6px; }
   .modalMetin { font-size: 12.5px; color: var(--yazi-dim); margin-bottom: 14px; line-height: 1.5; }
-  .modalSoru { font-size: 20px; font-weight: 600; color: var(--vurgu); font-family: 'IBM Plex Mono', monospace; margin-bottom: 12px; text-align: center; background: var(--bg); border: 1px solid var(--sinir); border-radius: 8px; padding: 10px; }
+  .modalSoru { font-size: 20px; font-weight: 600; color: var(--vurgu); font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; text-align: center; background: var(--bg); border: 1px solid var(--sinir); border-radius: 8px; padding: 10px; }
   .modalHata { color: var(--kirmizi); font-size: 12px; min-height: 16px; margin-top: 8px; }
   .modalBtnSatir { display: flex; gap: 10px; margin-top: 6px; }
   .modalBtnSatir button { flex: 1; }

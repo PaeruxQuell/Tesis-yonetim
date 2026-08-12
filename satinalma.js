@@ -225,10 +225,10 @@ function renderSatinAlmaDetay(){
             <span style="width:150px;flex:none">
               ${k.stokaAktarildi ? `
                 <span style="color:var(--yesil);font-weight:600;font-size:11.5px">✓ Depoya eklendi</span>
-                ${k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'IBM Plex Mono',monospace">${esc(k.gelisTarihi)}</div>` : ''}
+                ${k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'JetBrains Mono',monospace">${esc(k.gelisTarihi)}</div>` : ''}
               ` : `
                 <button class="ty-btn" style="width:110px;background:rgba(${durumRenkRgb[k.durum]},0.1);color:${durumRenk[k.durum]};font-weight:600;border:1px solid rgba(${durumRenkRgb[k.durum]},0.33);border-radius:6px;padding:6px 0;font-size:11.5px" onclick="saKalemDurumDegistir('${sat.id}','${k.id}')">${k.durum}</button>
-                ${k.durum==='Geldi' && k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'IBM Plex Mono',monospace;margin-top:2px">${esc(k.gelisTarihi)}</div>` : ''}
+                ${k.durum==='Geldi' && k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'JetBrains Mono',monospace;margin-top:2px">${esc(k.gelisTarihi)}</div>` : ''}
               `}
             </span>
           `}

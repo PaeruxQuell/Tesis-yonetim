@@ -186,7 +186,7 @@ function renderAnaSayfa(){
             <div style="color:var(--yazi);font-size:13px">${esc(sm.ozet)}</div>
             <div style="color:var(--yazi-soluk);font-size:11.5px">${esc(sm.tesis)} / ${esc(sm.makine)} / ${esc(sm.pompa)}</div>
           </span>
-          <span style="color:var(--yazi-soluk);font-size:11px;font-family:'IBM Plex Mono',monospace">${esc(sm.tarih)}</span>
+          <span style="color:var(--yazi-soluk);font-size:11px;font-family:'JetBrains Mono',monospace">${esc(sm.tarih)}</span>
         </div>`;
       });
       h += `</div>`;

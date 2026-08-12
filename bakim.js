@@ -172,9 +172,9 @@ function renderBakim(){
                       <input class="parcaGirdi" style="flex:1.3" list="malzemeListesi" placeholder="Örn: Rulman değişimi" value="${esc(b.ad)}" onchange="bakimPompaGuncelle('${t.id}','${m.id}','${p.id}','${b.id}','ad',this.value)" />
                       <input class="parcaGirdi" style="width:95px;flex:none" type="number" min="1" value="${esc(b.periyotGun)}" onchange="bakimPompaGuncelle('${t.id}','${m.id}','${p.id}','${b.id}','periyotGun',this.value)" />
                       <input class="parcaGirdi" style="width:95px;flex:none" type="number" min="1" title="Bu bakım için kaç gün kala uyarı çıksın" value="${esc(b.uyariGunu||15)}" onchange="bakimPompaGuncelle('${t.id}','${m.id}','${p.id}','${b.id}','uyariGunu',this.value)" />
-                      <input class="parcaGirdi" style="width:110px;flex:none;font-family:'IBM Plex Mono',monospace" placeholder="gg.aa.yyyy" value="${esc(b.sonYapilmaTarihi)}" onchange="bakimPompaGuncelle('${t.id}','${m.id}','${p.id}','${b.id}','sonYapilmaTarihi',this.value)" />
+                      <input class="parcaGirdi" style="width:110px;flex:none;font-family:'JetBrains Mono',monospace" placeholder="gg.aa.yyyy" value="${esc(b.sonYapilmaTarihi)}" onchange="bakimPompaGuncelle('${t.id}','${m.id}','${p.id}','${b.id}','sonYapilmaTarihi',this.value)" />
                       <div style="width:140px;flex:none">
-                        <div style="color:${renk};font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">${d.tarih}</div>
+                        <div style="color:${renk};font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600">${d.tarih}</div>
                         <div style="color:${renk};font-size:11px">${metin}</div>
                       </div>
                       <div style="width:130px;flex:none;display:flex;gap:6px">
@@ -201,9 +201,9 @@ function renderBakim(){
                 <input class="parcaGirdi" style="flex:1.3" list="malzemeListesi" placeholder="Örn: Genel yağlama" value="${esc(b.ad)}" onchange="bakimGuncelle('${t.id}','${m.id}','${b.id}','ad',this.value)" />
                 <input class="parcaGirdi" style="width:95px;flex:none" type="number" min="1" value="${esc(b.periyotGun)}" onchange="bakimGuncelle('${t.id}','${m.id}','${b.id}','periyotGun',this.value)" />
                 <input class="parcaGirdi" style="width:95px;flex:none" type="number" min="1" title="Bu bakım için kaç gün kala uyarı çıksın" value="${esc(b.uyariGunu||15)}" onchange="bakimGuncelle('${t.id}','${m.id}','${b.id}','uyariGunu',this.value)" />
-                <input class="parcaGirdi" style="width:110px;flex:none;font-family:'IBM Plex Mono',monospace" placeholder="gg.aa.yyyy" value="${esc(b.sonYapilmaTarihi)}" onchange="bakimGuncelle('${t.id}','${m.id}','${b.id}','sonYapilmaTarihi',this.value)" />
+                <input class="parcaGirdi" style="width:110px;flex:none;font-family:'JetBrains Mono',monospace" placeholder="gg.aa.yyyy" value="${esc(b.sonYapilmaTarihi)}" onchange="bakimGuncelle('${t.id}','${m.id}','${b.id}','sonYapilmaTarihi',this.value)" />
                 <div style="width:140px;flex:none">
-                  <div style="color:${renk};font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">${d.tarih}</div>
+                  <div style="color:${renk};font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600">${d.tarih}</div>
                   <div style="color:${renk};font-size:11px">${metin}</div>
                 </div>
                 <div style="width:130px;flex:none;display:flex;gap:6px">

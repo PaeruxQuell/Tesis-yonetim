@@ -73,7 +73,7 @@ function renderPompa(){
       } else {
         h += `<span style="flex:1;color:var(--yazi)">${esc(pr.ad) || '(isimsiz)'}</span>`;
         h += `<span style="flex:1;color:var(--yazi-dim)">${esc(pr.malzeme) || '—'}</span>`;
-        h += `<span style="width:70px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">× ${esc(pr.adet)}</span>`;
+        h += `<span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">× ${esc(pr.adet)}</span>`;
       }
       h += `</div>`;
     });
@@ -119,7 +119,7 @@ function renderPompa(){
         if (acik && malzemeVar) {
           h += `<div class="gecmisMalzemeListesi">
             <div class="kartBaslik" style="margin-bottom:8px">Kullanılan malzemeler</div>
-            ${g.malzemeler.map(x => `<div class="gecmisMalzemeSatir"><span>${esc(x.ad)}${x.kod?` <span style="color:var(--yazi-soluk)">(${esc(x.kod)})</span>`:''}</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--yazi-dim)">× ${esc(x.adet)} ${esc(x.birim||'adet')}</span></div>`).join('')}
+            ${g.malzemeler.map(x => `<div class="gecmisMalzemeSatir"><span>${esc(x.ad)}${x.kod?` <span style="color:var(--yazi-soluk)">(${esc(x.kod)})</span>`:''}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--yazi-dim)">× ${esc(x.adet)} ${esc(x.birim||'adet')}</span></div>`).join('')}
           </div>`;
         }
         h += `</div>`;

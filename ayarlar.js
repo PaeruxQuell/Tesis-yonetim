@@ -116,7 +116,7 @@ function renderAyarlar(){
       <div class="kartBaslik" style="margin-bottom:14px">Yazı Boyutu</div>
       <div style="display:flex;align-items:center;gap:16px">
         <input type="range" min="80" max="160" step="10" value="${yaziOlcegiOku()}" oninput="yaziOlcegiDegisti(this.value)" style="flex:1;accent-color:var(--vurgu)" />
-        <span id="yaziOlcekDeger" style="font-family:'IBM Plex Mono',monospace;color:var(--vurgu);font-weight:600;width:52px;text-align:right;flex-shrink:0">${yaziOlcegiOku()}%</span>
+        <span id="yaziOlcekDeger" style="font-family:'JetBrains Mono',monospace;color:var(--vurgu);font-weight:600;width:52px;text-align:right;flex-shrink:0">${yaziOlcegiOku()}%</span>
       </div>
       <div class="bosMetin" style="margin-top:10px">Kaydırıcıyı sağa çekince tüm sayfadaki yazılar büyür, sola çekince küçülür. Tercihiniz bu tarayıcıda hatırlanır.</div>
     </div>`;
@@ -248,8 +248,8 @@ function renderAyarlar(){
             <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
             <span style="flex:1;color:var(--yazi-ikincil)">${esc(k.aciklama)}</span>
             <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
-            <span style="width:110px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.tarih)}</span>
-            <span style="width:70px;color:var(--yazi-dim);font-family:'IBM Plex Mono',monospace">${esc(k.saat)}</span>
+            <span style="width:110px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.tarih)}</span>
+            <span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.saat)}</span>
           </div>`;
         });
         h += `</div></div>`;
