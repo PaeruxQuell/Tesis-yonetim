@@ -213,7 +213,7 @@
     opacity: 0.55;
   }
   .logo { font-size: 20px; color: var(--vurgu); }
-  .baslik { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; }
+  .baslik { font-size: 16.5px; font-weight: 800; letter-spacing: -0.2px; }
   .altBaslik { font-size: 11.5px; color: var(--yazi-soluk); margin-top: 1px; }
   .altBaslik2 { font-size: 12.5px; color: var(--yazi-dim); margin-top: 3px; }
   .logoAlani { width: 320px; height: 85px; flex-shrink: 0; display: flex; align-items: center; overflow: hidden; padding: 0; background: none; border: none; }
@@ -240,7 +240,8 @@
     width: 260px; border-left: 1px solid var(--sinir); background: var(--bg-yan); overflow-y: auto;
     padding: 16px 0 24px; flex-shrink: 0;
   }
-  .islemSatir { padding: 12px 16px; border-bottom: 1px solid var(--bg-satir-sinir); cursor: pointer; transition: transform .15s ease, background-color .15s ease; }
+  .islemSatir { padding: 12px 14px; margin: 0 10px 8px; border-radius: 10px; background: var(--bg-yuzey); border: 1px solid var(--sinir-soluk); border-bottom: none; cursor: pointer; transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .islemSatir:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.14); }
   .islemSatir:hover { transform: translateX(4px); background: var(--bg-hover); }
   .islemRozet { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid; border-radius: 5px; padding: 2px 7px; margin-bottom: 5px; }
   .islemAciklama { font-size: 12.5px; color: var(--yazi-ikincil); line-height: 1.35; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -255,7 +256,7 @@
   .rozet { background: var(--vurgu); color: var(--bg-yuzey); font-size: 11.5px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
   .surumRozeti { background: rgba(var(--turkuaz-rgb),0.14); color: var(--turkuaz); border: 1px solid rgba(var(--turkuaz-rgb),0.35); font-size: 11.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; border-radius: 20px; padding: 4px 11px; }
   .solBaslikSatir { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 10px; }
-  .solBaslik { font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--yazi-soluk); font-weight: 600; }
+  .solBaslik { font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--yazi-soluk); font-weight: 700; }
   .ekleMini { background: var(--bg-yuzey2); color: var(--vurgu); border: 1px solid var(--sinir2); border-radius: 6px; font-size: 12px; padding: 5px 10px; font-weight: 500; }
   .siralaAktifBtn { background: rgba(var(--vurgu-rgb),0.15); border-color: var(--vurgu); }
   .ekleMiniMakine { background: transparent; color: var(--mavi); border: none; font-size: 12.5px; padding: 10px 14px 10px 34px; display: block; width: 100%; text-align: left; }
@@ -271,10 +272,10 @@
   .tesisAdMetin, .makineAdMetin, .pompaAdMetin {
     flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
   }
-  .tesisAdMetin { font-size: 15.5px; font-weight: 600; color: var(--yazi2); }
+  .tesisAdMetin { font-size: 16px; font-weight: 700; color: var(--yazi2); }
   .makineSatir { display: flex; align-items: center; gap: 9px; padding: 13px 14px 13px 34px; cursor: pointer; border-top: 1px solid var(--sinir-soluk); }
   .makineSatir:hover { background: var(--bg-hover); }
-  .makineAdMetin { font-size: 14px; font-weight: 500; color: var(--yazi-ikincil); }
+  .makineAdMetin { font-size: 14.5px; font-weight: 600; color: var(--yazi-ikincil); }
   .pompaSatir { display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 54px; cursor: pointer; border-top: 1px solid var(--bg-satir-sinir); border-left: 3px solid transparent; }
   .pompaSatir:hover { background: var(--bg-hover); }
   .pompaSatirSecili { background: var(--bg-secili) !important; border-left: 3px solid var(--vurgu); }
@@ -299,13 +300,16 @@
   .bosDurum { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--yazi-soluk); font-size: 13.5px; }
   .yolIzi { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yazi-soluk); margin-bottom: 14px; }
   .pompaBaslikSatir { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-  .pompaAdBaslik { font-size: 22px; font-weight: 800; color: var(--yazi3); letter-spacing: -0.3px; }
+  .pompaAdBaslik { font-size: 24px; font-weight: 800; color: var(--yazi3); letter-spacing: -0.4px; }
   .pompaAdInput { font-size: 21px; font-weight: 600; background: var(--bg-yuzey2); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--yazi3); padding: 4px 10px; }
   .duzenleBtn { background: var(--vurgu); color: var(--vurgu-uzeri-yazi); border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
   .duzenleBtnAktif { background: var(--bg-yukseltilmis3); color: var(--yazi); border: 1px solid var(--yazi-soluk2); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
   .kart { background: var(--bg-yuzey); border: 1px solid var(--sinir); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+  .malzemeKisayolKart { cursor: pointer; border-color: rgba(var(--yesil-rgb),0.35); background: rgba(var(--yesil-rgb),0.06); transition: transform .18s ease, box-shadow .18s ease; }
+  .malzemeKisayolKart:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(var(--yesil-rgb),0.18); }
+  .malzemeKisayolIkon { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 12px; background: rgba(var(--yesil-rgb),0.16); font-size: 24px; flex-shrink: 0; }
   .kartBaslikSatir { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .kartBaslik { font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--yazi-etiket); font-weight: 500; }
+  .kartBaslik { font-size: 13.5px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--yazi-etiket); font-weight: 700; }
   .deger { font-size: 14px; color: var(--yazi-ikincil2); }
   .bosMetin { font-size: 12.5px; color: var(--ikon-soluk); font-style: italic; }
   .girdi { width: 100%; background: var(--bg); border: 1px solid var(--sinir2); border-radius: 6px; color: var(--yazi); padding: 8px 10px; font-size: 13.5px; }
@@ -427,6 +431,8 @@
   .kritikMarqueeIc { display: inline-block; padding-left: 100%; animation: kritikKaydir 14s linear infinite; color: var(--kirmizi); font-size: 11.5px; font-weight: 600; }
   @keyframes kritikKaydir { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
   .acilirIcerik { transform-origin: top; }
+  .makineListesiAlani { background: rgba(var(--mavi-rgb),0.055); border-top: 1px solid rgba(var(--mavi-rgb),0.18); border-bottom: 1px solid rgba(var(--mavi-rgb),0.18); }
+  .pompaListesiAlani { background: rgba(var(--turkuaz-rgb),0.06); }
   .tesisKart { transition: border-color .2s ease; }
   .tesisBaslikSatir, .makineSatir { transition: background-color .15s ease; }
   .eklePrimer { background: linear-gradient(135deg, var(--vurgu), var(--kirmizi2)); color: var(--vurgu-uzeri-yazi); border: none; border-radius: 6px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 8px rgba(var(--vurgu-rgb),0.25); }

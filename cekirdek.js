@@ -98,7 +98,9 @@ function varsayilanVeri(){
     malzemeGecmisi: [],
     sonIslemler: [],
     transferler: [],
-    logoUrl: ""
+    logoUrl: "",
+    logoUrlKoyu: "",
+    logoUrlAcik: ""
   };
 }
 
@@ -115,6 +117,8 @@ function sanitizeVeri(v){
   if (!v.sonIslemler) v.sonIslemler = [];
   if (!v.transferler) v.transferler = [];
   if (typeof v.logoUrl !== "string") v.logoUrl = "";
+  if (typeof v.logoUrlKoyu !== "string") v.logoUrlKoyu = v.logoUrl || "";
+  if (typeof v.logoUrlAcik !== "string") v.logoUrlAcik = "";
   v.tesisler.forEach(t => {
     if (!Array.isArray(t.depolar)) t.depolar = [];
     (t.makineler || []).forEach(m => {
@@ -154,7 +158,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUMU = "v9";
+const UYGULAMA_SURUMU = "v10";
 const UYGULAMA_SURUM_TARIHI = "12 Ağustos 2026";
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
@@ -464,6 +468,7 @@ function bildirimeTikla(i){
 function lambaTikla(){
   temaDegistir(temaOku() !== "acik");
   lambaGuncelle();
+  logoGuncelle();
   const btn = document.getElementById("lambaBtn");
   if (btn) {
     btn.classList.remove("sallaniyor");
@@ -705,8 +710,10 @@ function renderUstNav(){
 function logoGuncelle(){
   const el = document.getElementById("logoAlani");
   if (!el || !state) return;
-  el.innerHTML = state.logoUrl
-    ? `<img src="${esc(state.logoUrl)}" alt="Logo" style="width:320px;height:85px;object-fit:contain;display:block" />`
+  const acikMi = temaOku() === "acik";
+  const aktifLogo = acikMi ? (state.logoUrlAcik || state.logoUrlKoyu) : (state.logoUrlKoyu || state.logoUrlAcik);
+  el.innerHTML = aktifLogo
+    ? `<img src="${esc(aktifLogo)}" alt="Logo" style="width:320px;height:85px;object-fit:contain;display:block" />`
     : `<div style="display:flex;align-items:center;gap:10px;width:320px;height:85px">
         <span class="logo">⌁</span>
         <div>
@@ -757,7 +764,7 @@ function tesisAgaciHTML(){
     </div>`;
 
     if (acikT) {
-      h += `<div class="acilirIcerik">`;
+      h += `<div class="acilirIcerik makineListesiAlani">`;
       const makineListesi = siraliMakineler(t.id, t.makineler);
       makineListesi.forEach((m, mIndex) => {
         const acikM = ui.acikMakine.has(m.id);
@@ -781,7 +788,7 @@ function tesisAgaciHTML(){
         </div>`;
 
         if (acikM) {
-          h += `<div class="acilirIcerik">`;
+          h += `<div class="acilirIcerik pompaListesiAlani">`;
           m.pompalar.forEach(p => {
             const secili = ui.secim.pompaId === p.id && ui.view === 'pompa';
             h += `<div class="pompaSatir ${secili?'pompaSatirSecili':''}" onclick="pompaSec('${t.id}','${m.id}','${p.id}')">
