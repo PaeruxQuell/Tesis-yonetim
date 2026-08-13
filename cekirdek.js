@@ -158,10 +158,10 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "12";
-const UYGULAMA_SURUM_SAAT = "15:20";
-const UYGULAMA_SURUM_GUN = "12.08.2026";
-const UYGULAMA_SURUMU = `V.${UYGULAMA_SURUM_SAAT}.${UYGULAMA_SURUM_GUN}.${UYGULAMA_SURUM_NO}`;
+const UYGULAMA_SURUM_NO = "13";
+const UYGULAMA_SURUM_SAAT = "11:12";
+const UYGULAMA_SURUM_GUN = "13.08.2026";
+const UYGULAMA_SURUMU = `V${UYGULAMA_SURUM_NO} - ${UYGULAMA_SURUM_SAAT} - ${UYGULAMA_SURUM_GUN}`;
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
 let mevcutIzinler = null;
