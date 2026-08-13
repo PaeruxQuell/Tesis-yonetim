@@ -158,8 +158,8 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "13";
-const UYGULAMA_SURUM_SAAT = "11:12";
+const UYGULAMA_SURUM_NO = "14";
+const UYGULAMA_SURUM_SAAT = "11:40";
 const UYGULAMA_SURUM_GUN = "13.08.2026";
 const UYGULAMA_SURUMU = `V${UYGULAMA_SURUM_NO} - ${UYGULAMA_SURUM_SAAT} - ${UYGULAMA_SURUM_GUN}`;
 let mevcutRol = "personel";
@@ -390,7 +390,18 @@ function lambaGuncelle(){
 let bildirimPaneliAcik = false;
 let bildirimHedefleri = [];
 let ilkBildirimAnimasyonuYapildi = false;
-let bildirimGizlenenler = new Set();
+function bildirimGizlenenleriOku(){
+  try { return new Set(JSON.parse(localStorage.getItem("tys_bildirim_gizli") || "[]")); }
+  catch(e){ return new Set(); }
+}
+function bildirimGizlenenleriYaz(set){
+  try {
+    const liste = [...set];
+    // çok büyümesin diye en fazla son 500 anahtarı tutuyoruz
+    localStorage.setItem("tys_bildirim_gizli", JSON.stringify(liste.slice(-500)));
+  } catch(e){}
+}
+let bildirimGizlenenler = bildirimGizlenenleriOku();
 function bildirimleriTopla(){
   const liste = [];
   (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Rapor eklendi") && islemGorunurMu(k))
@@ -414,15 +425,14 @@ function bildirimleriTopla(){
 }
 function bildirimSil(anahtar){
   bildirimGizlenenler.add(anahtar);
+  bildirimGizlenenleriYaz(bildirimGizlenenler);
   bildirimGuncelle();
 }
-let bildirimGorulenler = new Set();
 function bildirimGuncelle(){
   const rozet = document.getElementById("canRozet");
   if (!rozet) return;
   const liste = bildirimleriTopla();
-  const yeniSayi = liste.filter(b => !bildirimGorulenler.has(b.anahtar)).length;
-  if (yeniSayi > 0) { rozet.textContent = yeniSayi > 99 ? "99+" : yeniSayi; rozet.style.display = ""; }
+  if (liste.length > 0) { rozet.textContent = liste.length > 99 ? "99+" : liste.length; rozet.style.display = ""; }
   else rozet.style.display = "none";
   if (bildirimPaneliAcik) bildirimPaneliRender();
   if (!ilkBildirimAnimasyonuYapildi) {
@@ -438,7 +448,9 @@ function bildirimPaneliAcKapat(){
   if (bildirimPaneliAcik) {
     bildirimPaneliRender();
     panel.style.display = "block";
-    bildirimleriTopla().forEach(b => bildirimGorulenler.add(b.anahtar));
+    // paneli açıp gördüğün an, o an listede olan bildirimler bir daha hiç gelmesin
+    bildirimleriTopla().forEach(b => bildirimGizlenenler.add(b.anahtar));
+    bildirimGizlenenleriYaz(bildirimGizlenenler);
     bildirimGuncelle();
   }
   else panel.style.display = "none";
@@ -451,10 +463,9 @@ function bildirimPaneliRender(){
   let h = `<div class="bildirimBaslikSatir">Bildirimler</div>`;
   if (liste.length === 0) h += `<div class="bosMetin" style="padding:14px">Şu an bir bildirim yok.</div>`;
   else liste.forEach((b, i) => {
-    const yeniMi = !bildirimGorulenler.has(b.anahtar);
     h += `<div class="bildirimSatir" onclick="bildirimeTikla(${i})">
-      <span class="bildirimNokta" style="color:${b.renk}">${yeniMi?'●':'○'}</span>
-      <span style="flex:1;font-size:12.5px;color:${yeniMi?'var(--yazi-ikincil)':'var(--yazi-soluk)'}">${esc(b.mesaj)}</span>
+      <span class="bildirimNokta" style="color:${b.renk}">●</span>
+      <span style="flex:1;font-size:12.5px;color:var(--yazi-ikincil)">${esc(b.mesaj)}</span>
       <span class="bildirimSilBtn" title="Bildirimi kaldır" onclick="event.stopPropagation(); bildirimSil('${b.anahtar}')">×</span>
     </div>`;
   });
