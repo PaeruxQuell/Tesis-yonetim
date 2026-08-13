@@ -23,6 +23,7 @@ function satinAlmaOnayla(satId){
   s.onayDurumu = "onaylandi";
   kaydetIslem(`Satın alma onaylandı: ${s.siparisNo || 'sipariş no yok'}`, { view: "satinalma-detay", satId: s.id });
   toastGoster("Satın alma talebi onaylandı.", "basari");
+  konfetiPatlat();
   saveData(); render();
 }
 function satinAlmaGuncelle(id, alan, deger){

@@ -52,6 +52,25 @@ const suAn = () => {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 function esc(str){ return (str ?? "").toString().replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function konfetiPatlat(){
+  const renkler = ['#e2a33d','#3fae74','#5b8fe2','#a586e8','#4ec4c9','#e2694d'];
+  const kapsayici = document.createElement("div");
+  kapsayici.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;";
+  document.body.appendChild(kapsayici);
+  for (let i = 0; i < 46; i++){
+    const p = document.createElement("div");
+    const renk = renkler[Math.floor(Math.random()*renkler.length)];
+    const genislik = 6 + Math.random()*6;
+    const solX = 38 + Math.random()*24;
+    const gecikme = Math.random()*0.2;
+    const sure = 1.1 + Math.random()*0.9;
+    const donme = (Math.random()*720-360) + "deg";
+    const yatay = (Math.random()*220-110) + "px";
+    p.style.cssText = `position:absolute;top:-10px;left:${solX}%;width:${genislik}px;height:${genislik*0.4}px;background:${renk};border-radius:2px;opacity:0.95;transform:rotate(${Math.random()*360}deg);animation:konfetiDusme ${sure}s ease-in ${gecikme}s forwards;--yatay-kayma:${yatay};--donme:${donme};`;
+    kapsayici.appendChild(p);
+  }
+  setTimeout(() => kapsayici.remove(), 2600);
+}
 function toastGoster(mesaj, tip){
   const kapsayici = document.getElementById("toastKapsayici");
   if (!kapsayici) return;
@@ -161,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "22";
+const UYGULAMA_SURUM_NO = "23";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -371,6 +390,42 @@ function makineTasi(tesisId, makineId, yon){
   siraYaz(sira); render();
 }
 function yaziOlcegiOku(){ try { return parseInt(localStorage.getItem("tys_yazi_olcek") || "100", 10); } catch(e){ return 100; } }
+
+/* ---------------- sürükle-bırak sıralama ---------------- */
+let surukleTesisId = null;
+function tesisSurukleBasla(e, tesisId){ surukleTesisId = tesisId; try { e.dataTransfer.effectAllowed = "move"; } catch(err){} }
+function tesisSurukleBirak(e, hedefTesisId){
+  e.preventDefault(); e.stopPropagation();
+  if (!surukleTesisId || surukleTesisId === hedefTesisId) { surukleTesisId = null; return; }
+  const sira = siraOku();
+  const liste = siraliListe(erisilenTesisler().map(t => t.id), sira.tesisler);
+  const kaynakIdx = liste.indexOf(surukleTesisId), hedefIdx = liste.indexOf(hedefTesisId);
+  const kaynakId = surukleTesisId;
+  surukleTesisId = null;
+  if (kaynakIdx === -1 || hedefIdx === -1) return;
+  liste.splice(kaynakIdx, 1);
+  liste.splice(hedefIdx, 0, kaynakId);
+  sira.tesisler = liste;
+  siraYaz(sira); render();
+}
+let surukleMakineId = null;
+function makineSurukleBasla(e, makineId){ e.stopPropagation(); surukleMakineId = makineId; try { e.dataTransfer.effectAllowed = "move"; } catch(err){} }
+function makineSurukleBirak(e, tesisId, hedefMakineId){
+  e.preventDefault(); e.stopPropagation();
+  if (!surukleMakineId || surukleMakineId === hedefMakineId) { surukleMakineId = null; return; }
+  const t = state.tesisler.find(x => x.id === tesisId); if (!t) { surukleMakineId = null; return; }
+  const sira = siraOku();
+  if (!sira.makineler) sira.makineler = {};
+  const liste = siraliListe(t.makineler.map(m => m.id), sira.makineler[tesisId]);
+  const kaynakIdx = liste.indexOf(surukleMakineId), hedefIdx = liste.indexOf(hedefMakineId);
+  const kaynakId = surukleMakineId;
+  surukleMakineId = null;
+  if (kaynakIdx === -1 || hedefIdx === -1) return;
+  liste.splice(kaynakIdx, 1);
+  liste.splice(hedefIdx, 0, kaynakId);
+  sira.makineler[tesisId] = liste;
+  siraYaz(sira); render();
+}
 function yaziOlcegiUygula(deger){
   const oran = deger / 100;
   document.documentElement.style.zoom = oran;
@@ -643,6 +698,7 @@ function pompaAdGuncelle(ad){
 function pompaSec(tesisId, makineId, pompaId){
   ui.secim = { tesisId, makineId, pompaId }; ui.view = "pompa"; ui.duzenle = false;
   ui.acikTesis.add(tesisId); if (makineId) ui.acikMakine.add(makineId);
+  if (mobilMi()) mobilMenuleriKapat();
   render();
 }
 function acikTesisToggle(id){ ui.acikTesis.has(id) ? ui.acikTesis.delete(id) : ui.acikTesis.add(id); render(); }
@@ -650,6 +706,53 @@ function acikMakineToggle(id){ ui.acikMakine.has(id) ? ui.acikMakine.delete(id) 
 function duzenleAcKapat(){ ui.duzenle = !ui.duzenle; render(); }
 
 /* ---------------- rapor ekle ---------------- */
+const SVG_YOLLARI = {
+  home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  box: '<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  cart: '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 1 1-5.66 5.66L3 18v3h3l6.04-6.04a4 4 0 1 1 5.66-5.66z"/>',
+  trendDown: '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>',
+  refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  factory: '<path d="M2 20V9l6 4V9l6 4V4l8 6v10z"/><line x1="2" y1="20" x2="22" y2="20"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>',
+};
+function svgIkon(ad, boyut){
+  const s = boyut || 15;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="${s}" height="${s}">${SVG_YOLLARI[ad] || ''}</svg>`;
+}
+
+/* ---------------- mobil (telefon) uyumu ---------------- */
+function mobilMi(){ return window.innerWidth <= 900; }
+function mobilSolAcKapat(){
+  const sol = document.getElementById("solMenu");
+  const sag = document.getElementById("sagMenu");
+  const bg = document.getElementById("mobilArkaplan");
+  if (!sol) return;
+  const acilacak = !sol.classList.contains("mobilAcik");
+  if (sag) sag.classList.remove("mobilAcik");
+  sol.classList.toggle("mobilAcik", acilacak);
+  if (bg) bg.classList.toggle("aktif", acilacak);
+}
+function mobilSagAcKapat(){
+  const sol = document.getElementById("solMenu");
+  const sag = document.getElementById("sagMenu");
+  const bg = document.getElementById("mobilArkaplan");
+  if (!sag) return;
+  const acilacak = !sag.classList.contains("mobilAcik");
+  if (sol) sol.classList.remove("mobilAcik");
+  sag.classList.toggle("mobilAcik", acilacak);
+  if (bg) bg.classList.toggle("aktif", acilacak);
+}
+function mobilMenuleriKapat(){
+  const sol = document.getElementById("solMenu");
+  const sag = document.getElementById("sagMenu");
+  const bg = document.getElementById("mobilArkaplan");
+  if (sol) sol.classList.remove("mobilAcik");
+  if (sag) sag.classList.remove("mobilAcik");
+  if (bg) bg.classList.remove("aktif");
+}
 function render(){ renderSol(); renderAna(); renderSag(); renderUstNav(); logoGuncelle(); guncelleMalzemeListesi(); bildirimGuncelle(); }
 function islemBadge(aciklama){
   const a = (aciklama || "").toLowerCase();
@@ -716,25 +819,25 @@ function enterIleKaydet(e){ if (e.key === "Enter") e.target.blur(); if (e.key ==
 function renderUstNav(){
   const el = document.getElementById("ustNav");
   if (!el) return;
-  const ikon = (emoji, renkVar) => `<span class="navIkon" style="background:rgba(var(--${renkVar}-rgb),.16);color:var(--${renkVar})">${emoji}</span>`;
+  const ikon = (svgAd, renkVar) => `<span class="navIkon" style="background:rgba(var(--${renkVar}-rgb),.16);color:var(--${renkVar})">${svgIkon(svgAd)}</span>`;
   let h = `
-    <div class="ustNavBtn ${ui.view==='anasayfa'?'ustNavBtnAktif':''} ty-btn" onclick="anaSayfaGoster()">${ikon('🏠','mavi')} Ana Sayfa</div>`;
+    <div class="ustNavBtn ${ui.view==='anasayfa'?'ustNavBtnAktif':''} ty-btn" onclick="anaSayfaGoster()">${ikon('home','mavi')} Ana Sayfa</div>`;
   if (izinVar('stokListesi')) h += `
-    <div class="ustNavBtn ${ui.view==='stok'?'ustNavBtnAktif':''} ty-btn" onclick="stokGoster()">${ikon('📦','yesil')} Stok Listesi</div>`;
+    <div class="ustNavBtn ${ui.view==='stok'?'ustNavBtnAktif':''} ty-btn" onclick="stokGoster()">${ikon('box','yesil')} Stok Listesi</div>`;
   if (izinVar('satinAlmalar')) h += `
-    <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">${ikon('🛒','mor')} Satın Almalar
+    <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">${ikon('cart','mor')} Satın Almalar
       ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
     </div>`;
   if (izinVar('raporEkle')) h += `
     <div class="ustNavBtn ${ui.view==='rapor'?'ustNavBtnAktif':''} ty-btn" onclick="raporGoster()">${ikon('📝','vurgu')} Rapor ekle</div>`;
   if (izinVar('periyodikBakim')) h += `
-    <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">${ikon('🔧','kirmizi')} Periyodik Bakım
+    <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">${ikon('wrench','kirmizi')} Periyodik Bakım
       ${bakimUyariSayisi() > 0 ? `<span class="rozet">${bakimUyariSayisi()}</span>` : ''}
     </div>`;
   if (izinVar('malzemeCikis')) h += `
-    <div class="ustNavBtn ${ui.view==='malzemecikis'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeCikisGoster()">${ikon('📉','turkuaz')} Malzeme Kullan</div>`;
+    <div class="ustNavBtn ${ui.view==='malzemecikis'?'ustNavBtnAktif':''} ty-btn" onclick="malzemeCikisGoster()">${ikon('trendDown','turkuaz')} Malzeme Kullan</div>`;
   if (izinVar('transfer')) h += `
-    <div class="ustNavBtn ${ui.view==='transfer'?'ustNavBtnAktif':''} ty-btn" onclick="transferGoster()">${ikon('🔄','mavi')} Transfer Et
+    <div class="ustNavBtn ${ui.view==='transfer'?'ustNavBtnAktif':''} ty-btn" onclick="transferGoster()">${ikon('refresh','mavi')} Transfer Et
       ${bekleyenTransferSayisi() > 0 ? `<span class="rozet">${bekleyenTransferSayisi()}</span>` : ''}
     </div>`;
   if (izinVar('raporGor')) h += `
@@ -798,10 +901,11 @@ function tesisAgaciHTML(){
   }
   tesisListesi.forEach((t, tIndex) => {
     const acikT = ui.acikTesis.has(t.id);
-    h += `<div class="tesisKart">`;
-    h += `<div class="tesisBaslikSatir" onclick="acikTesisToggle('${t.id}')">
+    h += `<div class="tesisKart" ${ui.siralaModu?`draggable="true" ondragstart="tesisSurukleBasla(event,'${t.id}')" ondragover="event.preventDefault()" ondrop="tesisSurukleBirak(event,'${t.id}')"`:''}>`;
+    h += `<div class="tesisBaslikSatir ${ui.siralaModu?'suruklenebilirSatir':''}" onclick="acikTesisToggle('${t.id}')">
+      ${ui.siralaModu ? `<span class="suruklemeTutamaci">⠿</span>` : ''}
       <span class="okBuyuk" style="transform:${acikT?'rotate(90deg)':'none'}">›</span>
-      <span class="tesisIkon tesisIkonRenkli">🏭</span>`;
+      <span class="tesisIkon tesisIkonRenkli">${svgIkon('factory',15)}</span>`;
     if (ui.duzenlenenId === t.id) {
       h += `<input class="editInput" id="editInput_${t.id}" value="${esc(t.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="tesisAdKaydet(this,'${t.id}')" />`;
     } else {
@@ -823,9 +927,10 @@ function tesisAgaciHTML(){
       const makineListesi = siraliMakineler(t.id, t.makineler);
       makineListesi.forEach((m, mIndex) => {
         const acikM = ui.acikMakine.has(m.id);
-        h += `<div class="makineSatir" onclick="acikMakineToggle('${m.id}')">
+        h += `<div class="makineSatir ${ui.siralaModu?'suruklenebilirSatir':''}" ${ui.siralaModu?`draggable="true" ondragstart="makineSurukleBasla(event,'${m.id}')" ondragover="event.preventDefault()" ondrop="makineSurukleBirak(event,'${t.id}','${m.id}')"`:''} onclick="acikMakineToggle('${m.id}')">
+          ${ui.siralaModu ? `<span class="suruklemeTutamaci">⠿</span>` : ''}
           <span class="okBuyuk" style="transform:${acikM?'rotate(90deg)':'none'}">›</span>
-          <span class="tesisIkon makineIkonRenkli" style="font-size:12px">⚙</span>`;
+          <span class="tesisIkon makineIkonRenkli">${svgIkon('gear',13)}</span>`;
         if (ui.duzenlenenId === m.id) {
           h += `<input class="editInput" id="editInput_${m.id}" value="${esc(m.ad)}" onclick="event.stopPropagation()" onkeydown="enterIleKaydet(event)" onblur="makineAdKaydet(this,'${t.id}','${m.id}')" />`;
         } else {

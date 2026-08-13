@@ -29,6 +29,8 @@ function bakimYapildiIsaretle(tesisId, makineId, bakimId){
   const b = m.bakimlar.find(x => x.id === bakimId); if (!b) return;
   b.sonYapilmaTarihi = bugun();
   kaydetIslem(`Periyodik bakım yapıldı: ${b.ad || 'bakım'} (${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id });
+  toastGoster("Bakım tamamlandı olarak işaretlendi.", "basari");
+  konfetiPatlat();
   saveData(); render();
 }
 function bakimPompaBul(tesisId, makineId, pompaId){
@@ -60,6 +62,8 @@ function bakimPompaYapildiIsaretle(tesisId, makineId, pompaId, bakimId){
   const b = p.bakimlar.find(x => x.id === bakimId); if (!b) return;
   b.sonYapilmaTarihi = bugun();
   kaydetIslem(`Periyodik bakım yapıldı: ${b.ad || 'bakım'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  toastGoster("Bakım tamamlandı olarak işaretlendi.", "basari");
+  konfetiPatlat();
   saveData(); render();
 }
 function bakimSonrakiTarih(b){

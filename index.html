@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesis Yönetim Sistemi</title>
-<link rel="stylesheet" href="stil.css?v=22">
+<link rel="stylesheet" href="stil.css?v=23">
 </head>
 <body>
 
@@ -35,13 +35,14 @@
 <div id="uygulama" style="display:none;">
   <div class="ustCubuk">
     <div style="display:flex;align-items:center;gap:18px;min-width:0;flex:1">
+      <button class="mobilMenuBtn" id="mobilSolBtn" onclick="mobilSolAcKapat()" title="Tesisler">☰</button>
       <div id="logoAlani" class="logoAlani ty-btn" onclick="anaSayfaGoster()" title="Ana Sayfa"></div>
       <div id="ustNav" class="ustNav"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
       <button class="lambaBtn ty-btn" id="lambaBtn" onclick="lambaTikla()" title="Temayı değiştir">
         <span id="lambaIkon">💡</span>
-        <span id="lambaMetin">Koyu Tema</span>
+        <span id="lambaMetin" class="lambaMetinYazi">Koyu Tema</span>
       </button>
       <span class="kullaniciRozeti" id="kullaniciRozeti"></span>
       <div style="position:relative">
@@ -51,12 +52,14 @@
         </button>
         <div id="bildirimPaneli" class="bildirimPaneli" style="display:none"></div>
       </div>
-      <button class="ustBtn ty-btn" onclick="ayarlarGoster()">⚙ Ayarlar</button>
-      <button class="ustBtn ty-btn" onclick="cikisYap()">Çıkış yap</button>
+      <button class="mobilMenuBtn" id="mobilSagBtn" onclick="mobilSagAcKapat()" title="Son İşlemler">🕐</button>
+      <button class="ustBtn ty-btn ustBtnMetin" onclick="ayarlarGoster()">⚙ Ayarlar</button>
+      <button class="ustBtn ty-btn ustBtnMetin" onclick="cikisYap()">Çıkış yap</button>
     </div>
   </div>
   <div id="ustMarquee"></div>
   <div class="govde">
+    <div id="mobilArkaplan" class="mobilArkaplan" onclick="mobilMenuleriKapat()"></div>
     <div class="sol" id="solMenu"></div>
     <div class="ana" id="anaPanel"></div>
     <div class="sag" id="sagMenu"></div>
@@ -82,16 +85,16 @@
 
 <canvas id="sandCursor"></canvas>
 
-<script src="cekirdek.js?v=22"></script>
-<script src="stok.js?v=22"></script>
-<script src="anasayfa.js?v=22"></script>
-<script src="ayarlar.js?v=22"></script>
-<script src="bakim.js?v=22"></script>
-<script src="pompa.js?v=22"></script>
-<script src="rapor.js?v=22"></script>
-<script src="raporlar.js?v=22"></script>
-<script src="satinalma.js?v=22"></script>
-<script src="kum-imleci.js?v=22"></script>
-<script src="baslangic.js?v=22"></script>
+<script src="cekirdek.js?v=23"></script>
+<script src="stok.js?v=23"></script>
+<script src="anasayfa.js?v=23"></script>
+<script src="ayarlar.js?v=23"></script>
+<script src="bakim.js?v=23"></script>
+<script src="pompa.js?v=23"></script>
+<script src="rapor.js?v=23"></script>
+<script src="raporlar.js?v=23"></script>
+<script src="satinalma.js?v=23"></script>
+<script src="kum-imleci.js?v=23"></script>
+<script src="baslangic.js?v=23"></script>
 </body>
 </html>
