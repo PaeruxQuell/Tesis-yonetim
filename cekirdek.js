@@ -161,8 +161,8 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "15";
-const UYGULAMA_SURUM_SAAT = "12:35";
+const UYGULAMA_SURUM_NO = "16";
+const UYGULAMA_SURUM_SAAT = "13:05";
 const UYGULAMA_SURUM_GUN = "13.08.2026";
 const UYGULAMA_SURUMU = `V${UYGULAMA_SURUM_NO} - ${UYGULAMA_SURUM_SAAT} - ${UYGULAMA_SURUM_GUN}`;
 let mevcutRol = "personel";
@@ -175,7 +175,7 @@ let dinleyiciBaslatildi = false;
 function adminMi(){ return mevcutRol === "yonetici"; }
 function anaYoneticiMi(){ return mevcutAnaYonetici === true; }
 function satinAlmaOnaylayabilirMi(){
-  return !!(mevcutKullanici && state && state.satinAlmaOnaycisiId && state.satinAlmaOnaycisiId === mevcutKullanici.uid);
+  return !!(mevcutKullanici && mevcutIzinler && mevcutIzinler.satinAlmaOnay === true);
 }
 
 function saveData(){
@@ -293,7 +293,7 @@ function kapsamTesisler(){
   return state.tesisler.filter(t => mevcutTesisErisimi.includes(t.id));
 }
 function erisilenTesisAdlari(){ return new Set(erisilenTesisler().map(t => t.ad)); }
-const IZIN_VARSAYILAN_KAPALI = ["malzemeCikis", "transfer"];
+const IZIN_VARSAYILAN_KAPALI = ["malzemeCikis", "transfer", "satinAlmaOnay"];
 function izinVar(ad){
   if (adminMi()) return true;
   const kapaliMi = IZIN_VARSAYILAN_KAPALI.includes(ad);
