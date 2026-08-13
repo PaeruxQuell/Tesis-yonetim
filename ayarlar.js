@@ -138,7 +138,7 @@ function renderAyarlar(){
     if (adminMi()) {
       h += `<div class="kart">
         <div class="kartBaslik" style="margin-bottom:10px">Logo</div>
-        <div class="bosMetin" style="margin-bottom:14px">Sol üstte görünecek logo görselinin adresini (URL) girin — 320×85 boyutunda gösterilir. Koyu ve açık tema için ayrı ayrı logo yükleyebilirsiniz (örn. açık temada koyu renkli, koyu temada açık renkli bir logo daha net görünür). Boş bırakılırsa varsayılan yazı ve simge kullanılır.</div>
+        <div class="bosMetin" style="margin-bottom:14px">Sol üstte görünecek logo görselinin adresini (URL) girin — 320×85 boyutunda gösterilir. PNG/JPG gibi sabit görsellerin yanı sıra <b>animasyonlu GIF</b> de kullanabilirsiniz, otomatik oynar. Koyu ve açık tema için ayrı ayrı logo yükleyebilirsiniz (örn. açık temada koyu renkli, koyu temada açık renkli bir logo daha net görünür). Boş bırakılırsa varsayılan yazı ve simge kullanılır.</div>
 
         <div style="margin-bottom:16px">
           <div style="font-size:12.5px;font-weight:700;color:var(--yazi-ikincil);margin-bottom:6px">🌙 Koyu Tema Logosu</div>
