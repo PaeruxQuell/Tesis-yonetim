@@ -103,7 +103,7 @@ function depoGizleDegistir(tesisId, depoId){
 function renderAyarlar(){
     let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         <div class="pompaAdBaslik" style="margin-bottom:0">Ayarlar</div>
-        <span class="surumRozeti" title="Uygulama sürümü — güncelleme sonrası buradaki numara değiştiyse yeni sürüm yüklenmiş demektir">${UYGULAMA_SURUMU}</span>
+        <span class="surumRozeti" title="Uygulama sürümü — tarih/saat, index.html dosyasının sunucudaki gerçek son değişiklik zamanıdır">${uygulamaSurumMetni()}</span>
       </div>
       <div class="altBaslik2" style="margin-bottom:20px">görmek istemediğiniz tesisleri gizleyebilir, yazı boyutunu ayarlayabilirsiniz</div>`;
 

@@ -161,10 +161,14 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "16";
-const UYGULAMA_SURUM_SAAT = "13:05";
-const UYGULAMA_SURUM_GUN = "13.08.2026";
-const UYGULAMA_SURUMU = `V${UYGULAMA_SURUM_NO} - ${UYGULAMA_SURUM_SAAT} - ${UYGULAMA_SURUM_GUN}`;
+const UYGULAMA_SURUM_NO = "18";
+function uygulamaSurumMetni(){
+  const lm = new Date(document.lastModified);
+  const p = (n) => String(n).padStart(2, "0");
+  const saat = `${p(lm.getHours())}:${p(lm.getMinutes())}`;
+  const tarih = `${p(lm.getDate())}.${p(lm.getMonth()+1)}.${lm.getFullYear()}`;
+  return `V${UYGULAMA_SURUM_NO} - ${saat} - ${tarih}`;
+}
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
 let mevcutIzinler = null;
