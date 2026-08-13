@@ -97,6 +97,13 @@ function depoGizleDegistir(tesisId, depoId){
 }
 
 /* ---------------- giriş / oturum ---------------- */
+function satinAlmaOnaycisiDegistir(kullaniciId){
+  if (!anaYoneticiMi()) return;
+  state.satinAlmaOnaycisiId = kullaniciId || "";
+  const kisi = kullanicilarListesi.find(k => k.id === kullaniciId);
+  kaydetIslem(`Satın alma onaycısı değiştirildi: ${kisi ? (kisi.isim || kisi.eposta) : '(seçilmedi)'}`, { view: "kayitlar" });
+  saveData(); render();
+}
 
 function renderAyarlar(){
     let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
@@ -104,6 +111,19 @@ function renderAyarlar(){
         <span class="surumRozeti" title="Uygulama sürümü — güncelleme sonrası buradaki numara değiştiyse yeni sürüm yüklenmiş demektir">${UYGULAMA_SURUMU}</span>
       </div>
       <div class="altBaslik2" style="margin-bottom:20px">görmek istemediğiniz tesisleri gizleyebilir, yazı boyutunu ayarlayabilirsiniz</div>`;
+
+    if (anaYoneticiMi()) {
+      const onaycı = kullanicilarListesi.find(k => k.id === state.satinAlmaOnaycisiId);
+      h += `<div class="kart" style="border-color:rgba(var(--mor-rgb),0.35)">
+        <div class="kartBaslik" style="margin-bottom:10px;color:var(--mor)">🔑 Satın Alma Onaycısı</div>
+        <div class="bosMetin" style="margin-bottom:12px">Yeni satın alma taleplerini onaylama yetkisi sadece burada seçtiğiniz TEK kişiye aittir — diğer yöneticiler dahil kimse bu işlemi yapamaz. Bu ayarı sadece Ana Yönetici değiştirebilir.</div>
+        <select class="girdi" style="width:300px" onchange="satinAlmaOnaycisiDegistir(this.value)">
+          <option value="">— Seçilmedi —</option>
+          ${kullanicilarListesi.map(k => `<option value="${k.id}" ${state.satinAlmaOnaycisiId===k.id?'selected':''}>${esc(k.isim || k.eposta)}</option>`).join('')}
+        </select>
+        ${onaycı ? `<div class="bosMetin" style="margin-top:8px">Şu an onaycı: <b style="color:var(--yazi)">${esc(onaycı.isim || onaycı.eposta)}</b></div>` : ''}
+      </div>`;
+    }
 
     if (izinVar('kullanilanMalzemeler')) {
       h += `<div class="kart ty-btn malzemeKisayolKart" onclick="malzemeListesiGoster()">

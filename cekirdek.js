@@ -100,13 +100,14 @@ function varsayilanVeri(){
     transferler: [],
     logoUrl: "",
     logoUrlKoyu: "",
-    logoUrlAcik: ""
+    logoUrlAcik: "",
+    satinAlmaOnaycisiId: ""
   };
 }
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik" };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "" };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -119,6 +120,8 @@ function sanitizeVeri(v){
   if (typeof v.logoUrl !== "string") v.logoUrl = "";
   if (typeof v.logoUrlKoyu !== "string") v.logoUrlKoyu = v.logoUrl || "";
   if (typeof v.logoUrlAcik !== "string") v.logoUrlAcik = "";
+  if (typeof v.satinAlmaOnaycisiId !== "string") v.satinAlmaOnaycisiId = "";
+  (v.satinAlmalar || []).forEach(s => { if (!s.onayDurumu) s.onayDurumu = "onaylandi"; });
   v.tesisler.forEach(t => {
     if (!Array.isArray(t.depolar)) t.depolar = [];
     (t.makineler || []).forEach(m => {
@@ -158,17 +161,22 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "14";
-const UYGULAMA_SURUM_SAAT = "11:40";
+const UYGULAMA_SURUM_NO = "15";
+const UYGULAMA_SURUM_SAAT = "12:35";
 const UYGULAMA_SURUM_GUN = "13.08.2026";
 const UYGULAMA_SURUMU = `V${UYGULAMA_SURUM_NO} - ${UYGULAMA_SURUM_SAAT} - ${UYGULAMA_SURUM_GUN}`;
 let mevcutRol = "personel";
 let mevcutTesisErisimi = null;
 let mevcutIzinler = null;
 let mevcutIsim = "";
+let mevcutAnaYonetici = false;
 let dinleyiciBaslatildi = false;
 
 function adminMi(){ return mevcutRol === "yonetici"; }
+function anaYoneticiMi(){ return mevcutAnaYonetici === true; }
+function satinAlmaOnaylayabilirMi(){
+  return !!(mevcutKullanici && state && state.satinAlmaOnaycisiId && state.satinAlmaOnaycisiId === mevcutKullanici.uid);
+}
 
 function saveData(){
   if (!state) return;
@@ -202,16 +210,19 @@ async function kullaniciRoluAyarla(user){
   if (!snap.exists) {
     const hepsi = await db.collection("kullanicilar").get();
     mevcutRol = hepsi.empty ? "yonetici" : "personel";
-    await ref.set({ eposta: user.email, rol: mevcutRol });
+    const ilkKullaniciMi = hepsi.empty;
+    await ref.set({ eposta: user.email, rol: mevcutRol, anaYonetici: ilkKullaniciMi });
     mevcutTesisErisimi = null;
     mevcutIzinler = null;
     mevcutIsim = "";
+    mevcutAnaYonetici = ilkKullaniciMi;
   } else {
     mevcutRol = snap.data().rol || "personel";
     const liste = snap.data().tesisErisimi;
     mevcutTesisErisimi = Array.isArray(liste) && liste.length > 0 ? liste : null;
     mevcutIzinler = snap.data().izinler || null;
     mevcutIsim = snap.data().isim || "";
+    mevcutAnaYonetici = snap.data().anaYonetici === true;
   }
 }
 function tarayiciAdi(){
@@ -410,6 +421,17 @@ function bildirimleriTopla(){
   (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma durumu değiştirildi") && k.aciklama.endsWith("Geldi"))
     .slice(0, 15)
     .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef }));
+  if (satinAlmaOnaylayabilirMi()) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Yeni satın alma talebi oluşturuldu"))
+      .slice(0, 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: "Onay bekleyen yeni satın alma talebi var.", renk: "var(--mor)", hedef: k.hedef }));
+  }
+  (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma onaylandı"))
+    .slice(0, 15)
+    .forEach(k => {
+      const sat = (k.hedef && k.hedef.satId) ? (state.satinAlmalar||[]).find(s => s.id === k.hedef.satId) : null;
+      if (sat && satinAlmaGorunurMu(sat)) liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef });
+    });
   kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
     if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {
       liste.push({ anahtar: "kritik:"+t.id+":"+d.id+":"+u.id, mesaj: `Kritik stok: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, renk: "var(--kirmizi)", hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
@@ -525,7 +547,7 @@ async function girisiTamamla(user){
   veriDinlemeyeBasla();
 }
 function girisEkraniniGoster(){
-  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; mevcutIsim = ""; dinleyiciBaslatildi = false; state = null;
+  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; mevcutIsim = ""; mevcutAnaYonetici = false; dinleyiciBaslatildi = false; state = null;
   document.getElementById("uygulama").style.display = "none";
   document.getElementById("girisEkrani").style.display = "flex";
   document.getElementById("girisSifre").value = "";

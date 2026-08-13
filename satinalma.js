@@ -5,6 +5,7 @@ function bosSatinAlmaKaydi(){
     id: uid(), siparisNo: "", gelisTarihi: bugun(),
     kalemler: [bosKalem()], yerler: [bosYer()],
     firma: "",
+    onayDurumu: "bekliyor",
     eklenmeTarihi: bugun(), eklenmeSaati: suAn()
   };
 }
@@ -16,6 +17,14 @@ function satinAlmaEkle(){
   ui.saSecim = yeni.id; ui.saDuzenle = true; ui.view = "satinalma-detay"; render();
 }
 function satinAlmaBul(id){ return state.satinAlmalar.find(x => x.id === id); }
+function satinAlmaOnayla(satId){
+  if (!satinAlmaOnaylayabilirMi()) { toastGoster("Bu işlemi onaylama yetkiniz yok.", "hata"); return; }
+  const s = satinAlmaBul(satId); if (!s) return;
+  s.onayDurumu = "onaylandi";
+  kaydetIslem(`Satın alma onaylandı: ${s.siparisNo || 'sipariş no yok'}`, { view: "satinalma-detay", satId: s.id });
+  toastGoster("Satın alma talebi onaylandı.", "basari");
+  saveData(); render();
+}
 function satinAlmaGuncelle(id, alan, deger){
   const s = satinAlmaBul(id); if (s) s[alan] = deger; saveData(); render();
 }
@@ -52,6 +61,7 @@ function saKalemGuncelle(satId, kalemId, alan, deger){
 }
 function saKalemDurumDegistir(satId, kalemId){
   const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
+  if (s.onayDurumu !== "onaylandi") { toastGoster("Bu talep henüz onaylanmadı.", "hata"); return; }
   if (k.stokaAktarildi) { toastGoster("Bu ürün zaten stoğa eklendi, durumu değiştirilemez.", "hata"); return; }
   k.durum = k.durum === "Geldi" ? "Gelmedi" : "Geldi";
   k.gelisTarihi = k.durum === "Geldi" ? bugun() : "";
@@ -77,9 +87,13 @@ function saTumKalemler(){
   return state.satinAlmalar.filter(satinAlmaGorunurMu).flatMap(s => s.kalemler.map(k => ({ ...k, satId: s.id })));
 }
 function saDurumFiltreDegistir(f){ ui.saFiltre = f; render(); }
+function saTesisFiltreDegistir(deger){ ui.saTesisFiltre = deger; render(); }
 function saFiltreliListe(){
   const q = (ui.saArama || "").trim().toLowerCase();
   let liste = state.satinAlmalar.filter(satinAlmaGorunurMu);
+  if (ui.saTesisFiltre) {
+    liste = liste.filter(s => (s.yerler || []).some(y => y.ad === ui.saTesisFiltre));
+  }
   if (q) {
     liste = liste.filter(s =>
       [s.siparisNo, s.firma,
@@ -88,10 +102,15 @@ function saFiltreliListe(){
         .some(alan => (alan || "").toLowerCase().includes(q))
     );
   }
-  if (ui.saFiltre === "gelen") {
-    liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
-  } else if (ui.saFiltre === "gelmeyen") {
-    liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
+  if (ui.saFiltre === "beklemede") {
+    liste = liste.filter(s => s.onayDurumu !== "onaylandi");
+  } else {
+    liste = liste.filter(s => s.onayDurumu === "onaylandi");
+    if (ui.saFiltre === "gelen") {
+      liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
+    } else if (ui.saFiltre === "gelmeyen") {
+      liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
+    }
   }
   return liste;
 }
@@ -108,14 +127,15 @@ function saListesiRender(){
       const gelenSayi = (sat.kalemler || []).filter(k => k.durum === "Geldi").length;
       const toplam = (sat.kalemler || []).length;
       const yerMetni = (sat.yerler || []).map(y => y.ad).filter(Boolean).join(", ");
-      const renk = gelenSayi === toplam ? durumRenk.Geldi : durumRenk.Gelmedi;
-      const renkRgb = gelenSayi === toplam ? durumRenkRgb.Geldi : durumRenkRgb.Gelmedi;
+      const bekliyorMu = sat.onayDurumu !== "onaylandi";
+      const renk = bekliyorMu ? "var(--mor)" : (gelenSayi === toplam ? durumRenk.Geldi : durumRenk.Gelmedi);
+      const renkRgb = bekliyorMu ? "var(--mor-rgb)" : (gelenSayi === toplam ? durumRenkRgb.Geldi : durumRenkRgb.Gelmedi);
       h += `<div class="saListeSatir ty-satir" onclick="satinAlmaSec('${sat.id}')">
         <div style="flex:1;min-width:0">
           <div class="saListeUrun">${esc(urunler.slice(0,3).join(", ")) || "(ürün adı girilmedi)"}${urunler.length>3?` <span style="color:var(--yazi-soluk)">+${urunler.length-3} diğer</span>`:''}</div>
           <div class="saListeAltBilgi">${[sat.siparisNo && ('Sipariş No: '+sat.siparisNo), yerMetni].filter(Boolean).map(esc).join(' · ') || '—'}</div>
         </div>
-        <span class="rozetDurum" style="color:${renk};border-color:rgba(${renkRgb},0.33);background:rgba(${renkRgb},0.1)">${gelenSayi}/${toplam} geldi</span>
+        <span class="rozetDurum" style="color:${renk};border-color:rgba(${renkRgb},0.33);background:rgba(${renkRgb},0.1)">${bekliyorMu ? '⏳ Onay Bekliyor' : `${gelenSayi}/${toplam} geldi`}</span>
       </div>`;
     });
   }
@@ -159,14 +179,23 @@ function renderSatinAlma(){
         <button class="eklePrimer ty-btn" onclick="satinAlmaEkle()">+ satın alma ekle</button>
       </div>
     </div>`;
-    h += `<input class="girdi saArama" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />`;
-    const tumSayi = state.satinAlmalar.length;
-    const gelenSayi = state.satinAlmalar.filter(s => s.kalemler.length>0 && s.kalemler.every(k=>k.durum==='Geldi')).length;
-    const gelmeyenSayi = state.satinAlmalar.filter(s => s.kalemler.some(k=>k.durum==='Gelmedi')).length;
+    h += `<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <input class="girdi saArama" style="flex:1;min-width:220px" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />
+      <select class="girdi" style="width:200px" onchange="saTesisFiltreDegistir(this.value)">
+        <option value="">Tüm tesisler</option>
+        ${erisilenTesisler().map(t => `<option value="${esc(t.ad)}" ${ui.saTesisFiltre===t.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+      </select>
+    </div>`;
+    const onayliListe = state.satinAlmalar.filter(satinAlmaGorunurMu).filter(s => s.onayDurumu === "onaylandi");
+    const tumSayi = onayliListe.length;
+    const gelenSayi = onayliListe.filter(s => s.kalemler.length>0 && s.kalemler.every(k=>k.durum==='Geldi')).length;
+    const gelmeyenSayi = onayliListe.filter(s => s.kalemler.some(k=>k.durum==='Gelmedi')).length;
+    const beklemedeSayi = state.satinAlmalar.filter(satinAlmaGorunurMu).filter(s => s.onayDurumu !== "onaylandi").length;
     h += `<div class="filtreSatiri">
       <button class="filtreBtn ${ui.saFiltre==='tumu'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:var(--vurgu);--filtre-bg:rgba(var(--vurgu-rgb),0.12)" onclick="saDurumFiltreDegistir('tumu')">Tümü <span class="filtreSayi">${tumSayi}</span></button>
       <button class="filtreBtn ${ui.saFiltre==='gelen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Geldi};--filtre-bg:rgba(${durumRenkRgb.Geldi},0.12)" onclick="saDurumFiltreDegistir('gelen')">Gelenler <span class="filtreSayi">${gelenSayi}</span></button>
       <button class="filtreBtn ${ui.saFiltre==='gelmeyen'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:${durumRenk.Gelmedi};--filtre-bg:rgba(${durumRenkRgb.Gelmedi},0.12)" onclick="saDurumFiltreDegistir('gelmeyen')">Gelmeyenler <span class="filtreSayi">${gelmeyenSayi}</span></button>
+      <button class="filtreBtn ${ui.saFiltre==='beklemede'?'filtreBtnAktif':''} ty-btn" style="--filtre-renk:var(--mor);--filtre-bg:rgba(var(--mor-rgb),0.12)" onclick="saDurumFiltreDegistir('beklemede')">Beklemede <span class="filtreSayi">${beklemedeSayi}</span></button>
     </div>`;
     h += `<div id="saListesiKapsayici"></div>`;
     anaPanelYaz(h);
@@ -192,6 +221,18 @@ function renderSatinAlmaDetay(){
         ${adminMi() ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : ''}
       </div>
     </div>`;
+
+    if (sat.onayDurumu !== "onaylandi") {
+      h += `<div class="kart" style="border-color:rgba(var(--mor-rgb),0.4);background:rgba(var(--mor-rgb),0.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;color:var(--mor);font-size:14px">⏳ Onay Bekliyor</div>
+            <div class="bosMetin" style="margin:2px 0 0">Bu talep henüz onaylanmadı. Onaylanana kadar ürünlerin Geldi/Gelmedi durumu değiştirilemez.</div>
+          </div>
+          ${satinAlmaOnaylayabilirMi() ? `<button class="eklePrimer ty-btn" onclick="silOnayla('Satın Almayı Onayla', ()=>satinAlmaOnayla('${sat.id}'))">✓ Onayla</button>` : ''}
+        </div>
+      </div>`;
+    }
 
     h += `<div class="kart">
       <div class="kartBaslik" style="margin-bottom:12px">Satınalma Talep Formu</div>
@@ -223,7 +264,9 @@ function renderSatinAlmaDetay(){
             <span style="flex:1;color:var(--yazi-dim)">${esc(k.miktar) || '—'}</span>
             <span style="flex:1;color:var(--yazi-dim)">${esc(k.birim) || '—'}</span>
             <span style="width:150px;flex:none">
-              ${k.stokaAktarildi ? `
+              ${sat.onayDurumu !== "onaylandi" ? `
+                <span style="color:var(--mor);font-weight:600;font-size:11px">⏳ Onay bekliyor</span>
+              ` : k.stokaAktarildi ? `
                 <span style="color:var(--yesil);font-weight:600;font-size:11.5px">✓ Depoya eklendi</span>
                 ${k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'JetBrains Mono',monospace">${esc(k.gelisTarihi)}</div>` : ''}
               ` : `
