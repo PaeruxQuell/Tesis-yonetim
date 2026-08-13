@@ -126,7 +126,7 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "" };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0 };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -180,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "26";
+const UYGULAMA_SURUM_NO = "27";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");

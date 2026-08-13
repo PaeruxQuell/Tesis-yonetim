@@ -536,3 +536,15 @@
     .logoAlani .baslik { font-size: 12px; }
     .pompaAdBaslik { font-size: 19px !important; }
   }
+
+  /* ---------------- raporlar: özel tarih takvimi ---------------- */
+  .raporTakvim { background: var(--bg-yuzey2); border: 1px solid var(--sinir2); border-radius: 10px; padding: 14px; width: 260px; flex-shrink: 0; }
+  .raporTakvimBaslik { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13.5px; font-weight: 700; color: var(--yazi); }
+  .raporTakvimOk { background: var(--bg-yukseltilmis); border: 1px solid var(--sinir2); border-radius: 6px; width: 26px; height: 26px; padding: 0; color: var(--yazi-ikincil); font-size: 14px; }
+  .raporTakvimHaftaSatiri { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10.5px; color: var(--yazi-soluk); margin-bottom: 4px; }
+  .raporTakvimGunler { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .raporTakvimGun, .raporTakvimBosluk { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--yazi-ikincil); }
+  .raporTakvimGun:hover { background: var(--bg-hover); }
+  .raporTakvimGunBugun { border: 1px solid rgba(var(--vurgu-rgb),0.5); font-weight: 700; }
+  .raporTakvimGunAralikta { background: rgba(var(--vurgu-rgb),0.14); }
+  .raporTakvimGunSecili { background: var(--vurgu); color: var(--vurgu-uzeri-yazi); font-weight: 700; }
