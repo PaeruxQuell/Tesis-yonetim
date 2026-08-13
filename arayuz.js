@@ -110,15 +110,35 @@ function lambaGuncelle(){
   btn?.setAttribute("title", acikMi ? "Açık Tema — değiştirmek için tıklayın" : "Koyu Tema — değiştirmek için tıklayın");
 }
 
+function gunGeceDalgasi(acikMi){
+  const el = document.createElement("div");
+  el.className = "gunGeceDalga";
+  el.style.background = acikMi
+    ? "linear-gradient(115deg, transparent 0%, rgba(255,248,225,0.92) 46%, rgba(255,248,225,0.92) 54%, transparent 100%)"
+    : "linear-gradient(115deg, transparent 0%, rgba(4,6,10,0.92) 46%, rgba(4,6,10,0.92) 54%, transparent 100%)";
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
 function lambaTikla(){
-  temaDegistir(temaOku() !== "acik");
-  lambaGuncelle();
-  logoGuncelle();
+  const acikOlacak = temaOku() !== "acik";
+  const ikon = document.getElementById("lambaIkon");
   const btn = document.getElementById("lambaBtn");
-  if (btn) {
-    btn.classList.remove("sallaniyor");
-    void btn.offsetWidth;
-    btn.classList.add("sallaniyor");
+
+  gunGeceDalgasi(acikOlacak);
+
+  if (ikon) {
+    ikon.classList.remove("ikonGecisi");
+    void ikon.offsetWidth;
+    ikon.classList.add("ikonGecisi");
+    setTimeout(() => {
+      temaDegistir(acikOlacak);
+      lambaGuncelle();
+      logoGuncelle();
+    }, 260);
+  } else {
+    temaDegistir(acikOlacak);
+    lambaGuncelle();
+    logoGuncelle();
   }
 }
 

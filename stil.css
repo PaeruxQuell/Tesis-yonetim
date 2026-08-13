@@ -195,8 +195,23 @@
   .bildirimTumunuGorBtn { text-align: center; padding: 10px; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--vurgu); border-top: 1px solid var(--bg-satir-sinir); cursor: pointer; }
   .bildirimTumunuGorBtn:hover { background: var(--bg-hover); }
   .bildirimNokta { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-  @keyframes lambaSallan { 0%,100% { transform: rotate(0deg) scale(1); } 20% { transform: rotate(-14deg) scale(1.08); } 40% { transform: rotate(11deg) scale(1.08); } 60% { transform: rotate(-7deg) scale(1.04); } 80% { transform: rotate(4deg) scale(1.02); } }
-  .lambaBtn.sallaniyor { animation: lambaSallan .5s ease; }
+  @keyframes ikonDusCik {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    48% { transform: translateY(16px) rotate(200deg); opacity: 0; }
+    52% { transform: translateY(-16px) rotate(200deg); opacity: 0; }
+    100% { transform: translateY(0) rotate(360deg); opacity: 1; }
+  }
+  #lambaIkon.ikonGecisi { display: inline-block; animation: ikonDusCik .52s ease; }
+
+  .gunGeceDalga {
+    position: fixed; top: -60%; left: -60%; width: 280%; height: 280%; z-index: 9998; pointer-events: none;
+    transform: rotate(-32deg) translateX(105%);
+    animation: gunGeceSweep .9s cubic-bezier(.45,0,.2,1) forwards;
+  }
+  @keyframes gunGeceSweep {
+    0% { transform: rotate(-32deg) translateX(105%); }
+    100% { transform: rotate(-32deg) translateX(-105%); }
+  }
   .temaAnahtari { position: relative; width: 46px; height: 26px; flex-shrink: 0; display: inline-block; }
   .temaAnahtari input { opacity: 0; width: 0; height: 0; }
   .temaKaydirici { position: absolute; cursor: pointer; inset: 0; background: var(--sinir2); border-radius: 26px; transition: .2s; }
