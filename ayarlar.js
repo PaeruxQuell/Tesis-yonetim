@@ -229,7 +229,7 @@ function renderAyarlar(){
               { anahtar: 'stokListesi', etiket: '📦 Stok Listesi (kritik stok, depo)' },
               { anahtar: 'satinAlmalar', etiket: '🛒 Satın Almalar' },
               { anahtar: 'raporEkle', etiket: '📝 Rapor Ekle' },
-              { anahtar: 'raporGor', etiket: '📊 Raporu (özet görünüm)' },
+              { anahtar: 'raporGor', etiket: '📊 Raporlar (özet görünüm)' },
               { anahtar: 'periyodikBakim', etiket: '🔧 Periyodik Bakım' },
               { anahtar: 'kullanilanMalzemeler', etiket: '🧾 Kullanılan Malzemeler' },
               { anahtar: 'malzemeCikis', etiket: '📉 Malzeme Kullan (stoktan düş)', varsayilanKapali: true },

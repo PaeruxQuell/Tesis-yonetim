@@ -114,8 +114,6 @@ function renderUstNav(){
     <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">${ikon('cart','mor')} Satın Almalar
       ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
     </div>`;
-  if (izinVar('raporEkle')) h += `
-    <div class="ustNavBtn ${ui.view==='rapor'?'ustNavBtnAktif':''} ty-btn" onclick="raporGoster()">${ikon('📝','vurgu')} Rapor ekle</div>`;
   if (izinVar('periyodikBakim')) h += `
     <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">${ikon('wrench','kirmizi')} Periyodik Bakım
       ${bakimUyariSayisi() > 0 ? `<span class="rozet">${bakimUyariSayisi()}</span>` : ''}
@@ -127,7 +125,9 @@ function renderUstNav(){
       ${bekleyenTransferSayisi() > 0 ? `<span class="rozet">${bekleyenTransferSayisi()}</span>` : ''}
     </div>`;
   if (izinVar('raporGor')) h += `
-    <div class="ustNavBtn ${ui.view==='raporlar'?'ustNavBtnAktif':''} ty-btn" onclick="raporlarGoster()">${ikon('📊','vurgu')} Raporu</div>`;
+    <div class="ustNavBtn ${ui.view==='raporlar'?'ustNavBtnAktif':''} ty-btn" onclick="raporlarGoster()">${ikon('chart','vurgu')} Raporlar</div>`;
+  if (izinVar('raporEkle')) h += `
+    <div class="ustNavBtn ${ui.view==='rapor'?'ustNavBtnAktif':''} ty-btn" onclick="raporGoster()">${ikon('file','vurgu')} Rapor ekle</div>`;
   el.innerHTML = h;
 
   const marqueeEl = document.getElementById("ustMarquee");

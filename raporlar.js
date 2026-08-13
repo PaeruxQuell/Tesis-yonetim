@@ -37,7 +37,7 @@ function renderRaporlar(){
   ];
   let h = `<div class="pompaBaslikSatir" style="margin-bottom:4px">
     <div>
-      <div class="pompaAdBaslik">Raporu</div>
+      <div class="pompaAdBaslik">Raporlar</div>
       <div class="altBaslik2">tesislerde son yapılan işler, kullanılan malzemeler ve tarihleri — aralığı seçerek filtreleyin</div>
     </div>
   </div>`;
