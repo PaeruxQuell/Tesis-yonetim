@@ -201,17 +201,7 @@
     52% { transform: translateY(-16px) rotate(200deg); opacity: 0; }
     100% { transform: translateY(0) rotate(360deg); opacity: 1; }
   }
-  #lambaIkon.ikonGecisi { display: inline-block; animation: ikonDusCik .52s ease; }
-
-  .gunGeceDalga {
-    position: fixed; top: -60%; left: -60%; width: 280%; height: 280%; z-index: 9998; pointer-events: none;
-    transform: rotate(-32deg) translateX(105%);
-    animation: gunGeceSweep .9s cubic-bezier(.45,0,.2,1) forwards;
-  }
-  @keyframes gunGeceSweep {
-    0% { transform: rotate(-32deg) translateX(105%); }
-    100% { transform: rotate(-32deg) translateX(-105%); }
-  }
+  #lambaIkon.ikonGecisi { display: inline-block; animation: ikonDusCik 1s ease; }
   .temaAnahtari { position: relative; width: 46px; height: 26px; flex-shrink: 0; display: inline-block; }
   .temaAnahtari input { opacity: 0; width: 0; height: 0; }
   .temaKaydirici { position: absolute; cursor: pointer; inset: 0; background: var(--sinir2); border-radius: 26px; transition: .2s; }
