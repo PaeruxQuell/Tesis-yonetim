@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesis Yönetim Sistemi</title>
-<link rel="stylesheet" href="stil.css?v=24">
+<link rel="stylesheet" href="stil.css?v=25">
 </head>
 <body>
 
@@ -39,22 +39,23 @@
       <div id="logoAlani" class="logoAlani ty-btn" onclick="anaSayfaGoster()" title="Ana Sayfa"></div>
       <div id="ustNav" class="ustNav"></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-      <button class="lambaBtn ty-btn" id="lambaBtn" onclick="lambaTikla()" title="Temayı değiştir">
-        <span id="lambaIkon">💡</span>
-        <span id="lambaMetin" class="lambaMetinYazi">Koyu Tema</span>
-      </button>
-      <span class="kullaniciRozeti" id="kullaniciRozeti"></span>
-      <div style="position:relative">
-        <button class="canBtn ty-btn" id="canBtn" onclick="bildirimPaneliAcKapat()" title="Bildirimler">
-          <span class="canIkonu" id="canIkonu">🔔</span>
-          <span class="canRozet" id="canRozet" style="display:none">0</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="lambaBtn ty-btn" id="lambaBtn" onclick="lambaTikla()" title="Temayı değiştir">
+          <span id="lambaIkon">💡</span>
         </button>
-        <div id="bildirimPaneli" class="bildirimPaneli" style="display:none"></div>
+        <div style="position:relative">
+          <button class="canBtn ty-btn" id="canBtn" onclick="bildirimPaneliAcKapat()" title="Bildirimler">
+            <span class="canIkonu" id="canIkonu">🔔</span>
+            <span class="canRozet" id="canRozet" style="display:none">0</span>
+          </button>
+          <div id="bildirimPaneli" class="bildirimPaneli" style="display:none"></div>
+        </div>
+        <button class="mobilMenuBtn" id="mobilSagBtn" onclick="mobilSagAcKapat()" title="Son İşlemler">🕐</button>
+        <button class="ustBtn ty-btn ustBtnIkonYuvarlak" onclick="ayarlarGoster()" title="Ayarlar">⚙</button>
+        <button class="ustBtn ty-btn ustBtnMetin" onclick="cikisYap()">Çıkış yap</button>
       </div>
-      <button class="mobilMenuBtn" id="mobilSagBtn" onclick="mobilSagAcKapat()" title="Son İşlemler">🕐</button>
-      <button class="ustBtn ty-btn ustBtnMetin" onclick="ayarlarGoster()">⚙ Ayarlar</button>
-      <button class="ustBtn ty-btn ustBtnMetin" onclick="cikisYap()">Çıkış yap</button>
+      <span class="kullaniciRozeti" id="kullaniciRozeti"></span>
     </div>
   </div>
   <div id="ustMarquee"></div>
@@ -85,21 +86,21 @@
 
 <canvas id="sandCursor"></canvas>
 
-<script src="cekirdek.js?v=24"></script>
-<script src="arayuz.js?v=24"></script>
-<script src="bildirimler.js?v=24"></script>
-<script src="tesis-agaci.js?v=24"></script>
-<script src="stok.js?v=24"></script>
-<script src="malzeme-cikis.js?v=24"></script>
-<script src="transfer.js?v=24"></script>
-<script src="anasayfa.js?v=24"></script>
-<script src="ayarlar.js?v=24"></script>
-<script src="bakim.js?v=24"></script>
-<script src="pompa.js?v=24"></script>
-<script src="rapor.js?v=24"></script>
-<script src="raporlar.js?v=24"></script>
-<script src="satinalma.js?v=24"></script>
-<script src="kum-imleci.js?v=24"></script>
-<script src="baslangic.js?v=24"></script>
+<script src="cekirdek.js?v=25"></script>
+<script src="arayuz.js?v=25"></script>
+<script src="bildirimler.js?v=25"></script>
+<script src="tesis-agaci.js?v=25"></script>
+<script src="stok.js?v=25"></script>
+<script src="malzeme-cikis.js?v=25"></script>
+<script src="transfer.js?v=25"></script>
+<script src="anasayfa.js?v=25"></script>
+<script src="ayarlar.js?v=25"></script>
+<script src="bakim.js?v=25"></script>
+<script src="pompa.js?v=25"></script>
+<script src="rapor.js?v=25"></script>
+<script src="raporlar.js?v=25"></script>
+<script src="satinalma.js?v=25"></script>
+<script src="kum-imleci.js?v=25"></script>
+<script src="baslangic.js?v=25"></script>
 </body>
 </html>

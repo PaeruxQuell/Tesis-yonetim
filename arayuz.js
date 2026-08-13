@@ -106,9 +106,8 @@ function lambaGuncelle(){
   const acikMi = temaOku() === "acik";
   if (btn) btn.classList.toggle("yanik", acikMi);
   const ikon = document.getElementById("lambaIkon");
-  const metin = document.getElementById("lambaMetin");
   if (ikon) ikon.textContent = acikMi ? "☀️" : "🌙";
-  if (metin) metin.textContent = acikMi ? "Açık Tema" : "Koyu Tema";
+  btn?.setAttribute("title", acikMi ? "Açık Tema — değiştirmek için tıklayın" : "Koyu Tema — değiştirmek için tıklayın");
 }
 
 function lambaTikla(){

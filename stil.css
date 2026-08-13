@@ -155,7 +155,7 @@
   }
   .girisLink { display: block; text-align: center; margin-top: 14px; font-size: 12px; color: var(--mavi); cursor: pointer; }
   .girisHata { color: var(--kirmizi2); font-size: 12px; margin-top: 10px; min-height: 14px; }
-  .kullaniciRozeti { font-size: 12px; color: var(--yazi-dim); margin-right: 6px; }
+  .kullaniciRozeti { font-size: 12px; color: var(--yazi-dim); }
   .genelAramaSonuclari { margin-top: 8px; }
   .genelAramaSonuclari:not(:empty) { background: var(--bg-yuzey); border: 1px solid var(--sinir); border-radius: 10px; overflow: hidden; max-height: 420px; overflow-y: auto; }
   .aramaSonucSatiri { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-top: 1px solid var(--bg-satir-sinir); transition: transform .15s ease, background-color .15s ease; }
@@ -163,11 +163,11 @@
   .aramaSonucSatiri:first-child { border-top: none; }
   .aramaTip { flex-shrink: 0; width: 92px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--vurgu); background: rgba(var(--vurgu-rgb),0.1); border-radius: 6px; padding: 4px 0; text-align: center; }
   .lambaBtn {
-    display: inline-flex; align-items: center; gap: 7px; background: var(--bg-yukseltilmis); border: 1px solid var(--sinir2);
-    border-radius: 20px; padding: 7px 14px 7px 11px; font-size: 12.5px; font-weight: 600; color: var(--yazi-ikincil);
+    display: inline-flex; align-items: center; justify-content: center; background: var(--bg-yukseltilmis); border: 1px solid var(--sinir2);
+    border-radius: 50%; width: 34px; height: 34px; padding: 0; font-size: 16px; color: var(--yazi-ikincil);
     transition: all .2s ease;
   }
-  .lambaBtn #lambaIkon { font-size: 15px; transition: filter .3s ease; filter: grayscale(0.3); }
+  .lambaBtn #lambaIkon { font-size: 16px; transition: filter .3s ease; filter: grayscale(0.3); }
   .lambaBtn:hover { border-color: rgba(var(--vurgu-rgb),0.5); background: rgba(var(--vurgu-rgb),0.08); }
   .lambaBtn.yanik { color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.45); background: rgba(var(--vurgu-rgb),0.1); }
   .lambaBtn.yanik #lambaIkon { filter: drop-shadow(0 0 6px rgba(255,196,77,.9)); }
@@ -241,6 +241,7 @@
     background: var(--bg-yukseltilmis); color: var(--yazi-ikincil); border: 1px solid var(--sinir2); border-radius: 6px;
     padding: 7px 12px; font-size: 12.5px;
   }
+  .ustBtnIkonYuvarlak { border-radius: 50%; width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
   .govde { display: flex; flex: 1; min-height: 0; }
   .sol {
     width: 340px; border-right: 1px solid var(--sinir); background: var(--bg-yan); overflow-y: auto;
