@@ -161,7 +161,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "18";
+const UYGULAMA_SURUM_NO = "19";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -403,20 +403,22 @@ function lambaGuncelle(){
 
 /* ---------------- bildirimler ---------------- */
 let bildirimPaneliAcik = false;
+let bildirimTumunuGoster = false;
 let bildirimHedefleri = [];
 let ilkBildirimAnimasyonuYapildi = false;
-function bildirimGizlenenleriOku(){
-  try { return new Set(JSON.parse(localStorage.getItem("tys_bildirim_gizli") || "[]")); }
+
+function bildirimSetiOku(anahtarAdi){
+  try { return new Set(JSON.parse(localStorage.getItem(anahtarAdi) || "[]")); }
   catch(e){ return new Set(); }
 }
-function bildirimGizlenenleriYaz(set){
-  try {
-    const liste = [...set];
-    // çok büyümesin diye en fazla son 500 anahtarı tutuyoruz
-    localStorage.setItem("tys_bildirim_gizli", JSON.stringify(liste.slice(-500)));
-  } catch(e){}
+function bildirimSetiYaz(anahtarAdi, set){
+  try { localStorage.setItem(anahtarAdi, JSON.stringify([...set].slice(-500))); } catch(e){}
 }
-let bildirimGizlenenler = bildirimGizlenenleriOku();
+// X ile kalıcı silinenler — bunlar listeden tamamen çıkar
+let bildirimSilinenler = bildirimSetiOku("tys_bildirim_silinen");
+// paneli bir kez açıp görmüş olduğun bildirimler — listede kalır, sadece rozet sayısına girmez
+let bildirimGorulenler = bildirimSetiOku("tys_bildirim_gorulen");
+
 function bildirimleriTopla(){
   const liste = [];
   (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Rapor eklendi") && islemGorunurMu(k))
@@ -447,18 +449,19 @@ function bildirimleriTopla(){
     const hedef = x.pompaId ? { view: "bakim", tesisId: x.tesisId, makineId: x.makineId, pompaId: x.pompaId } : { view: "bakim", tesisId: x.tesisId, makineId: x.makineId };
     liste.push({ anahtar: "bakim:"+x.tesisId+":"+x.makineId+":"+(x.pompaId||'')+":"+x.bakim.id, mesaj: `${x.durum.durum==='gecti'?'Bakım gecikti':'Bakım yaklaşıyor'}: ${x.bakim.ad} (${yer})`, renk, hedef });
   });
-  return liste.filter(b => !bildirimGizlenenler.has(b.anahtar));
+  return liste.filter(b => !bildirimSilinenler.has(b.anahtar));
 }
 function bildirimSil(anahtar){
-  bildirimGizlenenler.add(anahtar);
-  bildirimGizlenenleriYaz(bildirimGizlenenler);
+  bildirimSilinenler.add(anahtar);
+  bildirimSetiYaz("tys_bildirim_silinen", bildirimSilinenler);
   bildirimGuncelle();
 }
 function bildirimGuncelle(){
   const rozet = document.getElementById("canRozet");
   if (!rozet) return;
   const liste = bildirimleriTopla();
-  if (liste.length > 0) { rozet.textContent = liste.length > 99 ? "99+" : liste.length; rozet.style.display = ""; }
+  const yeniSayi = liste.filter(b => !bildirimGorulenler.has(b.anahtar)).length;
+  if (yeniSayi > 0) { rozet.textContent = yeniSayi > 99 ? "99+" : yeniSayi; rozet.style.display = ""; }
   else rozet.style.display = "none";
   if (bildirimPaneliAcik) bildirimPaneliRender();
   if (!ilkBildirimAnimasyonuYapildi) {
@@ -472,29 +475,40 @@ function bildirimPaneliAcKapat(){
   const panel = document.getElementById("bildirimPaneli");
   if (!panel) return;
   if (bildirimPaneliAcik) {
+    bildirimTumunuGoster = false;
     bildirimPaneliRender();
     panel.style.display = "block";
-    // paneli açıp gördüğün an, o an listede olan bildirimler bir daha hiç gelmesin
-    bildirimleriTopla().forEach(b => bildirimGizlenenler.add(b.anahtar));
-    bildirimGizlenenleriYaz(bildirimGizlenenler);
+    // bir kez görülen bildirim listede kalır, sadece rozet sayısından düşer — kalıcı olarak localStorage'a yazılır
+    const guncelListe = bildirimleriTopla();
+    guncelListe.forEach(b => bildirimGorulenler.add(b.anahtar));
+    bildirimSetiYaz("tys_bildirim_gorulen", bildirimGorulenler);
     bildirimGuncelle();
   }
   else panel.style.display = "none";
 }
+function bildirimTumunuGosterAc(){
+  bildirimTumunuGoster = true;
+  bildirimPaneliRender();
+}
 function bildirimPaneliRender(){
   const panel = document.getElementById("bildirimPaneli");
   if (!panel) return;
-  const liste = bildirimleriTopla();
+  const tamListe = bildirimleriTopla();
+  const liste = bildirimTumunuGoster ? tamListe : tamListe.slice(0, 10);
   bildirimHedefleri = liste.map(b => b.hedef);
-  let h = `<div class="bildirimBaslikSatir">Bildirimler</div>`;
-  if (liste.length === 0) h += `<div class="bosMetin" style="padding:14px">Şu an bir bildirim yok.</div>`;
+  let h = `<div class="bildirimBaslikSatir">Son İşlemler</div>`;
+  if (liste.length === 0) h += `<div class="bosMetin" style="padding:14px">Henüz bir bildirim yok.</div>`;
   else liste.forEach((b, i) => {
+    const yeniMi = !bildirimGorulenler.has(b.anahtar);
     h += `<div class="bildirimSatir" onclick="bildirimeTikla(${i})">
-      <span class="bildirimNokta" style="color:${b.renk}">●</span>
+      <span class="bildirimNokta" style="color:${b.renk}">${yeniMi ? '●' : '○'}</span>
       <span style="flex:1;font-size:12.5px;color:var(--yazi-ikincil)">${esc(b.mesaj)}</span>
       <span class="bildirimSilBtn" title="Bildirimi kaldır" onclick="event.stopPropagation(); bildirimSil('${b.anahtar}')">×</span>
     </div>`;
   });
+  if (!bildirimTumunuGoster && tamListe.length > 10) {
+    h += `<div class="bildirimTumunuGorBtn ty-btn" onclick="bildirimTumunuGosterAc()">Tümünü gör (${tamListe.length})</div>`;
+  }
   panel.innerHTML = h;
 }
 function bildirimeTikla(i){

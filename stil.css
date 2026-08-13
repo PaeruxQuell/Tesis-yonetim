@@ -192,6 +192,8 @@
   .bildirimSatir:hover { background: var(--bg-hover); }
   .bildirimSilBtn { flex-shrink: 0; color: var(--yazi-soluk); font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
   .bildirimSilBtn:hover { color: var(--kirmizi); background: rgba(var(--kirmizi-rgb),0.12); }
+  .bildirimTumunuGorBtn { text-align: center; padding: 10px; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--vurgu); border-top: 1px solid var(--bg-satir-sinir); cursor: pointer; }
+  .bildirimTumunuGorBtn:hover { background: var(--bg-hover); }
   .bildirimNokta { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
   @keyframes lambaSallan { 0%,100% { transform: rotate(0deg) scale(1); } 20% { transform: rotate(-14deg) scale(1.08); } 40% { transform: rotate(11deg) scale(1.08); } 60% { transform: rotate(-7deg) scale(1.04); } 80% { transform: rotate(4deg) scale(1.02); } }
   .lambaBtn.sallaniyor { animation: lambaSallan .5s ease; }
