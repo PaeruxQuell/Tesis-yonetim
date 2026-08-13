@@ -2,6 +2,7 @@ window.addEventListener("DOMContentLoaded", () => {
   try { yaziOlcegiUygula(yaziOlcegiOku()); } catch(e){ console.error(e); }
   try { temaUygula(temaOku()); } catch(e){ console.error(e); }
   try { lambaGuncelle(); } catch(e){ console.error(e); }
+  try { if (kumImleciTercihOku()) kumImleciBaslat(); } catch(e){ console.error(e); }
   auth.onAuthStateChanged(user => {
     if (user) girisiTamamla(user);
     else girisEkraniniGoster();

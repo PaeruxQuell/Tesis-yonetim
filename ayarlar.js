@@ -129,6 +129,12 @@ function renderAyarlar(){
       <div class="bosMetin" style="margin-top:10px">Kaydırıcıyı sağa çekince tüm sayfadaki yazılar büyür, sola çekince küçülür. Tercihiniz bu tarayıcıda hatırlanır.</div>
     </div>`;
 
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:10px">⏳ Kum İmleci</div>
+      <div class="bosMetin" style="margin-bottom:12px">Fare imlecini, hareket ettikçe içi kum tanesiyle dolan özel bir imleçle değiştirir. Bir yere tıklayınca boşalıp yeniden dolmaya başlar. Sadece bu tarayıcıda geçerli bir tercihtir.</div>
+      <button class="ty-btn kumImleciToggleBtn ${kumImleciTercihOku()?'kumImleciToggleBtnAktif':''}" onclick="kumImleciAcKapat(${kumImleciTercihOku()?'false':'true'})">${kumImleciTercihOku()?'✓ Açık — kapatmak için tıklayın':'Kapalı — açmak için tıklayın'}</button>
+    </div>`;
+
     if (adminMi()) {
       h += `<div class="kart">
         <div class="kartBaslik" style="margin-bottom:10px">Logo</div>
