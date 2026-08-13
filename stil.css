@@ -218,7 +218,16 @@
   .baslik { font-size: 16.5px; font-weight: 800; letter-spacing: -0.2px; }
   .altBaslik { font-size: 11.5px; color: var(--yazi-soluk); margin-top: 1px; }
   .altBaslik2 { font-size: 12.5px; color: var(--yazi-dim); margin-top: 3px; }
-  .logoAlani { width: 320px; height: 85px; flex-shrink: 0; display: flex; align-items: center; overflow: hidden; padding: 0; background: none; border: none; }
+  .logoAlani { width: 320px; height: 85px; flex-shrink: 0; display: flex; align-items: center; overflow: hidden; padding: 0; background: none; border: none; transform-origin: center left; }
+  @keyframes logoKalpAtisi {
+    0% { transform: scale(1); }
+    15% { transform: scale(0.8); }
+    30% { transform: scale(1); }
+    45% { transform: scale(0.8); }
+    60% { transform: scale(1); }
+    100% { transform: scale(1); }
+  }
+  .logoAlani:hover { animation: logoKalpAtisi 1s ease-in-out; }
   .ustNav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
   .ustNavBtn {
     position: relative; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
