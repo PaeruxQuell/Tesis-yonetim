@@ -24,6 +24,8 @@
   let canvas, ctx;
   let maskCanvas, maskCtx;
   let baslatildi = false;
+  let calisiyor = false;
+  let sekmeGizli = false;
 
   function buildSegments(){
     const arr = new Array(bucketCount);
@@ -92,7 +94,8 @@
   }
 
   function draw(now){
-    if (!canvas || !canvas.isConnected) return; // sayfa/element kaldırıldıysa dur
+    if (!canvas || !canvas.isConnected) { calisiyor = false; return; } // sayfa/element kaldırıldıysa dur
+    if (sekmeGizli) { calisiyor = false; return; } // sekme arka plandayken çizim yapma, geri gelince yeniden tetiklenir
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / FILL_DURATION);
 
@@ -153,7 +156,15 @@
 
     ctx.drawImage(blueImg, 0, 0, W, H);
 
-    requestAnimationFrame(draw);
+    // Dolum tamamlandıysa ve düşen parçacık kalmadıysa döngüyü DURDUR —
+    // aksi halde tarayıcı sekmesi arka planda kalıp geri gelindiğinde
+    // gereksiz yere sürekli çizim yapmaya devam ederdi (donma hissi).
+    if (progress < 1 || particles.length > 0) {
+      calisiyor = true;
+      requestAnimationFrame(draw);
+    } else {
+      calisiyor = false; // sabit son kare olarak kalır, tema değişince tekrar tetiklenir
+    }
   }
 
   let letterImg, blueImg;
@@ -207,6 +218,7 @@
 
     particles = [];
     startTime = performance.now();
+    calisiyor = true;
     requestAnimationFrame(draw);
   }
 
@@ -227,6 +239,33 @@
 
   window.kumLogoTemaGuncelle = function(yeniTema){
     theme = yeniTema;
+    // Animasyon tamamlanıp durduysa, yeni rengi yansıtmak için tek bir kare
+    // daha çizdirip tekrar durduruyoruz — sürekli döngü açmaya gerek yok.
+    if (!calisiyor && canvas && ctx) {
+      calisiyor = true;
+      requestAnimationFrame(draw);
+    }
   };
+
+  // Sekme arka plana alınıp geri geldiğinde tarayıcının biriken kareleri
+  // aniden "telafi etmeye" çalışması donma hissi yaratıyordu. Sekme
+  // gizliyken döngüyü tamamen durdurup, geri gelince kaldığı ilerlemeden
+  // (zaman damgasını kaydırarak) devam ettiriyoruz.
+  let gizlenmeAni = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      sekmeGizli = true;
+      gizlenmeAni = performance.now();
+    } else {
+      sekmeGizli = false;
+      if (gizlenmeAni && startTime) {
+        startTime += (performance.now() - gizlenmeAni); // geçen "gizli" süreyi say dışı bırak
+      }
+      if (!calisiyor && canvas && ctx) {
+        calisiyor = true;
+        requestAnimationFrame(draw);
+      }
+    }
+  });
 
 })();

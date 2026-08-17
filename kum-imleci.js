@@ -83,11 +83,16 @@ function kumImleciTercihYaz(deger){
     window.addEventListener('mouseleave', () => { visible = false; });
     window.addEventListener('mouseenter', () => { visible = true; });
 
+    rafBekliyor = true;
     requestAnimationFrame(draw);
   }
 
+  let sekmeGizli = false;
+  let rafBekliyor = false;
+
   function draw(now){
-    if (!aktif) { if (canvas) canvas.style.opacity = 0; return; }
+    if (!aktif) { if (canvas) canvas.style.opacity = 0; rafBekliyor = false; return; }
+    if (sekmeGizli) { rafBekliyor = false; return; } // sekme arka plandayken çizim yapma
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / FILL_DURATION);
     if (progress < 1 && now - lastSpawn > 35){ spawnParticle(); lastSpawn = now; }
@@ -131,6 +136,18 @@ function kumImleciTercihYaz(deger){
     }
     requestAnimationFrame(draw);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      sekmeGizli = true;
+    } else {
+      const gecenGizliSure = sekmeGizli ? 1 : 0; // sadece işaret; asıl kayma aşağıda düzeltiliyor
+      sekmeGizli = false;
+      // sekme gizliyken donmuş "elapsed" birikmesin diye başlangıcı ileri kaydır
+      if (gecenGizliSure) startTime = performance.now() - (Math.min(FILL_DURATION, performance.now() - startTime));
+      if (!rafBekliyor && aktif) { rafBekliyor = true; requestAnimationFrame(draw); }
+    }
+  });
 
   window.kumImleciBaslat = function(){
     if (!window.matchMedia('(pointer: fine)').matches) return; // dokunmatik cihazlarda çalışmasın
