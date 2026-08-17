@@ -16,36 +16,61 @@ let bildirimSilinenler = bildirimSetiOku("tys_bildirim_silinen");
 // paneli bir kez açıp görmüş olduğun bildirimler — listede kalır, sadece rozet sayısına girmez
 let bildirimGorulenler = bildirimSetiOku("tys_bildirim_gorulen");
 
-function bildirimleriTopla(){
+// Bir tarihin (DD.MM.YYYY) bugünden en fazla `gunSayisi` gün önce olup olmadığını kontrol eder.
+function bildirimSonHaftaIcindeMi(tarihStr, gunSayisi){
+  if (!tarihStr) return true; // tarih bilgisi yoksa (canlı durum bildirimi) her zaman geçerli say
+  const d = tarihAyristir(tarihStr);
+  if (!d) return true;
+  const fark = gunFarki(d, new Date());
+  return fark >= 0 && fark <= gunSayisi;
+}
+
+function bildirimleriTopla(tumHaftaMi){
   const liste = [];
-  (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Rapor eklendi") && islemGorunurMu(k))
-    .slice(0, 15)
-    .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--vurgu)", hedef: k.hedef }));
-  (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma durumu değiştirildi") && k.aciklama.endsWith("Geldi"))
-    .slice(0, 15)
-    .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef }));
+  // Her bildirim türü, YALNIZCA o bölümü görme yetkisi olan kişiye gösterilir —
+  // örn. Stok Listesi izni olmayan biri kritik stok bildirimi görmez.
+  if (izinVar('raporGor')) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Rapor eklendi") && islemGorunurMu(k))
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--vurgu)", hedef: k.hedef, tarih: k.tarih }));
+  }
+  if (izinVar('satinAlmalar')) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma durumu değiştirildi") && k.aciklama.endsWith("Geldi"))
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef, tarih: k.tarih }));
+  }
   if (satinAlmaOnaylayabilirMi()) {
     (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Yeni satın alma talebi oluşturuldu"))
-      .slice(0, 15)
-      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: "Onay bekleyen yeni satın alma talebi var.", renk: "var(--mor)", hedef: k.hedef }));
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: "Onay bekleyen yeni satın alma talebi var.", renk: "var(--mor)", hedef: k.hedef, tarih: k.tarih }));
   }
-  (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma onaylandı"))
-    .slice(0, 15)
-    .forEach(k => {
-      const sat = (k.hedef && k.hedef.satId) ? (state.satinAlmalar||[]).find(s => s.id === k.hedef.satId) : null;
-      if (sat && satinAlmaGorunurMu(sat)) liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef });
+  if (izinVar('satinAlmalar')) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma onaylandı"))
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => {
+        const sat = (k.hedef && k.hedef.satId) ? (state.satinAlmalar||[]).find(s => s.id === k.hedef.satId) : null;
+        if (sat && satinAlmaGorunurMu(sat)) liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef, tarih: k.tarih });
+      });
+  }
+  if (izinVar('stokListesi')) {
+    kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
+      if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {
+        liste.push({ anahtar: "kritik:"+t.id+":"+d.id+":"+u.id, mesaj: `Kritik stok: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, renk: "var(--kirmizi)", hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
+      }
+    })));
+  }
+  if (izinVar('periyodikBakim')) {
+    tumBakimlar().filter(x => x.durum.durum === "gecti" || x.durum.durum === "yaklasiyor").forEach(x => {
+      const renk = x.durum.durum === "gecti" ? "var(--kirmizi)" : "var(--vurgu)";
+      const yer = x.pompa ? `${x.tesis} / ${x.makine} / ${x.pompa}` : `${x.tesis} / ${x.makine}`;
+      const hedef = x.pompaId ? { view: "bakim", tesisId: x.tesisId, makineId: x.makineId, pompaId: x.pompaId } : { view: "bakim", tesisId: x.tesisId, makineId: x.makineId };
+      liste.push({ anahtar: "bakim:"+x.tesisId+":"+x.makineId+":"+(x.pompaId||'')+":"+x.bakim.id, mesaj: `${x.durum.durum==='gecti'?'Bakım gecikti':'Bakım yaklaşıyor'}: ${x.bakim.ad} (${yer})`, renk, hedef });
     });
-  kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
-    if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {
-      liste.push({ anahtar: "kritik:"+t.id+":"+d.id+":"+u.id, mesaj: `Kritik stok: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, renk: "var(--kirmizi)", hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
-    }
-  })));
-  tumBakimlar().filter(x => x.durum.durum === "gecti" || x.durum.durum === "yaklasiyor").forEach(x => {
-    const renk = x.durum.durum === "gecti" ? "var(--kirmizi)" : "var(--vurgu)";
-    const yer = x.pompa ? `${x.tesis} / ${x.makine} / ${x.pompa}` : `${x.tesis} / ${x.makine}`;
-    const hedef = x.pompaId ? { view: "bakim", tesisId: x.tesisId, makineId: x.makineId, pompaId: x.pompaId } : { view: "bakim", tesisId: x.tesisId, makineId: x.makineId };
-    liste.push({ anahtar: "bakim:"+x.tesisId+":"+x.makineId+":"+(x.pompaId||'')+":"+x.bakim.id, mesaj: `${x.durum.durum==='gecti'?'Bakım gecikti':'Bakım yaklaşıyor'}: ${x.bakim.ad} (${yer})`, renk, hedef });
-  });
+  }
   return liste.filter(b => !bildirimSilinenler.has(b.anahtar));
 }
 function bildirimSil(anahtar){
@@ -90,7 +115,9 @@ function bildirimTumunuGosterAc(){
 function bildirimPaneliRender(){
   const panel = document.getElementById("bildirimPaneli");
   if (!panel) return;
-  const tamListe = bildirimleriTopla();
+  // "Tümünü gör" açıkken son 1 haftadaki TÜM işlemler gösterilir (kategori başına sınır yok);
+  // kapalıyken panel sadece en güncel 10 bildirimi gösterir.
+  const tamListe = bildirimleriTopla(bildirimTumunuGoster);
   const liste = bildirimTumunuGoster ? tamListe : tamListe.slice(0, 10);
   bildirimHedefleri = liste.map(b => b.hedef);
   let h = `<div class="bildirimBaslikSatir">Son İşlemler</div>`;
@@ -103,8 +130,8 @@ function bildirimPaneliRender(){
       <span class="bildirimSilBtn" title="Bildirimi kaldır" onclick="event.stopPropagation(); bildirimSil('${b.anahtar}')">×</span>
     </div>`;
   });
-  if (!bildirimTumunuGoster && tamListe.length > 10) {
-    h += `<div class="bildirimTumunuGorBtn ty-btn" onclick="bildirimTumunuGosterAc()">Tümünü gör (${tamListe.length})</div>`;
+  if (!bildirimTumunuGoster && bildirimleriTopla().length > 10) {
+    h += `<div class="bildirimTumunuGorBtn ty-btn" onclick="bildirimTumunuGosterAc()">Tümünü gör (son 1 hafta)</div>`;
   }
   panel.innerHTML = h;
 }

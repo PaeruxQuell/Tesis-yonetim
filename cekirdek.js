@@ -180,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "36";
+const UYGULAMA_SURUM_NO = "37";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -338,7 +338,7 @@ function aciklamaGoster(aciklama){
   return (aciklama || "").replace(/\s*—\s*\S+@\S+\.\S+\s*$/, "");
 }
 function satinAlmaGorunurMu(sat){
-  if (adminMi() || !mevcutTesisErisimi) return true;
+  if (adminMi() || satinAlmaOnaylayabilirMi() || !mevcutTesisErisimi) return true;
   if (!sat.yerler || sat.yerler.length === 0) return true;
   const adlar = erisilenTesisAdlari();
   return sat.yerler.some(y => adlar.has(y.ad));
@@ -418,7 +418,15 @@ function islemBadge(aciklama){
 }
 function renderSag(){
   const el = document.getElementById("sagMenu");
+  const btn = document.getElementById("mobilSagBtn");
+  if (!adminMi()) {
+    if (el) { el.style.display = "none"; el.innerHTML = ""; }
+    if (btn) btn.style.display = "none";
+    return;
+  }
+  if (btn) btn.style.display = "";
   if (!el) return;
+  el.style.display = "";
   const liste = (state.sonIslemler || []).filter(islemGorunurMu).slice(0, 10);
   let h = `<div class="solBaslikSatir" style="padding-top:6px"><span class="solBaslik">Son İşlemler</span></div>`;
   if (liste.length === 0) {

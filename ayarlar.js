@@ -100,6 +100,19 @@ function renderAyarlar(){
       </div>
       <div class="altBaslik2" style="margin-bottom:20px">görmek istemediğiniz tesisleri gizleyebilir, yazı boyutunu ayarlayabilirsiniz</div>`;
 
+    if (adminMi()) {
+      h += `<div class="kart malzemeKisayolKart" onclick="kullanicilarGoster()">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="malzemeKisayolIkon" style="background:rgba(var(--mor-rgb),0.16)">👥</span>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:var(--yazi)">Kullanıcılar ve Yetkiler</div>
+            <div class="bosMetin" style="margin:2px 0 0">Rol, tesis erişimi ve bölüm izinlerini yönetin — ${kullanicilarListesi.length || '…'} kullanıcı</div>
+          </div>
+          <span class="okBuyuk" style="transform:rotate(90deg);font-size:22px;color:var(--mor)">›</span>
+        </div>
+      </div>`;
+    }
+
     if (izinVar('kullanilanMalzemeler')) {
       h += `<div class="kart ty-btn malzemeKisayolKart" onclick="malzemeListesiGoster()">
         <div style="display:flex;align-items:center;gap:16px">
@@ -166,54 +179,39 @@ function renderAyarlar(){
       h += `</div>`;
     }
 
-    h += `<div class="kart">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:22px">💡</span>
-        <div>
-          <div class="kartBaslik" style="margin-bottom:2px">Açık / Koyu Tema</div>
-          <div class="bosMetin">Üst çubukta, "Tesis Yönetim Sistemi" yazısının yanındaki lambaya tıklayarak temayı değiştirebilirsiniz.</div>
-        </div>
-      </div>
-    </div>`;
-
-    h += `<div class="kart">
-      <div class="kartBaslik" style="margin-bottom:10px">Tesis Görünürlüğü</div>`;
-    state.tesisler.forEach(t => {
-      h += `<div class="ayarSatiri">
-        <span class="tesisIkon">🏭</span>
-        <span style="flex:1;color:${t.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(t.ad)}${t.gizli?' (gizli)':''}</span>
-        <button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>
-      </div>`;
-    });
-    h += `</div>`;
-    h += `<div class="bosMetin" style="margin-bottom:20px">Gizlenen tesisler; sol menüdeki Tesisler listesinde ve Stok Listesi'nde görünmez. Verileri silinmez, istediğiniz zaman tekrar gösterebilirsiniz.</div>`;
-
     const tumDepolar = [];
     state.tesisler.forEach(t => (t.depolar||[]).forEach(d => tumDepolar.push({ t, d })));
-    h += `<div class="kart">
-      <div class="kartBaslik" style="margin-bottom:10px">Depo Görünürlüğü</div>`;
-    if (tumDepolar.length === 0) h += `<div class="bosMetin">Henüz depo eklenmedi.</div>`;
-    tumDepolar.forEach(({ t, d }) => {
-      h += `<div class="ayarSatiri">
-        <span class="tesisIkon" style="font-size:16px">📦</span>
-        <span style="flex:1;color:${d.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(d.ad)} <span class="bosMetin" style="display:inline">— ${esc(t.ad)}</span>${d.gizli?' (gizli)':''}</span>
-        <button class="ty-btn ayarToggleBtn ${!d.gizli?'ayarToggleAktif':''}" onclick="depoGizleDegistir('${t.id}','${d.id}')">${d.gizli?'Göster':'Gizle'}</button>
+
+    h += `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">`;
+
+    h += `<div class="kart" style="flex:1;min-width:240px;padding:14px 16px">
+      <div class="kartBaslik" style="margin-bottom:6px;font-size:13px">Tesis Görünürlüğü</div>`;
+    state.tesisler.forEach(t => {
+      h += `<div class="ayarSatiri" style="padding:6px 0;gap:8px">
+        <span class="tesisIkon" style="font-size:14px">🏭</span>
+        <span style="flex:1;font-size:12.5px;color:${t.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(t.ad)}${t.gizli?' (gizli)':''}</span>
+        <button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" style="padding:3px 10px;font-size:11px" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>
       </div>`;
     });
+    h += `<div class="bosMetin" style="margin-top:8px;font-size:11px">Gizlenenler sol menü ve Stok Listesi'nde görünmez.</div>
+    </div>`;
+
+    h += `<div class="kart" style="flex:1;min-width:240px;padding:14px 16px">
+      <div class="kartBaslik" style="margin-bottom:6px;font-size:13px">Depo Görünürlüğü</div>`;
+    if (tumDepolar.length === 0) h += `<div class="bosMetin" style="font-size:11px">Henüz depo eklenmedi.</div>`;
+    tumDepolar.forEach(({ t, d }) => {
+      h += `<div class="ayarSatiri" style="padding:6px 0;gap:8px">
+        <span class="tesisIkon" style="font-size:13px">📦</span>
+        <span style="flex:1;font-size:12.5px;color:${d.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(d.ad)} <span class="bosMetin" style="display:inline;font-size:10.5px">— ${esc(t.ad)}</span>${d.gizli?' (gizli)':''}</span>
+        <button class="ty-btn ayarToggleBtn ${!d.gizli?'ayarToggleAktif':''}" style="padding:3px 10px;font-size:11px" onclick="depoGizleDegistir('${t.id}','${d.id}')">${d.gizli?'Göster':'Gizle'}</button>
+      </div>`;
+    });
+    h += `<div class="bosMetin" style="margin-top:8px;font-size:11px">Gizlenenler sadece Stok Listesi'nde görünmez.</div>
+    </div>`;
+
     h += `</div>`;
-    h += `<div class="bosMetin" style="margin-bottom:20px">Gizlenen depolar sadece Stok Listesi'nde görünmez, verileri korunur.</div>`;
 
     if (adminMi()) {
-      h += `<div class="kart malzemeKisayolKart" onclick="kullanicilarGoster()">
-        <div style="display:flex;align-items:center;gap:16px">
-          <span class="malzemeKisayolIkon" style="background:rgba(var(--mor-rgb),0.16)">👥</span>
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:800;color:var(--yazi)">Kullanıcılar ve Yetkiler</div>
-            <div class="bosMetin" style="margin:2px 0 0">Rol, tesis erişimi ve bölüm izinlerini yönetin — ${kullanicilarListesi.length || '…'} kullanıcı</div>
-          </div>
-          <span class="okBuyuk" style="transform:rotate(90deg);font-size:22px;color:var(--mor)">›</span>
-        </div>
-      </div>`;
       h += `<div class="bosMetin" style="margin-bottom:20px">Yeni kullanıcı eklemek için Firebase Console → Authentication → Add user yolunu kullanın. Yeni kullanıcı ilk giriş yaptığında otomatik olarak "Personel" yetkisiyle listelenir.</div>`;
 
       h += `<div class="kart">
