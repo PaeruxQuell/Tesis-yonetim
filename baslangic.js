@@ -1,4 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("contextmenu", (e) => { e.preventDefault(); });
   try { yaziOlcegiUygula(yaziOlcegiOku()); } catch(e){ console.error(e); }
   try { temaUygula(temaOku()); } catch(e){ console.error(e); }
   try { lambaGuncelle(); } catch(e){ console.error(e); }
