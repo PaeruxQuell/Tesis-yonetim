@@ -56,6 +56,12 @@ function bildirimleriTopla(tumHaftaMi){
         if (sat && satinAlmaGorunurMu(sat)) liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--yesil)", hedef: k.hedef, tarih: k.tarih });
       });
   }
+  if (izinVar('malzemeCikis')) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Depoda malzeme kullanıldı, stoktan düşülmeli") && islemGorunurMu(k))
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--turkuaz)", hedef: k.hedef, tarih: k.tarih }));
+  }
   if (izinVar('stokListesi')) {
     kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
       if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {

@@ -180,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "38";
+const UYGULAMA_SURUM_NO = "39";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -294,6 +294,7 @@ function hedefeGit(h){
   else if (h.view === "rapor") raporGoster();
   else if (h.view === "malzemeler") malzemeListesiGoster();
   else if (h.view === "stok") { if (h.tesisId) ui.stokAcikTesis.add(h.tesisId); if (h.depoId) ui.stokAcikDepo.add(h.depoId); stokGoster(); }
+  else if (h.view === "malzemecikis") { if (h.tesisId) ui.cikisTesisId = h.tesisId; if (h.depoId) ui.cikisDepoId = h.depoId; malzemeCikisGoster(); }
   else if (h.view === "satinalma") satinAlmaGoster();
   else if (h.view === "bakim") { if (h.tesisId) ui.bakimAcikTesis.add(h.tesisId); if (h.makineId) ui.bakimAcikMakine.add(h.makineId); if (h.pompaId) ui.bakimAcikPompa.add(h.pompaId); bakimGoster(); }
   else if (h.view === "tesis-vurgula") { ui.acikTesis.add(h.tesisId); if (h.makineId) ui.acikMakine.add(h.makineId); ui.view = "anasayfa"; render(); }
@@ -409,6 +410,7 @@ function render(){ renderSol(); renderAna(); renderSag(); renderUstNav(); logoGu
 function islemBadge(aciklama){
   const a = (aciklama || "").toLowerCase();
   if (a.includes("silindi")) return { etiket: "Silme", renk: "var(--kirmizi)", renkRgb: "var(--kirmizi-rgb)" };
+  if (a.includes("stoktan düşülmeli")) return { etiket: "Stok Uyarı", renk: "var(--turkuaz)", renkRgb: "var(--turkuaz-rgb)" };
   if (a.includes("onayland")) return { etiket: "Onay", renk: "var(--yesil)", renkRgb: "var(--yesil-rgb)" };
   if (a.includes("bakım yapıldı")) return { etiket: "Bakım", renk: "var(--yesil)", renkRgb: "var(--yesil-rgb)" };
   if (a.includes("rapor eklendi")) return { etiket: "Rapor", renk: "var(--vurgu)", renkRgb: "var(--vurgu-rgb)" };

@@ -1,7 +1,7 @@
-let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet" }] };
+let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
 function raporGoster(){
   if (!izinVar('raporEkle')) return;
-  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet" }] };
+  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
   if (raporForm.tesisId) {
     const t = state.tesisler.find(x => x.id === raporForm.tesisId);
     raporForm.makineId = t?.makineler[0]?.id || "";
@@ -27,10 +27,11 @@ function raporMakineSec(makineId){
 }
 function raporPompaSec(pompaId){ raporForm.pompaId = pompaId; render(); }
 function raporAlanGuncelle(alan, deger){ raporForm[alan] = deger; }
-function raporMalzemeEkle(){ raporForm.malzemeler.push({ id: uid(), ad: "", kod: "", adet: 1, birim: "adet" }); render(); }
+function raporMalzemeEkle(){ raporForm.malzemeler.push({ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }); render(); }
 function raporMalzemeSil(id){ raporForm.malzemeler = raporForm.malzemeler.filter(x => x.id !== id); render(); }
 function raporMalzemeGuncelle(id, alan, deger){
   const x = raporForm.malzemeler.find(x => x.id === id); if (x) x[alan] = deger;
+  render();
 }
 function raporKaydet(){
   const t = state.tesisler.find(x => x.id === raporForm.tesisId);
@@ -39,7 +40,7 @@ function raporKaydet(){
   if (!t || !m || !p) { toastGoster("Lütfen tesis, makine ve pompa seçin.", "hata"); return; }
   const tarih = raporForm.tarih || bugun();
   const kullanilanlar = raporForm.malzemeler
-    .map(x => ({ id: uid(), ad: x.ad.trim(), kod: (x.kod||"").trim(), adet: x.adet || 1, birim: x.birim || "adet" }))
+    .map(x => ({ id: uid(), ad: x.ad.trim(), kod: (x.kod||"").trim(), adet: x.adet || 1, birim: x.birim || "adet", onemliDegil: !!x.onemliDegil }))
     .filter(x => x.ad);
 
   kullanilanlar.forEach(({ ad, birim, kod }) => malzemeGecmisineEkle(ad, birim, kod));
@@ -48,6 +49,22 @@ function raporKaydet(){
   p.gecmis.unshift({ id: uid(), tarih, aciklama: aciklama.trim() || "—", malzemeler: kullanilanlar });
 
   kaydetIslem(`Rapor eklendi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+
+  // "Önemli değil" işaretlenmeyen malzemelerden, bu tesisin depolarında adı eşleşen
+  // bir ürün varsa, stoktan düşülmesi için malzemeCikis yetkisi olanlara bildirim gönder.
+  // Otomatik düşülmez — sadece ilgili kişiye "kontrol edip stoktan düş" uyarısı gider.
+  const gorunurDepolar = (t.depolar || []).filter(d => !d.gizli);
+  kullanilanlar.filter(x => !x.onemliDegil).forEach(x => {
+    const adAlt = x.ad.toLowerCase();
+    const eslesenDepo = gorunurDepolar.find(d => (d.urunler||[]).some(u => (u.ad||"").trim().toLowerCase() === adAlt));
+    if (eslesenDepo) {
+      kaydetIslem(
+        `Depoda malzeme kullanıldı, stoktan düşülmeli: ${x.adet} ${x.birim} ${x.ad} (${eslesenDepo.ad} — ${t.ad})`,
+        { view: "malzemecikis", tesisId: t.id, depoId: eslesenDepo.id }
+      );
+    }
+  });
+
   saveData();
   toastGoster("Rapor kaydedildi.", "basari");
   pompaSec(t.id, m.id, p.id);
@@ -100,19 +117,23 @@ function renderRapor(){
 
     h += `<div class="kart">
       <div class="kartBaslikSatir"><span class="kartBaslik">Kullanılan malzemeler</span><button class="ekleMini ty-btn" onclick="raporMalzemeEkle()">+ malzeme ekle</button></div>
-      <div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1.4">Malzeme</span><span style="width:130px">Kod</span><span style="width:80px">Miktar</span><span style="width:110px">Birim</span><span style="width:20px"></span></div>`;
+      <div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1.4">Malzeme</span><span style="width:130px">Kod</span><span style="width:80px">Miktar</span><span style="width:110px">Birim</span><span style="width:120px">Stok Uyarısı</span><span style="width:20px"></span></div>`;
     raporForm.malzemeler.forEach(x => {
-      h += `<div class="parcaSatir">
+      h += `<div class="parcaSatir" style="${x.onemliDegil?'opacity:.6':''}">
         <input class="parcaGirdi" style="flex:1.4" list="malzemeListesi" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
         <input class="parcaGirdi" style="width:130px;flex:none" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
         <select class="parcaGirdi" style="width:110px;flex:none" onchange="raporMalzemeGuncelle('${x.id}','birim',this.value)">
           ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${x.birim===b?'selected':''}>${b}</option>`).join('')}
         </select>
+        <label style="width:120px;flex:none;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--yazi-soluk);cursor:pointer" title="İşaretlerseniz bu malzeme için depo stoğundan düşülmesi gerektiğine dair kimseye bildirim gitmez. Yine de raporlarda ve makine geçmişinde görünmeye devam eder.">
+          <input type="checkbox" ${x.onemliDegil?'checked':''} onchange="raporMalzemeGuncelle('${x.id}','onemliDegil',this.checked)" />
+          Önemli değil
+        </label>
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>raporMalzemeSil('${x.id}'))">×</span>
       </div>`;
     });
-    h += `<div class="bosMetin" style="margin-top:8px">Yazmaya başladığında daha önce kullanılmış malzemeler öneri olarak çıkar.</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Yazmaya başladığında daha önce kullanılmış malzemeler öneri olarak çıkar. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
     h += `</div>`;
 
     h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;
