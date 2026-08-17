@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesis Yönetim Sistemi</title>
-<link rel="stylesheet" href="stil.css?v=31">
+<link rel="stylesheet" href="stil.css?v=32">
 </head>
 <body>
 
@@ -14,6 +14,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <!-- ================= GİRİŞ EKRANI ================= -->
+<!-- Yazı boyutu ölçeklemesi (transform:scale) sadece bu sarıcının içindeki
+     içeriğe uygulanır. sandCursor ve toastKapsayici kasıtlı olarak dışarıda
+     tutuluyor, aksi halde ölçeklendiğinde gerçek fare konumuyla kayar. -->
+<div id="olcekSarici">
 <div id="girisEkrani" style="height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);">
   <div class="girisKart">
     <div class="girisLogo">⌁</div>
@@ -67,6 +71,8 @@
   </div>
 </div>
 <datalist id="malzemeListesi"></datalist>
+</div>
+<!-- ↑ #olcekSarici burada kapanıyor — aşağıdakiler yazı boyutu ölçeklemesinden etkilenmez -->
 
 <div id="toastKapsayici" class="toastKapsayici"></div>
 
@@ -86,22 +92,22 @@
 
 <canvas id="sandCursor"></canvas>
 
-<script src="cekirdek.js?v=31"></script>
-<script src="arayuz.js?v=31"></script>
-<script src="bildirimler.js?v=31"></script>
-<script src="tesis-agaci.js?v=31"></script>
-<script src="stok.js?v=31"></script>
-<script src="malzeme-cikis.js?v=31"></script>
-<script src="transfer.js?v=31"></script>
-<script src="anasayfa.js?v=31"></script>
-<script src="ayarlar.js?v=31"></script>
-<script src="bakim.js?v=31"></script>
-<script src="pompa.js?v=31"></script>
-<script src="rapor.js?v=31"></script>
-<script src="raporlar.js?v=31"></script>
-<script src="satinalma.js?v=31"></script>
-<script src="kum-imleci.js?v=31"></script>
-<script src="logo-kum.js?v=31"></script>
-<script src="baslangic.js?v=31"></script>
+<script src="cekirdek.js?v=32"></script>
+<script src="arayuz.js?v=32"></script>
+<script src="bildirimler.js?v=32"></script>
+<script src="tesis-agaci.js?v=32"></script>
+<script src="stok.js?v=32"></script>
+<script src="malzeme-cikis.js?v=32"></script>
+<script src="transfer.js?v=32"></script>
+<script src="anasayfa.js?v=32"></script>
+<script src="ayarlar.js?v=32"></script>
+<script src="bakim.js?v=32"></script>
+<script src="pompa.js?v=32"></script>
+<script src="rapor.js?v=32"></script>
+<script src="raporlar.js?v=32"></script>
+<script src="satinalma.js?v=32"></script>
+<script src="kum-imleci.js?v=32"></script>
+<script src="logo-kum.js?v=32"></script>
+<script src="baslangic.js?v=32"></script>
 </body>
 </html>

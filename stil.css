@@ -104,6 +104,7 @@
   * { box-sizing: border-box; }
   *, *::before, *::after { transition: background-color .5s ease, color .5s ease, border-color .5s ease; }
   body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--yazi); }
+  #olcekSarici { transform-origin: top left; }
   input, textarea, select, button { font-family: 'Inter', sans-serif; }
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
@@ -448,7 +449,7 @@
   .kritikSolukNokta { color: rgba(var(--kirmizi-rgb),0.40); font-size: 9px; flex-shrink: 0; margin-right: -4px; }
   .stokKritikGirdi { border-color: var(--kirmizi) !important; background: var(--bg-tehlike-soluk) !important; color: var(--kirmizi-yazi) !important; }
   .kritikMarquee { overflow: hidden; white-space: nowrap; margin: 0 12px 14px; border: 1px solid rgba(var(--kirmizi-rgb),0.30); background: rgba(var(--kirmizi-rgb),0.08); border-radius: 8px; padding: 8px 0; }
-  .kritikMarqueeIc { display: inline-block; padding-left: 100%; animation: kritikKaydir 14s linear infinite; color: var(--kirmizi); font-size: 11.5px; font-weight: 600; }
+  .kritikMarqueeIc { display: inline-block; padding-left: 100%; animation: kritikKaydir 18.2s linear infinite; color: var(--kirmizi); font-size: 11.5px; font-weight: 600; }
   @keyframes kritikKaydir { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
   .acilirIcerik { transform-origin: top; }
   .makineListesiAlani { background: rgba(var(--mavi-rgb),0.055); border-top: 1px solid rgba(var(--mavi-rgb),0.18); border-bottom: 1px solid rgba(var(--mavi-rgb),0.18); }

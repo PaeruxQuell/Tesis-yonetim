@@ -83,7 +83,16 @@ function makineSurukleBirak(e, tesisId, hedefMakineId){
 }
 function yaziOlcegiUygula(deger){
   const oran = deger / 100;
-  document.documentElement.style.zoom = oran;
+  // Not: eskiden CSS "zoom" kullanıyordu — bazı tarayıcılarda (özellikle
+  // Windows ekran ölçeklemesiyle birlikte) görsel imleç konumu ile
+  // gerçek tıklama noktası arasında kayma yapıyordu. "transform: scale"
+  // tüm tarayıcılarda tıklama koordinatlarını doğru ölçekler; ayrıca kum
+  // imlecinin ve toast bildirimlerinin fare konumuyla kaymaması için
+  // ölçekleme sadece #olcekSarici sarmalayıcısına uygulanıyor, body'ye değil.
+  const el = document.getElementById("olcekSarici");
+  if (!el) return;
+  el.style.transform = oran === 1 ? "" : `scale(${oran})`;
+  el.style.width = oran === 1 ? "" : `${100 / oran}%`;
   try { localStorage.setItem("tys_yazi_olcek", String(deger)); } catch(e){}
 }
 function yaziOlcegiDegisti(deger){
