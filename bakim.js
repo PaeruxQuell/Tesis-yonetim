@@ -1,4 +1,9 @@
-function bakimGoster(){ if (!izinVar('periyodikBakim')) return; ui.view = "bakim"; render(); }
+function bakimGoster(){
+  if (!izinVar('periyodikBakim')) return;
+  ui.view = "bakim";
+  if (!ui.bakimTakvimYil) { const d = new Date(); ui.bakimTakvimYil = d.getFullYear(); ui.bakimTakvimAy = d.getMonth(); }
+  render();
+}
 function bakimTesisAcKapat(id){ ui.bakimAcikTesis.has(id) ? ui.bakimAcikTesis.delete(id) : ui.bakimAcikTesis.add(id); render(); }
 function bakimMakineAcKapat(id){ ui.bakimAcikMakine.has(id) ? ui.bakimAcikMakine.delete(id) : ui.bakimAcikMakine.add(id); render(); }
 function bakimPompaAcKapat(id){ ui.bakimAcikPompa.has(id) ? ui.bakimAcikPompa.delete(id) : ui.bakimAcikPompa.add(id); render(); }
@@ -110,10 +115,105 @@ function bakimUyariTesisAdlari(){
 }
 
 /* ---------------- görünürlük ayarları ---------------- */
+function bakimGorunumDegistir(mod){ ui.bakimGorunum = mod; render(); }
+function bakimTakvimAyDegistir(delta){
+  let ay = ui.bakimTakvimAy + delta, yil = ui.bakimTakvimYil;
+  if (ay < 0) { ay = 11; yil--; } else if (ay > 11) { ay = 0; yil++; }
+  ui.bakimTakvimAy = ay; ui.bakimTakvimYil = yil;
+  render();
+}
+function bakimTakvimGunSec(g, a, y){
+  const pad = n => String(n).padStart(2, "0");
+  ui.bakimTakvimSecili = `${pad(g)}.${pad(a+1)}.${y}`;
+  render();
+}
+function bakimTakvimVerileri(){
+  const harita = {};
+  tumBakimlar().forEach(x => {
+    const tarihObj = bakimSonrakiTarih(x.bakim);
+    if (!tarihObj) return;
+    const key = tarihFormatla(tarihObj);
+    if (!harita[key]) harita[key] = [];
+    harita[key].push(x);
+  });
+  return harita;
+}
+function renderBakimTakvimi(){
+  const AY_ADLARI = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+  const GUN_ADLARI = ["Pt","Sa","Ça","Pe","Cu","Ct","Pz"];
+  const yil = ui.bakimTakvimYil, ay = ui.bakimTakvimAy;
+  const harita = bakimTakvimVerileri();
+  const ilkGun = new Date(yil, ay, 1);
+  let baslangicBosluk = ilkGun.getDay() - 1; if (baslangicBosluk < 0) baslangicBosluk = 6;
+  const ayGunSayisi = new Date(yil, ay+1, 0).getDate();
+  const bugunStr = bugun();
+
+  let h = `<div class="bakimTakvimBaslik">
+    <button class="ty-btn raporTakvimOk" onclick="bakimTakvimAyDegistir(-1)">‹</button>
+    <span>${AY_ADLARI[ay]} ${yil}</span>
+    <button class="ty-btn raporTakvimOk" onclick="bakimTakvimAyDegistir(1)">›</button>
+  </div>`;
+  h += `<div class="bakimTakvimHaftaSatiri">${GUN_ADLARI.map(g=>`<span>${g}</span>`).join('')}</div>`;
+  h += `<div class="bakimTakvimGunler">`;
+  for (let i=0; i<baslangicBosluk; i++) h += `<span class="bakimTakvimBosluk"></span>`;
+  for (let g=1; g<=ayGunSayisi; g++){
+    const pad = n => String(n).padStart(2,"0");
+    const key = `${pad(g)}.${pad(ay+1)}.${yil}`;
+    const kayitlar = harita[key] || [];
+    const gectiSayisi = kayitlar.filter(x => x.durum.durum === "gecti").length;
+    const yaklasanSayisi = kayitlar.filter(x => x.durum.durum === "yaklasiyor").length;
+    let sinif = "bakimTakvimGun";
+    if (gectiSayisi > 0) sinif += " bakimTakvimGunKirmizi";
+    else if (yaklasanSayisi > 0) sinif += " bakimTakvimGunSari";
+    else if (kayitlar.length > 0) sinif += " bakimTakvimGunMavi";
+    if (key === bugunStr) sinif += " bakimTakvimGunBugun";
+    if (key === ui.bakimTakvimSecili) sinif += " bakimTakvimGunSecili";
+    h += `<span class="${sinif}" onclick="bakimTakvimGunSec(${g},${ay},${yil})">
+      <span class="bakimTakvimGunNo">${g}</span>
+      ${kayitlar.length ? `<span class="bakimTakvimGunSayi">${kayitlar.length}</span>` : ''}
+    </span>`;
+  }
+  h += `</div>`;
+
+  const seciliGun = ui.bakimTakvimSecili || bugunStr;
+  const seciliKayitlar = harita[seciliGun] || [];
+  h += `<div class="kart" style="margin-top:16px">
+    <div class="kartBaslik" style="margin-bottom:10px">${esc(seciliGun)}${seciliGun===bugunStr?' (bugün)':''} — ${seciliKayitlar.length} bakım</div>`;
+  if (seciliKayitlar.length === 0) {
+    h += `<div class="bosMetin">Bu tarihte planlı bakım yok.</div>`;
+  } else {
+    seciliKayitlar.forEach(x => {
+      const renk = x.durum.durum==='gecti' ? 'var(--kirmizi)' : x.durum.durum==='yaklasiyor' ? 'var(--vurgu)' : 'var(--yesil)';
+      const yer = x.pompa ? `${x.tesis} / ${x.makine} / ${x.pompa}` : `${x.tesis} / ${x.makine}`;
+      h += `<div class="ayarSatiri ty-btn" style="border-left:3px solid ${renk}" onclick="bakimTesisAcKapat('${x.tesisId}'); bakimMakineAcKapat('${x.makineId}'); ${x.pompaId?`bakimPompaAcKapat('${x.pompaId}');`:''} bakimGorunumDegistir('liste')">
+        <span style="flex:1">
+          <div style="color:var(--yazi);font-size:13px;font-weight:600">${esc(x.bakim.ad)}</div>
+          <div style="color:var(--yazi-soluk);font-size:11.5px">${esc(yer)}</div>
+        </span>
+        <span style="color:${renk};font-size:11.5px;font-weight:600">${x.durum.durum==='gecti' ? `${Math.abs(x.durum.gunKaldi)} gün gecikti` : `${x.durum.gunKaldi} gün kaldı`}</span>
+      </div>`;
+    });
+  }
+  h += `</div>`;
+  return h;
+}
 
 function renderBakim(){
-    let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Periyodik Bakım</div>
-      <div class="altBaslik2" style="margin-bottom:20px">tesis ve makine bazında bakım planı</div>`;
+    let h = `<div class="pompaBaslikSatir" style="margin-bottom:4px">
+      <div>
+        <div class="pompaAdBaslik">Periyodik Bakım</div>
+        <div class="altBaslik2">tesis ve makine bazında bakım planı</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="ty-btn raporFiltreBtn ${(!ui.bakimGorunum||ui.bakimGorunum==='liste')?'raporFiltreBtnAktif':''}" onclick="bakimGorunumDegistir('liste')">📋 Liste</button>
+        <button class="ty-btn raporFiltreBtn ${ui.bakimGorunum==='takvim'?'raporFiltreBtnAktif':''}" onclick="bakimGorunumDegistir('takvim')">📅 Takvim</button>
+      </div>
+    </div>`;
+    if (ui.bakimGorunum === 'takvim') {
+      h += renderBakimTakvimi();
+      anaPanelYaz(h);
+      return;
+    }
     erisilenTesisler().forEach(t => {
       const acik = ui.bakimAcikTesis.has(t.id);
       const tesisBakimlari = tumBakimlar().filter(x => x.tesisId === t.id);

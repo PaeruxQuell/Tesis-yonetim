@@ -554,3 +554,17 @@
   .raporTakvimGunBugun { border: 1px solid rgba(var(--vurgu-rgb),0.5); font-weight: 700; }
   .raporTakvimGunAralikta { background: rgba(var(--vurgu-rgb),0.14); }
   .raporTakvimGunSecili { background: var(--vurgu); color: var(--vurgu-uzeri-yazi); font-weight: 700; }
+
+  /* ---------------- bakım takvimi ---------------- */
+  .bakimTakvimBaslik { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; font-size: 15px; font-weight: 700; color: var(--yazi); }
+  .bakimTakvimHaftaSatiri { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; color: var(--yazi-soluk); margin-bottom: 6px; }
+  .bakimTakvimGunler { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .bakimTakvimGun, .bakimTakvimBosluk { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; border-radius: 10px; cursor: pointer; color: var(--yazi-ikincil); background: var(--bg-yuzey); border: 1px solid var(--sinir-soluk); }
+  .bakimTakvimGun:hover { background: var(--bg-hover); }
+  .bakimTakvimGunNo { font-weight: 600; }
+  .bakimTakvimGunSayi { font-size: 10px; font-family: 'JetBrains Mono', monospace; opacity: .8; }
+  .bakimTakvimGunBugun { border: 2px solid var(--vurgu); }
+  .bakimTakvimGunKirmizi { background: rgba(var(--kirmizi-rgb),0.16); color: var(--kirmizi); border-color: rgba(var(--kirmizi-rgb),0.4); font-weight: 700; }
+  .bakimTakvimGunSari { background: rgba(var(--vurgu-rgb),0.16); color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.4); font-weight: 700; }
+  .bakimTakvimGunMavi { background: rgba(var(--mavi-rgb),0.12); color: var(--mavi); border-color: rgba(var(--mavi-rgb),0.35); }
+  .bakimTakvimGunSecili { outline: 3px solid var(--vurgu); outline-offset: 1px; }

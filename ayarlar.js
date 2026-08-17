@@ -33,6 +33,7 @@ function ayarlarGoster(){
       kullanicilarListesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (ui.view === "ayarlar") render();
     }).catch(err => console.error(err));
+    yedeklerYukle();
   }
 }
 function kullaniciRoluDegistir(kullaniciId, yeniRol){
@@ -126,6 +127,44 @@ function renderAyarlar(){
       <div class="bosMetin" style="margin-bottom:12px">Fare imlecini, hareket ettikçe içi kum tanesiyle dolan özel bir imleçle değiştirir. Bir yere tıklayınca boşalıp yeniden dolmaya başlar. Sadece bu tarayıcıda geçerli bir tercihtir.</div>
       <button class="ty-btn kumImleciToggleBtn ${kumImleciTercihOku()?'kumImleciToggleBtnAktif':''}" onclick="kumImleciAcKapat(${kumImleciTercihOku()?'false':'true'})">${kumImleciTercihOku()?'✓ Açık — kapatmak için tıklayın':'Kapalı — açmak için tıklayın'}</button>
     </div>`;
+
+    if (adminMi()) {
+      h += `<div class="kart">
+        <div class="kartBaslik" style="margin-bottom:10px">🗄️ Günlük Yedekler</div>
+        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. Eski yedekler burada kalıcı olarak durur; birine tıklayıp önizleyebilir, indirebilir ya da (gerekirse) o güne geri dönebilirsiniz.</div>
+        ${yedeklerListesi.length === 0 ? `<div class="bosMetin">Henüz bir yedek oluşmadı.</div>` : ''}`;
+      yedeklerListesi.forEach(y => {
+        const acikMi = ui.yedekSecili === y.id;
+        const veri = yedekOnizlemeVerisi[y.id];
+        h += `<div class="ayarSatiri ty-btn" style="flex-direction:column;align-items:stretch;gap:0" onclick="yedekOnizleAc('${y.id}')">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="okBuyuk" style="transform:${acikMi?'rotate(90deg)':'none'}">›</span>
+            <span style="flex:1;font-weight:600;color:var(--yazi);font-family:'JetBrains Mono',monospace">${esc(y.tarih)}</span>
+            <span class="bosMetin" style="margin:0">saat ${esc(y.saat)}</span>
+            <span class="islemRozet" style="color:${y.kapandi?'var(--yesil)':'var(--vurgu)'};background:rgba(${y.kapandi?'var(--yesil-rgb)':'var(--vurgu-rgb)'},0.14);border-color:rgba(${y.kapandi?'var(--yesil-rgb)':'var(--vurgu-rgb)'},0.4)">${y.kapandi?'✓ kapandı':'⏳ gün devam ediyor'}</span>
+          </div>`;
+        if (acikMi) {
+          h += `<div style="padding:12px 0 4px 30px" onclick="event.stopPropagation()">`;
+          if (!veri) {
+            h += `<div class="bosMetin">Yükleniyor...</div>`;
+          } else {
+            h += `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px">
+              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.tesisSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Tesis</div></div>
+              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.malzemeGecmisiSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Kayıtlı Malzeme</div></div>
+              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.satinAlmaSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Satın Alma</div></div>
+              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.transferSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Transfer</div></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="ustBtn ty-btn" onclick="yedekIndir('${y.id}')">⬇ İndir (.json)</button>
+              <button class="ustBtn ty-btn" style="color:var(--kirmizi);border-color:rgba(var(--kirmizi-rgb),0.4)" onclick="yedekGeriYukle('${y.id}')">↺ Bu Yedeğe Geri Dön</button>
+            </div>`;
+          }
+          h += `</div>`;
+        }
+        h += `</div>`;
+      });
+      h += `</div>`;
+    }
 
     h += `<div class="kart">
       <div style="display:flex;align-items:center;gap:12px">
