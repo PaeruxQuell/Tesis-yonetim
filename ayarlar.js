@@ -26,14 +26,6 @@ function sonIslemleriTemizle(){
   saveData(); render();
   toastGoster("Aktivite günlüğü temizlendi.", "basari");
 }
-function logoUrlGuncelle(tema, deger){
-  if (!adminMi()) return;
-  const temiz = (deger || "").trim();
-  if (tema === "koyu") state.logoUrlKoyu = temiz;
-  else state.logoUrlAcik = temiz;
-  kaydetIslem(temiz ? `Logo güncellendi (${tema==='koyu'?'koyu':'açık'} tema).` : `Logo kaldırıldı (${tema==='koyu'?'koyu':'açık'} tema).`, { view: "kayitlar" });
-  saveData(); render();
-}
 function ayarlarGoster(){
   ui.view = "ayarlar"; render();
   if (adminMi()) {
@@ -134,31 +126,6 @@ function renderAyarlar(){
       <div class="bosMetin" style="margin-bottom:12px">Fare imlecini, hareket ettikçe içi kum tanesiyle dolan özel bir imleçle değiştirir. Bir yere tıklayınca boşalıp yeniden dolmaya başlar. Sadece bu tarayıcıda geçerli bir tercihtir.</div>
       <button class="ty-btn kumImleciToggleBtn ${kumImleciTercihOku()?'kumImleciToggleBtnAktif':''}" onclick="kumImleciAcKapat(${kumImleciTercihOku()?'false':'true'})">${kumImleciTercihOku()?'✓ Açık — kapatmak için tıklayın':'Kapalı — açmak için tıklayın'}</button>
     </div>`;
-
-    if (adminMi()) {
-      h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">Logo</div>
-        <div class="bosMetin" style="margin-bottom:14px">Sol üstte görünecek logo görselinin adresini (URL) girin — 320×85 boyutunda gösterilir. PNG/JPG gibi sabit görsellerin yanı sıra <b>animasyonlu GIF</b> de kullanabilirsiniz, otomatik oynar. Koyu ve açık tema için ayrı ayrı logo yükleyebilirsiniz (örn. açık temada koyu renkli, koyu temada açık renkli bir logo daha net görünür). Boş bırakılırsa varsayılan yazı ve simge kullanılır.</div>
-
-        <div style="margin-bottom:16px">
-          <div style="font-size:12.5px;font-weight:700;color:var(--yazi-ikincil);margin-bottom:6px">🌙 Koyu Tema Logosu</div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <input class="girdi" style="flex:1;min-width:260px" placeholder="https://..." value="${esc(state.logoUrlKoyu||'')}" onchange="logoUrlGuncelle('koyu', this.value)" />
-            ${state.logoUrlKoyu ? `<button class="ustBtn ty-btn" onclick="logoUrlGuncelle('koyu','')">Kaldır</button>` : ''}
-          </div>
-          ${state.logoUrlKoyu ? `<div style="margin-top:10px;padding:10px;background:#12161d;border-radius:8px;display:inline-block"><img src="${esc(state.logoUrlKoyu)}" style="width:320px;height:85px;object-fit:contain;display:block" /></div>` : ''}
-        </div>
-
-        <div>
-          <div style="font-size:12.5px;font-weight:700;color:var(--yazi-ikincil);margin-bottom:6px">☀️ Açık Tema Logosu</div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <input class="girdi" style="flex:1;min-width:260px" placeholder="https://..." value="${esc(state.logoUrlAcik||'')}" onchange="logoUrlGuncelle('acik', this.value)" />
-            ${state.logoUrlAcik ? `<button class="ustBtn ty-btn" onclick="logoUrlGuncelle('acik','')">Kaldır</button>` : ''}
-          </div>
-          ${state.logoUrlAcik ? `<div style="margin-top:10px;padding:10px;background:#f2f3f5;border-radius:8px;display:inline-block"><img src="${esc(state.logoUrlAcik)}" style="width:320px;height:85px;object-fit:contain;display:block" /></div>` : ''}
-        </div>
-      </div>`;
-    }
 
     h += `<div class="kart">
       <div style="display:flex;align-items:center;gap:12px">

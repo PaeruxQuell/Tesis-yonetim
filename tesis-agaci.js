@@ -154,17 +154,11 @@ function renderUstNav(){
 function logoGuncelle(){
   const el = document.getElementById("logoAlani");
   if (!el || !state) return;
-  const acikMi = temaOku() === "acik";
-  const aktifLogo = acikMi ? (state.logoUrlAcik || state.logoUrlKoyu) : (state.logoUrlKoyu || state.logoUrlAcik);
-  el.innerHTML = aktifLogo
-    ? `<img src="${esc(aktifLogo)}" alt="Logo" style="width:320px;height:85px;object-fit:contain;display:block" />`
-    : `<div style="display:flex;align-items:center;gap:10px;width:320px;height:85px">
-        <span class="logo">⌁</span>
-        <div>
-          <div class="baslik">Tesis Yönetim Sistemi</div>
-          <div class="altBaslik">saha ekipman ve satın alma takibi</div>
-        </div>
-      </div>`;
+  if (!document.getElementById("kumLogoCanvas")) {
+    el.innerHTML = `<canvas id="kumLogoCanvas" style="display:block"></canvas>`;
+    if (window.kumLogoBaslat) window.kumLogoBaslat();
+  }
+  if (window.kumLogoTemaGuncelle) window.kumLogoTemaGuncelle(temaOku());
 }
 function renderSol(){
   const h = tesisAgaciHTML();
