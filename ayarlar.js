@@ -143,8 +143,11 @@ function renderAyarlar(){
 
     if (adminMi()) {
       h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">🗄️ Günlük Yedekler</div>
-        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. Eski yedekler burada kalıcı olarak durur; birine tıklayıp önizleyebilir, indirebilir ya da (gerekirse) o güne geri dönebilirsiniz.</div>
+        <div class="kartBaslikSatir" style="margin-bottom:10px">
+          <span class="kartBaslik">🗄️ Günlük Yedekler</span>
+          <button class="ustBtn ty-btn" ${manuelYedekAliniyor?'disabled':''} onclick="manuelYedekAl()">${manuelYedekAliniyor?'⏳ Yedekleniyor...':'⬇ Şimdi Yedekle'}</button>
+        </div>
+        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. "Şimdi Yedekle" ile bugünün yedeğini istediğiniz an manuel olarak da alabilirsiniz. Eski yedekler burada kalıcı olarak durur; birine tıklayıp önizleyebilir, indirebilir ya da (gerekirse) o güne geri dönebilirsiniz.</div>
         ${yedeklerListesi.length === 0 ? `<div class="bosMetin">Henüz bir yedek oluşmadı.</div>` : ''}`;
       yedeklerListesi.forEach(y => {
         const acikMi = ui.yedekSecili === y.id;

@@ -53,6 +53,28 @@ window.yedeklemeBaslat = function(){
   yedeklemeZamanlayiciKur();
 };
 
+/* ---------------- manuel yedekleme (sadece Yönetici) ---------------- */
+let manuelYedekAliniyor = false;
+async function manuelYedekAl(){
+  if (!adminMi()) return;
+  if (manuelYedekAliniyor) return;
+  manuelYedekAliniyor = true;
+  render();
+  try {
+    await bugununYedeginiGuncelle(false);
+    toastGoster("Yedek başarıyla alındı.", "basari");
+    kaydetIslem("Günlük yedek manuel olarak alındı.", { view: "ayarlar" });
+    yedekOnizlemeVerisi = {};
+    yedeklerYukle();
+  } catch (err) {
+    console.error(err);
+    toastGoster("Yedek alınamadı, tekrar deneyin.", "hata");
+  } finally {
+    manuelYedekAliniyor = false;
+    render();
+  }
+}
+
 /* ---------------- Ayarlar: yedek listesi ve önizleme ---------------- */
 let yedeklerListesi = [];
 let yedekOnizlemeVerisi = {};
