@@ -204,59 +204,17 @@ function renderAyarlar(){
     h += `<div class="bosMetin" style="margin-bottom:20px">Gizlenen depolar sadece Stok Listesi'nde görünmez, verileri korunur.</div>`;
 
     if (adminMi()) {
-      h += `<div class="kart">
-        <div class="kartBaslik" style="margin-bottom:10px">Kullanıcılar ve Yetkiler</div>`;
-      if (kullanicilarListesi.length === 0) {
-        h += `<div class="bosMetin">Yükleniyor...</div>`;
-      } else {
-        kullanicilarListesi.forEach(k => {
-          const benMi = mevcutKullanici && k.id === mevcutKullanici.uid;
-          const kErisimi = Array.isArray(k.tesisErisimi) ? k.tesisErisimi : [];
-          h += `<div class="ayarSatiri" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="flex:1;color:var(--yazi)">${esc(k.eposta)}${benMi?' (siz)':''}</span>
-              <select class="girdi" style="width:140px" ${benMi?'disabled':''} onchange="kullaniciRoluDegistir('${k.id}', this.value)">
-                <option value="personel" ${k.rol==='personel'?'selected':''}>Personel</option>
-                <option value="yonetici" ${k.rol==='yonetici'?'selected':''}>Yönetici</option>
-              </select>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span class="bosMetin" style="font-style:normal;flex-shrink:0">Görünecek isim:</span>
-              <input class="girdi" style="flex:1;padding:6px 10px;font-size:12.5px" placeholder="Örn: Ahmet Yılmaz" value="${esc(k.isim||'')}" onchange="kullaniciIsmiDegistir('${k.id}', this.value)" />
-            </div>
-            <div class="bosMetin">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-              <button class="ty-btn tesisErisimBtn ${(k.izinler && k.izinler.satinAlmaOnay===true)?'tesisErisimBtnAktif':''}" onclick="kullaniciIzinDegistir('${k.id}','satinAlmaOnay')">🔑 Satın Alma Onay</button>
-              <span class="bosMetin" style="margin:0">bu yetkiye sahip TEK kişi(ler) satın alma taleplerini onaylayabilir — rol fark etmeksizin</span>
-            </div>`;
-          if (k.rol !== 'yonetici') {
-            const kIzinler = k.izinler || {};
-            const izinListesi = [
-              { anahtar: 'stokListesi', etiket: '📦 Stok Listesi (kritik stok, depo)' },
-              { anahtar: 'satinAlmalar', etiket: '🛒 Satın Almalar' },
-              { anahtar: 'raporEkle', etiket: '📝 Rapor Ekle' },
-              { anahtar: 'raporGor', etiket: '📊 Raporlar (özet görünüm)' },
-              { anahtar: 'periyodikBakim', etiket: '🔧 Periyodik Bakım' },
-              { anahtar: 'kullanilanMalzemeler', etiket: '🧾 Kullanılan Malzemeler' },
-              { anahtar: 'malzemeCikis', etiket: '📉 Malzeme Kullan (stoktan düş)', varsayilanKapali: true },
-              { anahtar: 'transfer', etiket: '🔄 Depolar Arası Transfer', varsayilanKapali: true },
-            ];
-            h += `<div style="margin-top:4px">
-              <div class="bosMetin" style="margin-bottom:6px">Görebileceği tesisler ${kErisimi.length===0?'<b style="color:var(--yazi-dim)">(hiçbiri seçilmedi = tümünü görür)</b>':''}</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-                ${state.tesisler.map(t => `<button class="ty-btn tesisErisimBtn ${kErisimi.includes(t.id)?'tesisErisimBtnAktif':''}" onclick="kullaniciTesisErisimiDegistir('${k.id}','${t.id}')">${esc(t.ad)}</button>`).join('')}
-              </div>
-              <div class="bosMetin" style="margin-bottom:6px">Görebileceği bölümler</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px">
-                ${izinListesi.map(iz => `<button class="ty-btn tesisErisimBtn ${(iz.varsayilanKapali ? kIzinler[iz.anahtar]===true : kIzinler[iz.anahtar]!==false)?'tesisErisimBtnAktif':''}" onclick="kullaniciIzinDegistir('${k.id}','${iz.anahtar}')">${iz.etiket}</button>`).join('')}
-              </div>
-            </div>`;
-          }
-          h += `</div>`;
-        });
-      }
-      h += `</div>`;
-      h += `<div class="bosMetin" style="margin-bottom:20px">Yeni kullanıcı eklemek için Firebase Console → Authentication → Add user yolunu kullanın. Yeni kullanıcı ilk giriş yaptığında otomatik olarak "Personel" yetkisiyle burada listelenir.</div>`;
+      h += `<div class="kart malzemeKisayolKart" onclick="kullanicilarGoster()">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="malzemeKisayolIkon" style="background:rgba(var(--mor-rgb),0.16)">👥</span>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:var(--yazi)">Kullanıcılar ve Yetkiler</div>
+            <div class="bosMetin" style="margin:2px 0 0">Rol, tesis erişimi ve bölüm izinlerini yönetin — ${kullanicilarListesi.length || '…'} kullanıcı</div>
+          </div>
+          <span class="okBuyuk" style="transform:rotate(90deg);font-size:22px;color:var(--mor)">›</span>
+        </div>
+      </div>`;
+      h += `<div class="bosMetin" style="margin-bottom:20px">Yeni kullanıcı eklemek için Firebase Console → Authentication → Add user yolunu kullanın. Yeni kullanıcı ilk giriş yaptığında otomatik olarak "Personel" yetkisiyle listelenir.</div>`;
 
       h += `<div class="kart">
         <div class="kartBaslikSatir ty-btn" style="cursor:pointer;margin-bottom:0" onclick="sistemKayitlariAcKapat()">
@@ -323,4 +281,109 @@ function renderMalzemeler(){
     h += `</div>`;
     anaPanelYaz(h);
     return;
+}
+
+/* ---------------- kullanıcılar ve yetkiler (ayrı sayfa) ---------------- */
+function kullanicilarGoster(){
+  if (!adminMi()) return;
+  ui.view = "kullanicilar";
+  render();
+  if (kullanicilarListesi.length === 0) {
+    db.collection("kullanicilar").get().then(snap => {
+      kullanicilarListesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (ui.view === "kullanicilar") render();
+    }).catch(err => console.error(err));
+  }
+}
+function kullaniciAcKapat(id){
+  ui.kullaniciAcikId = (ui.kullaniciAcikId === id) ? "" : id;
+  render();
+}
+
+function renderKullanicilar(){
+  let h = `<div class="bosMetin ty-btn" style="cursor:pointer;margin-bottom:10px;display:inline-block" onclick="ayarlarGoster()">← Ayarlar'a dön</div>`;
+  h += `<div class="pompaAdBaslik" style="margin-bottom:4px">Kullanıcılar ve Yetkiler</div>
+    <div class="altBaslik2" style="margin-bottom:20px">rol, tesis erişimi ve bölüm izinlerini buradan yönetin — bir kullanıcıya tıklayarak açın</div>`;
+
+  if (kullanicilarListesi.length === 0) {
+    h += `<div class="kart"><div class="bosMetin">Yükleniyor...</div></div>`;
+    anaPanelYaz(h);
+    return;
+  }
+
+  kullanicilarListesi.forEach(k => {
+    const benMi = mevcutKullanici && k.id === mevcutKullanici.uid;
+    const acikMi = ui.kullaniciAcikId === k.id;
+    const kErisimi = Array.isArray(k.tesisErisimi) ? k.tesisErisimi : [];
+    const yoneticiMi = k.rol === 'yonetici';
+    const rolRenk = yoneticiMi ? 'var(--vurgu)' : 'var(--turkuaz)';
+    const rolRgb = yoneticiMi ? 'var(--vurgu-rgb)' : 'var(--turkuaz-rgb)';
+    const harf = (k.isim || k.eposta || '?').trim().charAt(0).toUpperCase();
+
+    h += `<div class="kart" style="padding:0;overflow:hidden">
+      <div class="ayarSatiri ty-btn" style="padding:14px 16px;margin:0" onclick="kullaniciAcKapat('${k.id}')">
+        <span class="tesisIkonRenkli" style="background:rgba(${rolRgb},0.18);color:${rolRenk};font-weight:700;font-size:14px">${esc(harf)}</span>
+        <span style="flex:1;min-width:0">
+          <div style="color:var(--yazi);font-weight:600;font-size:13.5px">${esc(k.isim) || esc(k.eposta)}${benMi?' <span style="color:var(--yazi-soluk);font-weight:400">(siz)</span>':''}</div>
+          <div class="bosMetin" style="margin:1px 0 0">${esc(k.eposta)}</div>
+        </span>
+        <span class="islemRozet" style="color:${rolRenk};background:rgba(${rolRgb},0.14);border-color:rgba(${rolRgb},0.4)">${yoneticiMi?'Yönetici':'Personel'}</span>
+        <span class="okBuyuk" style="transform:${acikMi?'rotate(90deg)':'none'}">›</span>
+      </div>`;
+
+    if (acikMi) {
+      h += `<div class="acilirIcerik" style="padding:0 16px 18px 16px;border-top:1px solid var(--sinir-soluk)">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;margin-bottom:18px">
+          <div style="flex:1;min-width:160px">
+            <div class="kullaniciAlanBasligi">Rol</div>
+            <select class="girdi" style="width:100%" ${benMi?'disabled':''} onchange="kullaniciRoluDegistir('${k.id}', this.value)">
+              <option value="personel" ${k.rol==='personel'?'selected':''}>Personel</option>
+              <option value="yonetici" ${k.rol==='yonetici'?'selected':''}>Yönetici</option>
+            </select>
+          </div>
+          <div style="flex:2;min-width:200px">
+            <div class="kullaniciAlanBasligi">Görünecek İsim</div>
+            <input class="girdi" style="width:100%" placeholder="Örn: Ahmet Yılmaz" value="${esc(k.isim||'')}" onchange="kullaniciIsmiDegistir('${k.id}', this.value)" />
+          </div>
+        </div>
+
+        <div style="margin-bottom:18px">
+          <div class="kullaniciAlanBasligi">Özel Yetki</div>
+          <button class="ty-btn tesisErisimBtn ${(k.izinler && k.izinler.satinAlmaOnay===true)?'tesisErisimBtnAktif':''}" onclick="kullaniciIzinDegistir('${k.id}','satinAlmaOnay')">🔑 Satın Alma Onay</button>
+          <div class="bosMetin" style="margin-top:6px">Bu yetkiye sahip kişi(ler) satın alma taleplerini onaylayabilir — rol fark etmeksizin.</div>
+        </div>`;
+
+      if (!yoneticiMi) {
+        const kIzinler = k.izinler || {};
+        const izinListesi = [
+          { anahtar: 'stokListesi', etiket: '📦 Stok Listesi' },
+          { anahtar: 'satinAlmalar', etiket: '🛒 Satın Almalar' },
+          { anahtar: 'raporEkle', etiket: '📝 Rapor Ekle' },
+          { anahtar: 'raporGor', etiket: '📊 Raporlar' },
+          { anahtar: 'periyodikBakim', etiket: '🔧 Periyodik Bakım' },
+          { anahtar: 'kullanilanMalzemeler', etiket: '🧾 Kullanılan Malzemeler' },
+          { anahtar: 'malzemeCikis', etiket: '📉 Malzeme Kullan', varsayilanKapali: true },
+          { anahtar: 'transfer', etiket: '🔄 Transfer', varsayilanKapali: true },
+        ];
+        h += `<div style="margin-bottom:18px">
+          <div class="kullaniciAlanBasligi">Erişebileceği Tesisler${kErisimi.length===0?' <span class="kullaniciAlanIpucu">— hiçbiri seçilmedi, tümünü görür</span>':''}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${state.tesisler.map(t => `<button class="ty-btn tesisErisimBtn ${kErisimi.includes(t.id)?'tesisErisimBtnAktif':''}" onclick="kullaniciTesisErisimiDegistir('${k.id}','${t.id}')">${esc(t.ad)}</button>`).join('')}
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div class="kullaniciAlanBasligi">Görebileceği Bölümler</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${izinListesi.map(iz => `<button class="ty-btn tesisErisimBtn ${(iz.varsayilanKapali ? kIzinler[iz.anahtar]===true : kIzinler[iz.anahtar]!==false)?'tesisErisimBtnAktif':''}" onclick="kullaniciIzinDegistir('${k.id}','${iz.anahtar}')">${iz.etiket}</button>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      h += `<div class="bosMetin" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sinir-soluk)">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>`;
+      h += `</div>`;
+    }
+    h += `</div>`;
+  });
+
+  anaPanelYaz(h);
 }

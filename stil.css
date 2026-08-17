@@ -568,3 +568,7 @@
   .bakimTakvimGunSari { background: rgba(var(--vurgu-rgb),0.16); color: var(--vurgu); border-color: rgba(var(--vurgu-rgb),0.4); font-weight: 700; }
   .bakimTakvimGunMavi { background: rgba(var(--mavi-rgb),0.12); color: var(--mavi); border-color: rgba(var(--mavi-rgb),0.35); }
   .bakimTakvimGunSecili { outline: 3px solid var(--vurgu); outline-offset: 1px; }
+
+  /* ---------------- kullanıcılar sayfası ---------------- */
+  .kullaniciAlanBasligi { font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--yazi-soluk); font-weight: 700; margin-bottom: 6px; }
+  .kullaniciAlanIpucu { color: var(--yazi-dim); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
