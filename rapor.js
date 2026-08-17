@@ -52,7 +52,10 @@ function raporKaydet(){
 
   // "Önemli değil" işaretlenmeyen malzemelerden, bu tesisin depolarında adı eşleşen
   // bir ürün varsa, stoktan düşülmesi için malzemeCikis yetkisi olanlara bildirim gönder.
-  // Otomatik düşülmez — sadece ilgili kişiye "kontrol edip stoktan düş" uyarısı gider.
+  // Eşleşen ürün YOKSA, muhtemelen depoya eklemeyi unutmuşlardır — o ürünü otomatik
+  // olarak EKSİ miktarla (örn. -2) depoya ekleyip kritik olarak işaretliyoruz, böylece
+  // Stok Listesi'nde çok belirgin bir uyarı olarak görünür; stokListesi yetkisi
+  // olanlara da bildirim gidiyor ki gerçek miktarı girip düzeltsinler.
   const gorunurDepolar = (t.depolar || []).filter(d => !d.gizli);
   kullanilanlar.filter(x => !x.onemliDegil).forEach(x => {
     const adAlt = x.ad.toLowerCase();
@@ -61,6 +64,18 @@ function raporKaydet(){
       kaydetIslem(
         `Depoda malzeme kullanıldı, stoktan düşülmeli: ${x.adet} ${x.birim} ${x.ad} (${eslesenDepo.ad} — ${t.ad})`,
         { view: "malzemecikis", tesisId: t.id, depoId: eslesenDepo.id }
+      );
+    } else if (gorunurDepolar.length > 0) {
+      const hedefDepo = gorunurDepolar[0];
+      const miktarSayi = parseFloat(x.adet) || 1;
+      hedefDepo.urunler = hedefDepo.urunler || [];
+      hedefDepo.urunler.push({
+        id: uid(), ad: x.ad, kod: x.kod, miktar: -miktarSayi, birim: x.birim,
+        kritikTakip: true, kritikEsik: 0
+      });
+      kaydetIslem(
+        `Depoda kayıtlı olmayan malzeme kullanıldı, stoğa eksi (-${miktarSayi}) olarak eklendi: ${x.ad} (${hedefDepo.ad} — ${t.ad}). Lütfen gerçek stok miktarını girin.`,
+        { view: "stok", tesisId: t.id, depoId: hedefDepo.id }
       );
     }
   });

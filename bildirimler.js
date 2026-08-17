@@ -63,6 +63,12 @@ function bildirimleriTopla(tumHaftaMi){
       .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--turkuaz)", hedef: k.hedef, tarih: k.tarih }));
   }
   if (izinVar('stokListesi')) {
+    (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Depoda kayıtlı olmayan malzeme kullanıldı") && islemGorunurMu(k))
+      .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
+      .slice(0, tumHaftaMi ? undefined : 15)
+      .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--kirmizi)", hedef: k.hedef, tarih: k.tarih }));
+  }
+  if (izinVar('stokListesi')) {
     kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
       if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {
         liste.push({ anahtar: "kritik:"+t.id+":"+d.id+":"+u.id, mesaj: `Kritik stok: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, renk: "var(--kirmizi)", hedef: { view: "stok", tesisId: t.id, depoId: d.id } });

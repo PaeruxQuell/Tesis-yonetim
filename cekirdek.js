@@ -180,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "39";
+const UYGULAMA_SURUM_NO = "40";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -410,6 +410,7 @@ function render(){ renderSol(); renderAna(); renderSag(); renderUstNav(); logoGu
 function islemBadge(aciklama){
   const a = (aciklama || "").toLowerCase();
   if (a.includes("silindi")) return { etiket: "Silme", renk: "var(--kirmizi)", renkRgb: "var(--kirmizi-rgb)" };
+  if (a.includes("stoğa eksi")) return { etiket: "Eksi Stok", renk: "var(--kirmizi)", renkRgb: "var(--kirmizi-rgb)" };
   if (a.includes("stoktan düşülmeli")) return { etiket: "Stok Uyarı", renk: "var(--turkuaz)", renkRgb: "var(--turkuaz-rgb)" };
   if (a.includes("onayland")) return { etiket: "Onay", renk: "var(--yesil)", renkRgb: "var(--yesil-rgb)" };
   if (a.includes("bakım yapıldı")) return { etiket: "Bakım", renk: "var(--yesil)", renkRgb: "var(--yesil-rgb)" };

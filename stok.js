@@ -217,18 +217,22 @@ function renderStok(){
             </div>`;
             (d.urunler || []).forEach(u => {
               const kritikRenk = u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0);
+              const eksiMi = (parseFloat(u.miktar)||0) < 0;
               const miktarFlashSinif = miktarDegisimSinifi(u.id, u.miktar);
-              h += `<div class="stokUrunSatirTek">
+              h += `<div class="stokUrunSatirTek ${eksiMi?'stokEksiSatir':''}">
                 ${ui.stokDuzenle ? `
-                  <input class="parcaGirdi" style="flex:2" list="malzemeListesi" placeholder="Ürün adı" value="${esc(u.ad)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','ad',this.value)" />
-                  <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${miktarFlashSinif}" style="width:60px;flex:none" type="number" min="0" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
+                  <span style="flex:2;display:flex;align-items:center;gap:6px">
+                    ${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}
+                    <input class="parcaGirdi" style="flex:1" list="malzemeListesi" placeholder="Ürün adı" value="${esc(u.ad)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','ad',this.value)" />
+                  </span>
+                  <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:60px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
                   <input class="parcaGirdi" style="width:110px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
                   <input class="parcaGirdi" style="width:80px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
                   <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:150px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
                   ${adminMi() ? `<span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>` : ''}
                 ` : `
-                  <span style="flex:2;color:var(--yazi)">${esc(u.ad) || '—'}</span>
-                  <span class="${miktarFlashSinif}" style="width:60px;color:${kritikRenk?'var(--kirmizi-yazi)':'var(--yazi-dim)'};font-weight:${kritikRenk?'700':'400'};border-radius:4px;display:inline-block">${esc(u.miktar)}</span>
+                  <span style="flex:2;color:var(--yazi);display:flex;align-items:center;gap:6px">${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}${esc(u.ad) || '—'}</span>
+                  <span class="${miktarFlashSinif}" style="width:60px;color:${eksiMi?'var(--kirmizi-yazi)':(kritikRenk?'var(--kirmizi-yazi)':'var(--yazi-dim)')};font-weight:${(eksiMi||kritikRenk)?'800':'400'};border-radius:4px;display:inline-block">${eksiMi?'⚠ ':''}${esc(u.miktar)}</span>
                   <span style="width:110px;color:var(--yazi-dim)">${esc(u.birim) || '—'}</span>
                   <span style="width:80px;color:var(--yazi-dim)">${esc(u.kritikEsik)}</span>
                   <span style="width:150px;color:${u.kritikTakip?'var(--kirmizi)':'var(--yazi-soluk)'};font-size:11.5px">${u.kritikTakip?'● İzleniyor':'—'}</span>
