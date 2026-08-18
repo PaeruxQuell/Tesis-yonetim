@@ -1,7 +1,7 @@
-let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
+let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", gecmiseDonuk: false, malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
 function raporGoster(){
   if (!izinVar('raporEkle')) return;
-  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
+  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", gecmiseDonuk: false, malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
   if (raporForm.tesisId) {
     const t = state.tesisler.find(x => x.id === raporForm.tesisId);
     raporForm.makineId = t?.makineler[0]?.id || "";
@@ -27,6 +27,7 @@ function raporMakineSec(makineId){
 }
 function raporPompaSec(pompaId){ raporForm.pompaId = pompaId; render(); }
 function raporAlanGuncelle(alan, deger){ raporForm[alan] = deger; }
+function raporGecmiseDonukDegistir(deger){ raporForm.gecmiseDonuk = deger; render(); }
 function raporMalzemeEkle(){ raporForm.malzemeler.push({ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }); render(); }
 function raporMalzemeSil(id){ raporForm.malzemeler = raporForm.malzemeler.filter(x => x.id !== id); render(); }
 function raporMalzemeGuncelle(id, alan, deger){
@@ -56,29 +57,33 @@ function raporKaydet(){
   // olarak EKSİ miktarla (örn. -2) depoya ekleyip kritik olarak işaretliyoruz, böylece
   // Stok Listesi'nde çok belirgin bir uyarı olarak görünür; stokListesi yetkisi
   // olanlara da bildirim gidiyor ki gerçek miktarı girip düzeltsinler.
-  const gorunurDepolar = (t.depolar || []).filter(d => !d.gizli);
-  kullanilanlar.filter(x => !x.onemliDegil).forEach(x => {
-    const adAlt = x.ad.toLowerCase();
-    const eslesenDepo = gorunurDepolar.find(d => (d.urunler||[]).some(u => (u.ad||"").trim().toLowerCase() === adAlt));
-    if (eslesenDepo) {
-      kaydetIslem(
-        `Depoda malzeme kullanıldı, stoktan düşülmeli: ${x.adet} ${x.birim} ${x.ad} (${eslesenDepo.ad} — ${t.ad})`,
-        { view: "malzemecikis", tesisId: t.id, depoId: eslesenDepo.id }
-      );
-    } else if (gorunurDepolar.length > 0) {
-      const hedefDepo = gorunurDepolar[0];
-      const miktarSayi = parseFloat(x.adet) || 1;
-      hedefDepo.urunler = hedefDepo.urunler || [];
-      hedefDepo.urunler.push({
-        id: uid(), ad: x.ad, kod: x.kod, miktar: -miktarSayi, birim: x.birim,
-        kritikTakip: true, kritikEsik: 0
-      });
-      kaydetIslem(
-        `Depoda kayıtlı olmayan malzeme kullanıldı, stoğa eksi (-${miktarSayi}) olarak eklendi: ${x.ad} (${hedefDepo.ad} — ${t.ad}). Lütfen gerçek stok miktarını girin.`,
-        { view: "stok", tesisId: t.id, depoId: hedefDepo.id }
-      );
-    }
-  });
+  // "Geçmişe dönük" işaretlenen raporlarda (eski evrak işleme) bu blok TAMAMEN atlanır —
+  // raporu giren kişi bunun güncel stoğu etkilemesini istemiyorsa bunu kontrol edebilir.
+  if (!raporForm.gecmiseDonuk) {
+    const gorunurDepolar = (t.depolar || []).filter(d => !d.gizli);
+    kullanilanlar.filter(x => !x.onemliDegil).forEach(x => {
+      const adAlt = x.ad.toLowerCase();
+      const eslesenDepo = gorunurDepolar.find(d => (d.urunler||[]).some(u => (u.ad||"").trim().toLowerCase() === adAlt));
+      if (eslesenDepo) {
+        kaydetIslem(
+          `Depoda malzeme kullanıldı, stoktan düşülmeli: ${x.adet} ${x.birim} ${x.ad} (${eslesenDepo.ad} — ${t.ad})`,
+          { view: "malzemecikis", tesisId: t.id, depoId: eslesenDepo.id }
+        );
+      } else if (gorunurDepolar.length > 0) {
+        const hedefDepo = gorunurDepolar[0];
+        const miktarSayi = parseFloat(x.adet) || 1;
+        hedefDepo.urunler = hedefDepo.urunler || [];
+        hedefDepo.urunler.push({
+          id: uid(), ad: x.ad, kod: x.kod, miktar: -miktarSayi, birim: x.birim,
+          kritikTakip: true, kritikEsik: 0
+        });
+        kaydetIslem(
+          `Depoda kayıtlı olmayan malzeme kullanıldı, stoğa eksi (-${miktarSayi}) olarak eklendi: ${x.ad} (${hedefDepo.ad} — ${t.ad}). Lütfen gerçek stok miktarını girin.`,
+          { view: "stok", tesisId: t.id, depoId: hedefDepo.id }
+        );
+      }
+    });
+  }
 
   saveData();
   toastGoster("Rapor kaydedildi.", "basari");
@@ -120,6 +125,16 @@ function renderRapor(){
         <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tarih</div>
         <input class="girdi" placeholder="gg.aa.yyyy" value="${esc(raporForm.tarih)}" onchange="raporAlanGuncelle('tarih', this.value)" />
       </div>
+    </div>`;
+
+    h += `<div class="kart" style="${raporForm.gecmiseDonuk?'border-color:rgba(var(--turkuaz-rgb),0.45);background:rgba(var(--turkuaz-rgb),0.07)':''}">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+        <input type="checkbox" style="margin-top:3px" ${raporForm.gecmiseDonuk?'checked':''} onchange="raporGecmiseDonukDegistir(this.checked)" />
+        <span>
+          <div style="font-weight:700;color:${raporForm.gecmiseDonuk?'var(--turkuaz)':'var(--yazi)'};font-size:13.5px">📋 Bu geçmişe dönük (eski tarihli) bir kayıt</div>
+          <div class="bosMetin" style="margin-top:2px">Eski evrakları işlerken bunu işaretleyin. İşaretlenirse, bu raporda kullanılan malzemeler için depo stoğundan düşme bildirimi gitmez ve eksi stok otomatik oluşmaz — malzemeler yine de bu rapor ve makine geçmişinde normal şekilde görünmeye devam eder.</div>
+        </span>
+      </label>
     </div>`;
 
     h += `<div class="kart">
