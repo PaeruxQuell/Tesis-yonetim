@@ -147,7 +147,7 @@ function renderAyarlar(){
           <span class="kartBaslik">🗄️ Günlük Yedekler</span>
           <button class="ustBtn ty-btn" ${manuelYedekAliniyor?'disabled':''} onclick="manuelYedekAl()">${manuelYedekAliniyor?'⏳ Yedekleniyor...':'⬇ Şimdi Yedekle'}</button>
         </div>
-        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. "Şimdi Yedekle" ile bugünün yedeğini istediğiniz an manuel olarak da alabilirsiniz. Eski yedekler burada kalıcı olarak durur; birine tıklayıp önizleyebilir, indirebilir ya da (gerekirse) o güne geri dönebilirsiniz.</div>
+        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. "Şimdi Yedekle" ile bugünün yedeğini istediğiniz an manuel olarak da alabilirsiniz. Eski yedekler burada kalıcı olarak durur; birine tıklayıp yalnızca önizleyebilir ve isterseniz .json olarak indirebilirsiniz.</div>
         ${yedeklerListesi.length === 0 ? `<div class="bosMetin">Henüz bir yedek oluşmadı.</div>` : ''}`;
       yedeklerListesi.forEach(y => {
         const acikMi = ui.yedekSecili === y.id;
@@ -170,10 +170,7 @@ function renderAyarlar(){
               <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.satinAlmaSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Satın Alma</div></div>
               <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.transferSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Transfer</div></div>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="ustBtn ty-btn" onclick="yedekIndir('${y.id}')">⬇ İndir (.json)</button>
-              <button class="ustBtn ty-btn" style="color:var(--kirmizi);border-color:rgba(var(--kirmizi-rgb),0.4)" onclick="yedekGeriYukle('${y.id}')">↺ Bu Yedeğe Geri Dön</button>
-            </div>`;
+            <button class="ustBtn ty-btn" onclick="yedekIndir('${y.id}')">⬇ İndir (.json)</button>`;
           }
           h += `</div>`;
         }

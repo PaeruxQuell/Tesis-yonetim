@@ -110,21 +110,3 @@ function yedekIndir(id){
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function yedekGeriYukle(id){
-  if (!adminMi()) return;
-  const json = yedekOnizlemeVerisi[id];
-  if (!json) { toastGoster("Önce önizlemeyi açın, veri henüz yüklenmedi.", "hata"); return; }
-  silOnayla("Bu Yedeği Geri Yükle", () => {
-    try {
-      const veri = JSON.parse(json);
-      state = sanitizeVeri(veri);
-      kaydetIslem(`Sistem "${id}" tarihli yedekten geri yüklendi.`, { view: "kayitlar" });
-      saveData();
-      render();
-      toastGoster("Yedek geri yüklendi.", "basari");
-    } catch (e) {
-      console.error(e);
-      toastGoster("Yedek geri yüklenemedi — dosya bozuk olabilir.", "hata");
-    }
-  });
-}
