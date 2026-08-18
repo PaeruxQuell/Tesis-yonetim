@@ -1,4 +1,4 @@
-function bosKalem(){ return { id: uid(), urun: "", miktar: "", birim: "", gelisTarihi: "", durum: "Gelmedi", stokaAktarildi: false }; }
+function bosKalem(){ return { id: uid(), urun: "", kod: "", miktar: "", birim: "", gelisTarihi: "", durum: "Gelmedi", stokaAktarildi: false }; }
 function bosYer(){ return { id: uid(), ad: "" }; }
 function bosSatinAlmaKaydi(){
   return {
@@ -57,7 +57,7 @@ function saKalemSil(satId, kalemId){
 }
 function saKalemGuncelle(satId, kalemId, alan, deger){
   const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
-  if (alan === "urun") malzemeGecmisineEkle(deger);
+  if (alan === "urun" || alan === "kod") { if (k && k.urun) malzemeGecmisineEkle(k.urun, "", k.kod); }
   saveData(); render();
 }
 function saKalemDurumDegistir(satId, kalemId){
@@ -249,19 +249,22 @@ function renderSatinAlmaDetay(){
         ${ui.saDuzenle?`<button class="ekleMini ty-btn" onclick="saKalemEkle('${sat.id}')">+ satır ekle</button>`:''}
       </div>
       <div class="kalemBaslikSatir">
-        <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="flex:1">Miktar</span><span style="flex:1">Birim</span><span style="width:150px">Durum</span><span style="width:20px"></span>
+        <span style="width:26px"></span><span style="flex:1.6">Ürün</span><span style="width:130px">Kod</span><span style="flex:1">Miktar</span><span style="flex:1">Birim</span><span style="width:150px">Durum</span><span style="width:20px"></span>
       </div>
       ${sat.kalemler.map((k, i) => `
         <div class="kalemSatir">
           <span class="kalemNo">${i+1}</span>
           ${urunKritikMi(k.urun) ? `<span class="kritikSolukNokta" title="Bu ürün kritik stokta">●</span>` : ''}
           ${ui.saDuzenle ? `
-            <input class="parcaGirdi" style="flex:2" list="malzemeListesi" placeholder="Ürün adı" value="${esc(k.urun)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','urun',this.value)" />
+            <input class="parcaGirdi" style="flex:1.6" list="malzemeListesi" placeholder="Ürün adı" value="${esc(k.urun)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','urun',this.value)" />
+            <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${k.id}" placeholder="Kod (örn: 6305)" value="${esc(k.kod||'')}" onchange="saKalemGuncelle('${sat.id}','${k.id}','kod',this.value)" />
+            <datalist id="kodListesi-${k.id}">${urunKodlariGetir(k.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
             <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
             <input class="parcaGirdi" style="flex:1" placeholder="Birim" value="${esc(k.birim)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)" />
             <span style="width:150px"></span>
           ` : `
-            <span style="flex:2;color:var(--yazi)">${esc(k.urun) || '—'}</span>
+            <span style="flex:1.6;color:var(--yazi)">${esc(k.urun) || '—'}</span>
+            <span style="width:130px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace;font-size:11.5px">${esc(k.kod) || '—'}</span>
             <span style="flex:1;color:var(--yazi-dim)">${esc(k.miktar) || '—'}</span>
             <span style="flex:1;color:var(--yazi-dim)">${esc(k.birim) || '—'}</span>
             <span style="width:150px;flex:none">

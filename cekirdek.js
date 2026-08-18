@@ -180,7 +180,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "43";
+const UYGULAMA_SURUM_NO = "44";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -279,6 +279,25 @@ function malzemeGecmisineEkle(ad, birim, kod){
     if (birim && !mevcut.birim) mevcut.birim = birim;
     if (kod && kod.trim() && !mevcut.kod) mevcut.kod = kod.trim();
   }
+}
+// Aynı isimdeki ürün için DAHA ÖNCE girilmiş tüm farklı kodları toplar
+// (örn. "Rulman" yazınca sadece rulman kodlarını, "Keçe" yazınca sadece
+// keçe kodlarını önerir) — hem satın alma kalemlerine hem rapor
+// geçmişindeki kullanılan malzemelere bakar.
+function urunKodlariGetir(urunAdi){
+  if (!urunAdi) return [];
+  const adAlt = urunAdi.trim().toLowerCase();
+  if (!adAlt) return [];
+  const kodlar = new Set();
+  (state.satinAlmalar || []).forEach(s => (s.kalemler || []).forEach(k => {
+    if ((k.urun || "").trim().toLowerCase() === adAlt && k.kod && k.kod.trim()) kodlar.add(k.kod.trim());
+  }));
+  (state.tesisler || []).forEach(t => (t.makineler || []).forEach(m => (m.pompalar || []).forEach(p =>
+    (p.gecmis || []).forEach(g => (g.malzemeler || []).forEach(mz => {
+      if ((mz.ad || "").trim().toLowerCase() === adAlt && mz.kod && mz.kod.trim()) kodlar.add(mz.kod.trim());
+    }))
+  )));
+  return [...kodlar].sort();
 }
 function kaydetIslem(aciklama, hedef){
   if (!state.sonIslemler) state.sonIslemler = [];
