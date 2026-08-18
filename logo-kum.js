@@ -64,8 +64,8 @@
         x: bi * BUCKET_WIDTH + BUCKET_WIDTH / 2,
         y: seg.top - 4 - Math.random() * 10,
         bi, seg,
-        vy: 2.2 + Math.random() * 1.6,
-        r: 0.5 + Math.random() * 0.5,
+        vy: 3.3 + Math.random() * 2.4,
+        r: 0.8 + Math.random() * 0.7,
         alpha: 0.85 + Math.random() * 0.15
       });
     }
