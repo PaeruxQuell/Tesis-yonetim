@@ -48,8 +48,17 @@ function stokUrunSil(tesisId, depoId, urunId){
   saveData(); render();
 }
 function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
-  const { u } = stokUrunBul(tesisId, depoId, urunId); if (u) u[alan] = deger;
-  if (alan === "ad") malzemeGecmisineEkle(deger);
+  const { t, d, u } = stokUrunBul(tesisId, depoId, urunId); if (u) u[alan] = deger;
+  if (alan === "ad") {
+    malzemeGecmisineEkle(deger);
+    // Aynı depoda AYNI isimde başka bir ürün zaten varsa uyar — stok yanlışlıkla
+    // iki ayrı satıra bölünmesin diye (elle eklerken bu kontrol yoktu).
+    const temiz = (deger || "").trim().toLowerCase();
+    if (temiz && d) {
+      const cakisan = d.urunler.find(x => x.id !== urunId && (x.ad||"").trim().toLowerCase() === temiz);
+      if (cakisan) toastGoster(`Dikkat: "${deger}" adında bir ürün bu depoda zaten var — stoğunuz iki ayrı satıra bölünmüş olabilir.`, "hata");
+    }
+  }
   saveData(); render();
 }
 function stokKritikDegistir(tesisId, depoId, urunId){

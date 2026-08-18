@@ -17,6 +17,17 @@ window.addEventListener("DOMContentLoaded", () => {
       panel.style.display = "none";
     }
   });
+  document.addEventListener("click", (e) => {
+    if (!genelAramaPaneliAcikMi) return;
+    const panel = document.getElementById("genelAramaPaneli");
+    const btn = document.getElementById("aramaBtn");
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+      genelAramaPaneliAcikMi = false;
+      panel.style.display = "none";
+      panel.innerHTML = "";
+      ui.genelArama = "";
+    }
+  });
 });
 
 /* ---------------- tesis / makine / pompa ---------------- */

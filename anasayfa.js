@@ -37,8 +37,34 @@ function sayiSayarakYaz(elId, eskiDeger, yeniDeger, anahtar){
   requestAnimationFrame(adim);
 }
 
-/* ---------------- genel arama ---------------- */
+/* ---------------- genel arama (üst çubuktan, her sayfadan erişilebilir) ---------------- */
 let aramaHedefleri = [];
+let genelAramaPaneliAcikMi = false;
+
+function genelAramaPaneliAcKapat(){
+  genelAramaPaneliAcikMi = !genelAramaPaneliAcikMi;
+  const panel = document.getElementById("genelAramaPaneli");
+  if (!panel) return;
+  if (genelAramaPaneliAcikMi) {
+    panel.style.display = "block";
+    panel.innerHTML = `<div style="padding:10px 10px 4px">
+      <input class="girdi" id="genelArama" placeholder="🔍  Tesis, makine, ürün, kod, rapor... her şeyde ara" value="${esc(ui.genelArama)}" oninput="genelAramaGuncelle(this.value)" style="width:100%" />
+    </div>
+    <div id="genelAramaSonuclari" class="genelAramaSonuclari"></div>`;
+    genelAramaSonucRender();
+    setTimeout(() => { const inp = document.getElementById("genelArama"); if (inp) inp.focus(); }, 0);
+  } else {
+    panel.style.display = "none";
+    panel.innerHTML = "";
+    ui.genelArama = "";
+  }
+}
+function genelAramaGirdiDoldur(deger){
+  ui.genelArama = deger;
+  const inp = document.getElementById("genelArama");
+  if (inp) inp.value = deger;
+  genelAramaSonucRender();
+}
 function genelAramaGuncelle(sorgu){
   ui.genelArama = sorgu;
   genelAramaSonucRender();
@@ -56,6 +82,11 @@ function genelAramaSonuclariHesapla(q){
         });
         (p.gecmis || []).forEach(g => {
           if ((g.aciklama||"").toLowerCase().includes(q)) sonuc.push({ tip: "Rapor/Geçmiş", baslik: g.aciklama, alt: `${p.ad} — ${t.ad}/${m.ad} · ${g.tarih}`, hedef: { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id } });
+          (g.malzemeler || []).forEach(mz => {
+            if ((mz.ad||"").toLowerCase().includes(q) || (mz.kod||"").toLowerCase().includes(q)) {
+              sonuc.push({ tip: "Kullanılan Malzeme", baslik: `${mz.ad}${mz.kod?` · ${mz.kod}`:''}`, alt: `${p.ad} — ${t.ad}/${m.ad} · ${g.tarih}`, hedef: { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id } });
+            }
+          });
         });
       });
       (m.bakimlar || []).forEach(b => {
@@ -71,12 +102,12 @@ function genelAramaSonuclariHesapla(q){
   });
   state.satinAlmalar.forEach(sat => {
     (sat.kalemler || []).forEach(k => {
-      if ((k.urun||"").toLowerCase().includes(q)) sonuc.push({ tip: "Satın Alma", baslik: k.urun, alt: sat.siparisNo ? `Sipariş No: ${sat.siparisNo}` : "", hedef: { view: "satinalma-detay", satId: sat.id } });
+      if ((k.urun||"").toLowerCase().includes(q) || (k.kod||"").toLowerCase().includes(q)) sonuc.push({ tip: "Satın Alma", baslik: `${k.urun}${k.kod?` · ${k.kod}`:''}`, alt: sat.siparisNo ? `Sipariş No: ${sat.siparisNo}` : "", hedef: { view: "satinalma-detay", satId: sat.id } });
     });
     if ((sat.siparisNo||"").toLowerCase().includes(q)) sonuc.push({ tip: "Satın Alma", baslik: `Sipariş No: ${sat.siparisNo}`, alt: "", hedef: { view: "satinalma-detay", satId: sat.id } });
   });
   (state.malzemeGecmisi || []).forEach(m => {
-    if (m.ad.toLowerCase().includes(q)) sonuc.push({ tip: "Malzeme", baslik: m.ad, alt: "Kullanılan Malzemeler listesi", hedef: { view: "malzemeler" } });
+    if (m.ad.toLowerCase().includes(q) || (m.kod||"").toLowerCase().includes(q)) sonuc.push({ tip: "Malzeme", baslik: `${m.ad}${m.kod?` · ${m.kod}`:''}`, alt: "Kullanılan Malzemeler listesi", hedef: { view: "malzemeler" } });
   });
   return sonuc.slice(0, 40);
 }
@@ -85,11 +116,25 @@ function genelAramaSonucRender(){
   if (!kap) return;
   const q = (ui.genelArama || "").trim().toLowerCase();
   if (!q) { kap.innerHTML = ""; aramaHedefleri = []; return; }
+
+  let h = "";
+
+  // Yazılan kelime bir ürün KATEGORİSİ ise (örn. "Rulman"), o kategoride
+  // daha önce girilmiş TÜM farklı kodları ayrı bir grup olarak en üstte göster.
+  const kategoriKodlari = urunKodlariGetir(q);
+  if (kategoriKodlari.length > 0) {
+    h += `<div class="aramaKategoriKutusu">
+      <div class="aramaKategoriBaslik">"${esc(ui.genelArama.trim())}" kategorisindeki kodlar</div>
+      <div class="aramaKategoriKodListesi">
+        ${kategoriKodlari.map(kd => `<span class="aramaKategoriKodu ty-btn" onclick="genelAramaGirdiDoldur('${esc(kd)}')">${esc(kd)}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
   const sonuclar = genelAramaSonuclariHesapla(q);
   aramaHedefleri = sonuclar.map(s => s.hedef);
-  let h = "";
-  if (sonuclar.length === 0) {
-    h = `<div class="bosMetin" style="padding:14px">Sonuç bulunamadı.</div>`;
+  if (sonuclar.length === 0 && kategoriKodlari.length === 0) {
+    h += `<div class="bosMetin" style="padding:14px">Sonuç bulunamadı.</div>`;
   } else {
     sonuclar.forEach((s, i) => {
       h += `<div class="aramaSonucSatiri ty-btn" onclick="aramaSonucunaGit(${i})">
@@ -105,8 +150,7 @@ function genelAramaSonucRender(){
 }
 function aramaSonucunaGit(i){
   const hedef = aramaHedefleri[i];
-  document.getElementById("genelArama").value = "";
-  ui.genelArama = "";
+  genelAramaPaneliAcKapat();
   hedefeGit(hedef);
 }
 
@@ -118,11 +162,6 @@ function renderAnaSayfa(){
 
     let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Ana Sayfa</div>
       <div class="altBaslik2" style="margin-bottom:20px">genel durum özeti</div>`;
-
-    h += `<div style="position:relative;margin-bottom:24px">
-      <input class="girdi" id="genelArama" placeholder="🔍  Tesis, makine, pompa, parça, rapor, satın alma, stok, malzeme... her şeyde ara" value="${esc(ui.genelArama)}" oninput="genelAramaGuncelle(this.value)" style="font-size:14.5px;padding:13px 16px" />
-      <div id="genelAramaSonuclari" class="genelAramaSonuclari"></div>
-    </div>`;
 
     h += `<div class="ozetSatiri">
       <div class="ozetKart ${kritikSayisi>0?'ozetKartKirmizi':''} ty-btn" onclick="stokGoster()">

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tesis Yönetim Sistemi</title>
-<link rel="stylesheet" href="stil.css?v=44">
+<link rel="stylesheet" href="stil.css?v=46">
 </head>
 <body>
 
@@ -45,6 +45,12 @@
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
       <div style="display:flex;gap:8px;align-items:center">
+        <div style="position:relative">
+          <button class="canBtn ty-btn" id="aramaBtn" onclick="genelAramaPaneliAcKapat()" title="Ara">
+            <span class="canIkonu">🔍</span>
+          </button>
+          <div id="genelAramaPaneli" class="bildirimPaneli genelAramaPaneli" style="display:none"></div>
+        </div>
         <button class="lambaBtn ty-btn" id="lambaBtn" onclick="lambaTikla()" title="Temayı değiştir">
           <span id="lambaIkon">💡</span>
         </button>
@@ -92,23 +98,23 @@
 
 <canvas id="sandCursor"></canvas>
 
-<script src="cekirdek.js?v=44"></script>
-<script src="arayuz.js?v=44"></script>
-<script src="bildirimler.js?v=44"></script>
-<script src="tesis-agaci.js?v=44"></script>
-<script src="stok.js?v=44"></script>
-<script src="malzeme-cikis.js?v=44"></script>
-<script src="transfer.js?v=44"></script>
-<script src="anasayfa.js?v=44"></script>
-<script src="ayarlar.js?v=44"></script>
-<script src="yedekleme.js?v=44"></script>
-<script src="bakim.js?v=44"></script>
-<script src="pompa.js?v=44"></script>
-<script src="rapor.js?v=44"></script>
-<script src="raporlar.js?v=44"></script>
-<script src="satinalma.js?v=44"></script>
-<script src="kum-imleci.js?v=44"></script>
-<script src="logo-kum.js?v=44"></script>
-<script src="baslangic.js?v=44"></script>
+<script src="cekirdek.js?v=46"></script>
+<script src="arayuz.js?v=46"></script>
+<script src="bildirimler.js?v=46"></script>
+<script src="tesis-agaci.js?v=46"></script>
+<script src="stok.js?v=46"></script>
+<script src="malzeme-cikis.js?v=46"></script>
+<script src="transfer.js?v=46"></script>
+<script src="anasayfa.js?v=46"></script>
+<script src="ayarlar.js?v=46"></script>
+<script src="yedekleme.js?v=46"></script>
+<script src="bakim.js?v=46"></script>
+<script src="pompa.js?v=46"></script>
+<script src="rapor.js?v=46"></script>
+<script src="raporlar.js?v=46"></script>
+<script src="satinalma.js?v=46"></script>
+<script src="kum-imleci.js?v=46"></script>
+<script src="logo-kum.js?v=46"></script>
+<script src="baslangic.js?v=46"></script>
 </body>
 </html>
