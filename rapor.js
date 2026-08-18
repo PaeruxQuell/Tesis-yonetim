@@ -98,6 +98,14 @@ function renderRapor(){
 
     let h = `<div class="pompaAdBaslik">Rapor Ekle</div><div class="altBaslik2" style="margin-bottom:20px">bir tesis / makine / pompa için yapılan işi kaydet</div>`;
 
+    h += `<button class="raporStokBtn ${raporForm.gecmiseDonuk?'raporStokBtnAktif':''}" onclick="raporGecmiseDonukDegistir(${raporForm.gecmiseDonuk?'false':'true'})">
+      <span style="font-size:22px">${raporForm.gecmiseDonuk?'🔒':'🔓'}</span>
+      <span>
+        <div style="font-weight:800;font-size:14px;color:${raporForm.gecmiseDonuk?'var(--turkuaz)':'var(--yazi)'}">${raporForm.gecmiseDonuk?'✓ Stoktan Düşülmeyecek — geçmişe dönük kayıt (kapatmak için tıklayın)':'Bu Raporun Malzemeleri Stoktan Düşülmesin (geçmişe dönük kayıt)'}</div>
+        <div class="bosMetin" style="margin-top:3px">Eski evrakları işlerken buna tıklayın. Açıkken, bu raporun içindeki HİÇBİR malzeme için depo stoğu etkilenmez — ne düşme bildirimi gider ne eksi stok oluşur. Malzemeler yine de rapor ve makine geçmişinde normal şekilde görünür.</div>
+      </span>
+    </button>`;
+
 
     h += `<div class="kart">
       <div class="kartBaslik" style="margin-bottom:10px">Konum</div>
@@ -125,16 +133,6 @@ function renderRapor(){
         <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tarih</div>
         <input class="girdi" placeholder="gg.aa.yyyy" value="${esc(raporForm.tarih)}" onchange="raporAlanGuncelle('tarih', this.value)" />
       </div>
-    </div>`;
-
-    h += `<div class="kart" style="${raporForm.gecmiseDonuk?'border-color:rgba(var(--turkuaz-rgb),0.45);background:rgba(var(--turkuaz-rgb),0.07)':''}">
-      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-        <input type="checkbox" style="margin-top:3px" ${raporForm.gecmiseDonuk?'checked':''} onchange="raporGecmiseDonukDegistir(this.checked)" />
-        <span>
-          <div style="font-weight:700;color:${raporForm.gecmiseDonuk?'var(--turkuaz)':'var(--yazi)'};font-size:13.5px">📋 Bu geçmişe dönük (eski tarihli) bir kayıt</div>
-          <div class="bosMetin" style="margin-top:2px">Eski evrakları işlerken bunu işaretleyin. İşaretlenirse, bu raporda kullanılan malzemeler için depo stoğundan düşme bildirimi gitmez ve eksi stok otomatik oluşmaz — malzemeler yine de bu rapor ve makine geçmişinde normal şekilde görünmeye devam eder.</div>
-        </span>
-      </label>
     </div>`;
 
     h += `<div class="kart">
