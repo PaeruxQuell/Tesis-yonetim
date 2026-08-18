@@ -51,7 +51,7 @@ function genelAramaPaneliAcKapat(){
       <input class="girdi" id="genelArama" placeholder="🔍  Tesis, makine, ürün, kod, rapor... her şeyde ara" value="${esc(ui.genelArama)}" oninput="genelAramaGuncelle(this.value)" style="width:100%" />
     </div>
     <div id="genelAramaSonuclari" class="genelAramaSonuclari"></div>`;
-    genelAramaSonucRender();
+    genelAramaSonucRender("genelAramaSonuclari");
     setTimeout(() => { const inp = document.getElementById("genelArama"); if (inp) inp.focus(); }, 0);
   } else {
     panel.style.display = "none";
@@ -60,14 +60,18 @@ function genelAramaPaneliAcKapat(){
   }
 }
 function genelAramaGirdiDoldur(deger){
-  ui.genelArama = deger;
-  const inp = document.getElementById("genelArama");
-  if (inp) inp.value = deger;
-  genelAramaSonucRender();
+  genelAramaGuncelle(deger);
 }
 function genelAramaGuncelle(sorgu){
   ui.genelArama = sorgu;
-  genelAramaSonucRender();
+  // Aynı anda hem üst çubuktaki panel hem Ana Sayfa'daki kutu açık olabilir —
+  // ikisinin girdisini de eşitleyip, ikisinin de sonuç alanını güncelliyoruz.
+  const girdiUst = document.getElementById("genelArama");
+  const girdiAna = document.getElementById("genelAramaAna");
+  if (girdiUst && girdiUst.value !== sorgu) girdiUst.value = sorgu;
+  if (girdiAna && girdiAna.value !== sorgu) girdiAna.value = sorgu;
+  genelAramaSonucRender("genelAramaSonuclari");
+  genelAramaSonucRender("genelAramaSonuclariAna");
 }
 function genelAramaSonuclariHesapla(q){
   const sonuc = [];
@@ -111,11 +115,11 @@ function genelAramaSonuclariHesapla(q){
   });
   return sonuc.slice(0, 40);
 }
-function genelAramaSonucRender(){
-  const kap = document.getElementById("genelAramaSonuclari");
+function genelAramaSonucRender(kapId){
+  const kap = document.getElementById(kapId || "genelAramaSonuclari");
   if (!kap) return;
   const q = (ui.genelArama || "").trim().toLowerCase();
-  if (!q) { kap.innerHTML = ""; aramaHedefleri = []; return; }
+  if (!q) { kap.innerHTML = ""; return; }
 
   let h = "";
 
@@ -150,7 +154,12 @@ function genelAramaSonucRender(){
 }
 function aramaSonucunaGit(i){
   const hedef = aramaHedefleri[i];
-  genelAramaPaneliAcKapat();
+  ui.genelArama = "";
+  if (genelAramaPaneliAcikMi) genelAramaPaneliAcKapat();
+  const anaKap = document.getElementById("genelAramaSonuclariAna");
+  if (anaKap) anaKap.innerHTML = "";
+  const anaInp = document.getElementById("genelAramaAna");
+  if (anaInp) anaInp.value = "";
   hedefeGit(hedef);
 }
 
@@ -162,6 +171,11 @@ function renderAnaSayfa(){
 
     let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Ana Sayfa</div>
       <div class="altBaslik2" style="margin-bottom:20px">genel durum özeti</div>`;
+
+    h += `<div style="position:relative;margin-bottom:24px">
+      <input class="girdi" id="genelAramaAna" placeholder="🔍  Tesis, makine, pompa, parça, rapor, satın alma, stok, malzeme... her şeyde ara" value="${esc(ui.genelArama)}" oninput="genelAramaGuncelle(this.value)" style="font-size:14.5px;padding:13px 16px" />
+      <div id="genelAramaSonuclariAna" class="genelAramaSonuclari"></div>
+    </div>`;
 
     h += `<div class="ozetSatiri">
       <div class="ozetKart ${kritikSayisi>0?'ozetKartKirmizi':''} ty-btn" onclick="stokGoster()">
@@ -232,7 +246,7 @@ function renderAnaSayfa(){
     }
 
     anaPanelYaz(h);
-    genelAramaSonucRender();
+    genelAramaSonucRender("genelAramaSonuclariAna");
     sayiSayarakYaz("ozetKritikSayi", ozetOnceki.kritik, kritikSayisi, "kritik");
     sayiSayarakYaz("ozetSatinAlmaSayi", ozetOnceki.satinAlma, bekleyenSatinAlma, "satinAlma");
     sayiSayarakYaz("ozetBakimSayi", ozetOnceki.bakim, bekleyenBakim, "bakim");

@@ -9,17 +9,35 @@ function bosSatinAlmaKaydi(){
     eklenmeTarihi: bugun(), eklenmeSaati: suAn()
   };
 }
-function satinAlmaEkleOnayla(){
-  teyitIste("Yeni Satın Alma Talebi", "Yeni bir satın alma talebi oluşturmak üzeresiniz. Onaylamak için işlemi çözün:", () => satinAlmaEkle());
+let saTaslak = null; // henüz gönderilmemiş, listeye/Firestore'a hiç yazılmamış satın alma taslağı
+function satinAlmaYeniAc(){
+  saTaslak = bosSatinAlmaKaydi();
+  ui.saSecim = saTaslak.id;
+  ui.saDuzenle = true;
+  ui.view = "satinalma-detay";
+  render();
 }
-function satinAlmaEkle(){
-  const yeni = bosSatinAlmaKaydi();
+function satinAlmaTaslakMi(id){ return !!(saTaslak && saTaslak.id === id); }
+function satinAlmaBul(id){
+  if (saTaslak && saTaslak.id === id) return saTaslak;
+  return state.satinAlmalar.find(x => x.id === id);
+}
+function satinAlmaGonder(){
+  if (!saTaslak) return;
+  const yeni = saTaslak;
+  saTaslak = null;
   state.satinAlmalar.unshift(yeni);
   kaydetIslem("Yeni satın alma talebi oluşturuldu", { view: "satinalma-detay", satId: yeni.id });
   saveData();
-  ui.saSecim = yeni.id; ui.saDuzenle = true; ui.view = "satinalma-detay"; render();
+  toastGoster("Satın alma talebi gönderildi.", "basari");
+  ui.saDuzenle = false;
+  render();
 }
-function satinAlmaBul(id){ return state.satinAlmalar.find(x => x.id === id); }
+function satinAlmaTaslaktanVazgec(){
+  saTaslak = null;
+  ui.view = "satinalma"; ui.saSecim = null;
+  render();
+}
 function satinAlmaOnayla(satId){
   if (!satinAlmaOnaylayabilirMi()) { toastGoster("Bu işlemi onaylama yetkiniz yok.", "hata"); return; }
   const s = satinAlmaBul(satId); if (!s) return;
@@ -30,7 +48,9 @@ function satinAlmaOnayla(satId){
   saveData(); render();
 }
 function satinAlmaGuncelle(id, alan, deger){
-  const s = satinAlmaBul(id); if (s) s[alan] = deger; saveData(); render();
+  const s = satinAlmaBul(id); if (s) s[alan] = deger;
+  if (!satinAlmaTaslakMi(id)) saveData();
+  render();
 }
 function satinAlmaSil(id){
   const sat = satinAlmaBul(id);
@@ -47,21 +67,28 @@ function saAramaGuncelle(deger){ ui.saArama = deger; saListesiRender(); }
 /* kalemler (ürün satırları) */
 function saKalemEkle(satId){
   const s = satinAlmaBul(satId); s.kalemler.push(bosKalem());
-  kaydetIslem(`Satın alma kalemi eklendi (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) {
+    kaydetIslem(`Satın alma kalemi eklendi (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+    saveData();
+  }
+  render();
 }
 function saKalemSil(satId, kalemId){
   const s = satinAlmaBul(satId);
   const k = s.kalemler.find(x => x.id === kalemId);
   s.kalemler = s.kalemler.filter(x => x.id !== kalemId);
   if (s.kalemler.length === 0) s.kalemler.push(bosKalem());
-  if (k) kaydetIslem(`Satın alma kalemi silindi: ${k.urun || '(isimsiz)'} (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) {
+    if (k) kaydetIslem(`Satın alma kalemi silindi: ${k.urun || '(isimsiz)'} (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+    saveData();
+  }
+  render();
 }
 function saKalemGuncelle(satId, kalemId, alan, deger){
   const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
   if (alan === "urun" || alan === "kod") { if (k && k.urun) malzemeGecmisineEkle(k.urun, "", k.kod); }
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) saveData();
+  render();
 }
 function saKalemDurumDegistir(satId, kalemId){
   const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
@@ -75,16 +102,19 @@ function saKalemDurumDegistir(satId, kalemId){
 /* kullanıldığı yer satırları */
 function saYerEkle(satId){
   const s = satinAlmaBul(satId); s.yerler.push(bosYer());
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) saveData();
+  render();
 }
 function saYerSil(satId, yerId){
   const s = satinAlmaBul(satId); s.yerler = s.yerler.filter(x => x.id !== yerId);
   if (s.yerler.length === 0) s.yerler.push(bosYer());
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) saveData();
+  render();
 }
 function saYerGuncelle(satId, yerId, deger){
   const s = satinAlmaBul(satId); const y = s.yerler.find(x => x.id === yerId); if (y) y.ad = deger;
-  saveData(); render();
+  if (!satinAlmaTaslakMi(satId)) saveData();
+  render();
 }
 
 function saTumKalemler(){
@@ -180,7 +210,7 @@ function renderSatinAlma(){
     let h = `<div class="saUstSatir">
       <div><div class="pompaAdBaslik">Satın Almalar</div><div class="altBaslik2">satınalma talep formu formatında kayıt ve takip</div></div>
       <div style="display:flex;gap:8px;">
-        <button class="eklePrimer ty-btn" onclick="satinAlmaEkleOnayla()">+ satın alma ekle</button>
+        <button class="eklePrimer ty-btn" onclick="satinAlmaYeniAc()">+ satın alma ekle</button>
       </div>
     </div>`;
     h += `<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
@@ -207,8 +237,9 @@ function renderSatinAlma(){
     return;
 }
 function renderSatinAlmaDetay(){
-    const sat = state.satinAlmalar.find(x => x.id === ui.saSecim);
+    const sat = satinAlmaBul(ui.saSecim);
     if (!sat) { ui.view = "satinalma"; renderAna(); return; }
+    const taslakMi = satinAlmaTaslakMi(sat.id);
     const baslikAlan = (etiket, key, genislik) => `
       <div style="${genislik?`width:${genislik}px`:'flex:1'}">
         <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}</div>
@@ -217,16 +248,26 @@ function renderSatinAlmaDetay(){
           : `<div class="deger">${esc(sat[key]) || '—'}</div>`}
       </div>`;
 
-    let h = `<div class="geriDon ty-btn" onclick="satinAlmaGoster()"><span style="font-size:17px;line-height:1">‹</span> Satın Almalar listesine dön</div>`;
+    let h = `<div class="geriDon ty-btn" onclick="${taslakMi ? "silOnayla('Taslağı Kapat', ()=>satinAlmaTaslaktanVazgec())" : 'satinAlmaGoster()'}"><span style="font-size:17px;line-height:1">‹</span> Satın Almalar listesine dön</div>`;
     h += `<div class="pompaBaslikSatir">
-      <div class="pompaAdBaslik">${esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi'}</div>
+      <div class="pompaAdBaslik">${taslakMi ? 'Yeni Satın Alma Talebi' : (esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi')}</div>
       <div style="display:flex;gap:8px">
-        <button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
-        ${adminMi() ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : ''}
+        ${taslakMi ? '' : `<button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>`}
+        ${taslakMi ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Taslağı Kapat', ()=>satinAlmaTaslaktanVazgec())">Vazgeç</button>` : (adminMi() ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : '')}
       </div>
     </div>`;
 
-    if (sat.onayDurumu !== "onaylandi") {
+    if (taslakMi) {
+      h += `<div class="kart" style="border-color:rgba(var(--vurgu-rgb),0.4);background:rgba(var(--vurgu-rgb),0.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;color:var(--vurgu);font-size:14px">📝 Taslak — henüz gönderilmedi</div>
+            <div class="bosMetin" style="margin:2px 0 0">Bu talep aşağıdaki bilgileri doldurup "Satın Almayı Gönder"e basana kadar listeye eklenmez, kimseye bildirim gitmez.</div>
+          </div>
+          <button class="eklePrimer ty-btn" onclick="satinAlmaGonder()">📨 Satın Almayı Gönder</button>
+        </div>
+      </div>`;
+    } else if (sat.onayDurumu !== "onaylandi") {
       h += `<div class="kart" style="border-color:rgba(var(--mor-rgb),0.4);background:rgba(var(--mor-rgb),0.06)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
@@ -309,7 +350,9 @@ function renderSatinAlmaDetay(){
       <div>${baslikAlan('Sipariş Edilmesi İstenen Firma / Firmalar', 'firma')}</div>
     </div>`;
 
-    h += `<div class="bosMetin">Kayıt zamanı: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
+    h += taslakMi
+      ? `<div class="bosMetin">Bu taslak henüz kaydedilmedi. Formu doldurup yukarıdaki "Satın Almayı Gönder" butonuna basın.</div>`
+      : `<div class="bosMetin">Kayıt zamanı: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
 
     anaPanelYaz(h);
 }
