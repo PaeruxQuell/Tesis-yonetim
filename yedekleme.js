@@ -14,24 +14,22 @@ function yedekSiraAnahtari(tarihStr){
 
 async function bugununYedeginiGuncelle(kapandiMi){
   if (!state || !adminMi()) return;
-  try {
-    const tarihStr = bugun();
-    const id = yedekDokumanId(tarihStr);
-    const ozet = {
-      tarih: tarihStr,
-      saat: suAn(),
-      sira: yedekSiraAnahtari(tarihStr),
-      tesisSayisi: (state.tesisler || []).length,
-      malzemeGecmisiSayisi: (state.malzemeGecmisi || []).length,
-      satinAlmaSayisi: (state.satinAlmalar || []).length,
-      transferSayisi: (state.transferler || []).length,
-      kapandi: !!kapandiMi
-    };
-    await db.collection("yedekler").doc(id).set(ozet, { merge: true });
-    await db.collection("yedekVerileri").doc(id).set({ veriJSON: JSON.stringify(state) });
-  } catch (err) {
-    console.error("Yedekleme hatası:", err);
-  }
+  const tarihStr = bugun();
+  const id = yedekDokumanId(tarihStr);
+  const ozet = {
+    tarih: tarihStr,
+    saat: suAn(),
+    sira: yedekSiraAnahtari(tarihStr),
+    tesisSayisi: (state.tesisler || []).length,
+    malzemeGecmisiSayisi: (state.malzemeGecmisi || []).length,
+    satinAlmaSayisi: (state.satinAlmalar || []).length,
+    transferSayisi: (state.transferler || []).length,
+    kapandi: !!kapandiMi
+  };
+  // Not: hata burada YUTULMUYOR — çağıran taraf (manuelYedekAl) gerçek
+  // başarı/başarısızlık durumunu görüp kullanıcıya doğru mesajı gösterebilsin.
+  await db.collection("yedekler").doc(id).set(ozet, { merge: true });
+  await db.collection("yedekVerileri").doc(id).set({ veriJSON: JSON.stringify(state) });
 }
 
 function yedeklemeZamanlayiciKur(){
@@ -40,7 +38,7 @@ function yedeklemeZamanlayiciKur(){
   if (hedef.getTime() <= simdi.getTime()) hedef.setDate(hedef.getDate() + 1);
   const ms = hedef.getTime() - simdi.getTime();
   setTimeout(async () => {
-    await bugununYedeginiGuncelle(true); // günü kapat
+    try { await bugununYedeginiGuncelle(true); } catch (err) { console.error("Otomatik yedekleme hatası:", err); } // günü kapat
     yedeklemeZamanlayiciKur(); // bir sonraki gün için tekrar kur
   }, ms);
 }
@@ -49,7 +47,7 @@ window.yedeklemeBaslat = function(){
   if (yedeklemeZamanlayicisiKuruldu) return;
   if (!adminMi()) return;
   yedeklemeZamanlayicisiKuruldu = true;
-  bugununYedeginiGuncelle(false); // güne dair ilk (henüz kapanmamış) yedek
+  bugununYedeginiGuncelle(false).catch(err => console.error("Otomatik yedekleme hatası:", err)); // güne dair ilk (henüz kapanmamış) yedek
   yedeklemeZamanlayiciKur();
 };
 
@@ -62,13 +60,14 @@ async function manuelYedekAl(){
   render();
   try {
     await bugununYedeginiGuncelle(false);
-    toastGoster("Yedek başarıyla alındı.", "basari");
     kaydetIslem("Günlük yedek manuel olarak alındı.", { view: "ayarlar" });
     yedekOnizlemeVerisi = {};
-    yedeklerYukle();
+    toastGoster("Yedek başarıyla alındı.", "basari");
+    try { await yedeklerYukle(); } catch (e) { console.error("Liste yenilenemedi:", e); }
   } catch (err) {
     console.error(err);
-    toastGoster("Yedek alınamadı, tekrar deneyin.", "hata");
+    const izinHatasiMi = err && (err.code === "permission-denied" || /permission/i.test(err.message||""));
+    toastGoster(izinHatasiMi ? "Yedek alınamadı — Firestore güvenlik kuralları 'yedekler' ve 'yedekVerileri' koleksiyonlarına izin vermiyor olabilir." : "Yedek alınamadı, tekrar deneyin.", "hata");
   } finally {
     manuelYedekAliniyor = false;
     render();
@@ -80,11 +79,11 @@ let yedeklerListesi = [];
 let yedekOnizlemeVerisi = {};
 
 function yedeklerYukle(){
-  if (!adminMi()) return;
-  db.collection("yedekler").orderBy("sira", "desc").limit(90).get().then(snap => {
+  if (!adminMi()) return Promise.resolve();
+  return db.collection("yedekler").orderBy("sira", "desc").limit(90).get().then(snap => {
     yedeklerListesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (ui.view === "ayarlar") render();
-  }).catch(err => console.error("Yedek listesi alınamadı:", err));
+  }).catch(err => { console.error("Yedek listesi alınamadı:", err); throw err; });
 }
 
 function yedekOnizleAc(id){

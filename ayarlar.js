@@ -33,7 +33,7 @@ function ayarlarGoster(){
       kullanicilarListesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (ui.view === "ayarlar") render();
     }).catch(err => console.error(err));
-    yedeklerYukle();
+    yedeklerYukle().catch(()=>{});
   }
 }
 function kullaniciRoluDegistir(kullaniciId, yeniRol){
