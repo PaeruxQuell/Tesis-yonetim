@@ -164,13 +164,57 @@ function renderAyarlar(){
           if (!veri) {
             h += `<div class="bosMetin">Yükleniyor...</div>`;
           } else {
-            h += `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px">
-              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.tesisSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Tesis</div></div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.malzemeGecmisiSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Kayıtlı Malzeme</div></div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.satinAlmaSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Satın Alma</div></div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--yazi)">${y.transferSayisi ?? '—'}</div><div class="bosMetin" style="margin:0">Transfer</div></div>
-            </div>
-            <button class="ustBtn ty-btn" onclick="yedekIndir('${y.id}')">⬇ İndir (.json)</button>`;
+            const veriObj = (() => { try { return JSON.parse(veri); } catch(e) { return null; } })();
+            const alt = ui.yedekAltSekme || "";
+            const kategoriler = [
+              { anahtar: "tesis", etiket: "Tesis", sayi: y.tesisSayisi },
+              { anahtar: "malzeme", etiket: "Kayıtlı Malzeme", sayi: y.malzemeGecmisiSayisi },
+              { anahtar: "satinalma", etiket: "Satın Alma", sayi: y.satinAlmaSayisi },
+              { anahtar: "transfer", etiket: "Transfer", sayi: y.transferSayisi },
+            ];
+            h += `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px">`;
+            kategoriler.forEach(k => {
+              h += `<div class="ty-btn" style="cursor:pointer;${alt===k.anahtar?'outline:2px solid var(--vurgu);border-radius:6px;padding:2px 6px;margin:-2px -6px':''}" onclick="event.stopPropagation(); yedekAltSekmeAc('${k.anahtar}')">
+                <div style="font-size:18px;font-weight:700;color:var(--yazi)">${k.sayi ?? '—'}</div>
+                <div class="bosMetin" style="margin:0">${k.etiket}</div>
+              </div>`;
+            });
+            h += `</div>`;
+
+            if (alt && veriObj) {
+              h += `<div class="kart" style="background:var(--bg-yuzey);margin-bottom:12px;max-height:260px;overflow-y:auto">`;
+              if (alt === "tesis") {
+                const liste = veriObj.tesisler || [];
+                if (liste.length === 0) h += `<div class="bosMetin">Bu yedekte tesis yok.</div>`;
+                liste.forEach(t => {
+                  h += `<div class="ayarSatiri" style="padding:6px 0"><span style="flex:1;font-size:12.5px;color:var(--yazi)">${esc(t.ad)}</span><span class="bosMetin" style="margin:0">${(t.makineler||[]).length} makine · ${(t.depolar||[]).length} depo</span></div>`;
+                });
+              } else if (alt === "malzeme") {
+                const liste = veriObj.malzemeGecmisi || [];
+                if (liste.length === 0) h += `<div class="bosMetin">Bu yedekte kayıtlı malzeme yok.</div>`;
+                liste.forEach(m => {
+                  h += `<div class="ayarSatiri" style="padding:6px 0"><span style="flex:1;font-size:12.5px;color:var(--yazi)">${esc(m.ad)}</span><span class="bosMetin" style="margin:0">${esc(m.birim||'')}${m.kod?' · '+esc(m.kod):''}</span></div>`;
+                });
+              } else if (alt === "satinalma") {
+                const liste = veriObj.satinAlmalar || [];
+                if (liste.length === 0) h += `<div class="bosMetin">Bu yedekte satın alma yok.</div>`;
+                liste.forEach(s => {
+                  h += `<div class="ayarSatiri" style="padding:6px 0;flex-direction:column;align-items:stretch;gap:2px">
+                    <div style="display:flex;justify-content:space-between"><span style="font-size:12.5px;color:var(--yazi);font-weight:600">${esc(s.firma||'—')} ${s.siparisNo?'· '+esc(s.siparisNo):''}</span><span class="bosMetin" style="margin:0">${s.onayDurumu==='onaylandi'?'✓ onaylandı':'⏳ bekliyor'}</span></div>
+                    <span class="bosMetin" style="margin:0">${(s.kalemler||[]).map(kl=>esc(kl.urun||'')).filter(Boolean).join(', ') || '—'}</span>
+                  </div>`;
+                });
+              } else if (alt === "transfer") {
+                const liste = veriObj.transferler || [];
+                if (liste.length === 0) h += `<div class="bosMetin">Bu yedekte transfer yok.</div>`;
+                liste.forEach(tr => {
+                  h += `<div class="ayarSatiri" style="padding:6px 0"><span style="flex:1;font-size:12.5px;color:var(--yazi)">${esc(tr.urunAdi||'—')} — ${esc(tr.miktar||'')} ${esc(tr.birim||'')}</span><span class="bosMetin" style="margin:0">${tr.durum?esc(tr.durum):'—'}</span></div>`;
+                });
+              }
+              h += `</div>`;
+            }
+
+            h += `<button class="ustBtn ty-btn" onclick="yedekIndir('${y.id}')">⬇ İndir (.json)</button>`;
           }
           h += `</div>`;
         }

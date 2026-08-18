@@ -88,6 +88,7 @@ function yedeklerYukle(){
 
 function yedekOnizleAc(id){
   ui.yedekSecili = (ui.yedekSecili === id) ? "" : id;
+  ui.yedekAltSekme = "";
   if (ui.yedekSecili && !yedekOnizlemeVerisi[id]) {
     db.collection("yedekVerileri").doc(id).get().then(snap => {
       if (snap.exists) {
@@ -96,6 +97,10 @@ function yedekOnizleAc(id){
       }
     }).catch(err => console.error("Yedek verisi alınamadı:", err));
   }
+  render();
+}
+function yedekAltSekmeAc(anahtar){
+  ui.yedekAltSekme = (ui.yedekAltSekme === anahtar) ? "" : anahtar;
   render();
 }
 
