@@ -9,6 +9,9 @@ function bosSatinAlmaKaydi(){
     eklenmeTarihi: bugun(), eklenmeSaati: suAn()
   };
 }
+function satinAlmaEkleOnayla(){
+  teyitIste("Yeni Satın Alma Talebi", "Yeni bir satın alma talebi oluşturmak üzeresiniz. Onaylamak için işlemi çözün:", () => satinAlmaEkle());
+}
 function satinAlmaEkle(){
   const yeni = bosSatinAlmaKaydi();
   state.satinAlmalar.unshift(yeni);
@@ -177,7 +180,7 @@ function renderSatinAlma(){
     let h = `<div class="saUstSatir">
       <div><div class="pompaAdBaslik">Satın Almalar</div><div class="altBaslik2">satınalma talep formu formatında kayıt ve takip</div></div>
       <div style="display:flex;gap:8px;">
-        <button class="eklePrimer ty-btn" onclick="satinAlmaEkle()">+ satın alma ekle</button>
+        <button class="eklePrimer ty-btn" onclick="satinAlmaEkleOnayla()">+ satın alma ekle</button>
       </div>
     </div>`;
     h += `<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
