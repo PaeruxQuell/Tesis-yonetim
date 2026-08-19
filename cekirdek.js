@@ -133,6 +133,21 @@ function sanitizeVeri(v){
   if (!v.tesisler) v.tesisler = varsayilanVeri().tesisler;
   if (!v.malzemeGecmisi) v.malzemeGecmisi = [];
   v.malzemeGecmisi = v.malzemeGecmisi.map(x => typeof x === "string" ? { id: uid(), ad: x } : x);
+  // Geçmişte (eski sürümlerde) aynı isimle birden fazla kayıt oluşmuş olabilir
+  // (örn. "Rulman" iki ayrı satırda, farklı kodlarla) — bunları isme göre
+  // (büyük/küçük harf duyarsız) tek kayda birleştiriyoruz; kodlar zaten artık
+  // dinamik olarak (satın alma + rapor geçmişinden) hesaplanıyor.
+  {
+    const gorulen = new Map();
+    const birlesik = [];
+    v.malzemeGecmisi.forEach(x => {
+      const anahtar = (x.ad || "").trim().toLowerCase();
+      if (!anahtar) return;
+      if (!gorulen.has(anahtar)) { gorulen.set(anahtar, x); birlesik.push(x); }
+      else { const mevcut = gorulen.get(anahtar); if (x.birim && !mevcut.birim) mevcut.birim = x.birim; }
+    });
+    v.malzemeGecmisi = birlesik;
+  }
   if (!v.satinAlmalar) v.satinAlmalar = [];
   if (!v.sonIslemler) v.sonIslemler = [];
   if (!v.transferler) v.transferler = [];
@@ -180,7 +195,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "54";
+const UYGULAMA_SURUM_NO = "55";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");

@@ -299,7 +299,7 @@ function renderAyarlar(){
     return;
 }
 function renderMalzemeler(){
-    let h = `<div class="bosMetin ty-btn" style="cursor:pointer;margin-bottom:10px;display:inline-block" onclick="ayarlarGoster()">← Ayarlar'a dön</div>`;
+    let h = `<div class="geriDon" onclick="ayarlarGoster()"><span style="font-size:17px;line-height:1">‹</span> Ayarlar'a dön</div>`;
     h += `<div class="pompaBaslikSatir">
       <div>
         <div class="pompaAdBaslik">Kullanılan Malzemeler</div>
@@ -309,11 +309,16 @@ function renderMalzemeler(){
     </div>`;
     h += `<div class="kart">`;
     if (state.malzemeGecmisi.length === 0) h += `<div class="bosMetin">Henüz malzeme eklenmedi.</div>`;
-    else h += `<div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1">Malzeme adı</span><span style="width:130px">Kod</span><span style="width:120px">Birim</span><span style="width:20px"></span></div>`;
+    else h += `<div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1">Malzeme adı</span><span style="width:200px">Kayıtlı Kodlar</span><span style="width:120px">Birim</span><span style="width:20px"></span></div>`;
     state.malzemeGecmisi.forEach(m => {
+      const kodlar = urunKodlariGetir(m.ad);
       h += `<div class="parcaSatir">
         <input class="parcaGirdi" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}','ad',this.value)" />
-        <input class="parcaGirdi" style="width:130px;flex:none" placeholder="Kod" value="${esc(m.kod)}" onchange="malzemeListesiGuncelle('${m.id}','kod',this.value)" />
+        <span style="width:200px;flex:none;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+          ${kodlar.length === 0
+            ? `<span class="bosMetin" style="margin:0">— kod yok —</span>`
+            : kodlar.map(kd => `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--turkuaz);background:rgba(var(--turkuaz-rgb),0.14);border-radius:5px;padding:2px 7px">${esc(kd)}</span>`).join('')}
+        </span>
         <select class="parcaGirdi" style="width:120px;flex:none" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
           ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
         </select>
@@ -321,6 +326,7 @@ function renderMalzemeler(){
       </div>`;
     });
     h += `</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Kodlar bu listeden elle girilmez — bir ürün satın alma ya da rapor kayıtlarında kullanıldıkça, o üründe geçen kodlar burada otomatik olarak toplanıp gösterilir.</div>`;
     anaPanelYaz(h);
     return;
 }
@@ -343,7 +349,7 @@ function kullaniciAcKapat(id){
 }
 
 function renderKullanicilar(){
-  let h = `<div class="bosMetin ty-btn" style="cursor:pointer;margin-bottom:10px;display:inline-block" onclick="ayarlarGoster()">← Ayarlar'a dön</div>`;
+  let h = `<div class="geriDon" onclick="ayarlarGoster()"><span style="font-size:17px;line-height:1">‹</span> Ayarlar'a dön</div>`;
   h += `<div class="pompaAdBaslik" style="margin-bottom:4px">Kullanıcılar ve Yetkiler</div>
     <div class="altBaslik2" style="margin-bottom:20px">rol, tesis erişimi ve bölüm izinlerini buradan yönetin — bir kullanıcıya tıklayarak açın</div>`;
 
