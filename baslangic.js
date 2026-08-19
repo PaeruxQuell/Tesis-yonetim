@@ -30,4 +30,13 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Gönderilmemiş bir satın alma taslağı varken sekme kapatılır/yenilenirse
+// tarayıcı bir onay istesin — aksi halde doldurulan form sessizce kaybolurdu.
+window.addEventListener("beforeunload", (e) => {
+  if (typeof saTaslak !== "undefined" && saTaslak) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
 /* ---------------- tesis / makine / pompa ---------------- */

@@ -137,7 +137,7 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "" };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "", duzenlenenId: null };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -206,7 +206,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "56";
+const UYGULAMA_SURUM_NO = "57";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -345,6 +345,8 @@ function hedefeGit(h){
   else if (h.view === "tesis-vurgula") { ui.acikTesis.add(h.tesisId); if (h.makineId) ui.acikMakine.add(h.makineId); ui.view = "anasayfa"; render(); }
   else if (h.view === "kayitlar") kayitlarGoster();
   else if (h.view === "anasayfa") anaSayfaGoster();
+  else if (h.view === "transfer") transferGoster();
+  else if (h.view === "ayarlar") ayarlarGoster();
 }
 function islemeGitById(id){
   const islem = (state.sonIslemler || []).find(x => x.id === id);
