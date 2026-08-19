@@ -90,6 +90,15 @@ function saKalemGuncelle(satId, kalemId, alan, deger){
   if (!satinAlmaTaslakMi(satId)) saveData();
   render();
 }
+function saKodSecimDegisti(satId, kalemId, deger){
+  if (deger === "__yeni__") { ui.saKodManuel.add(kalemId); render(); return; }
+  ui.saKodManuel.delete(kalemId);
+  saKalemGuncelle(satId, kalemId, 'kod', deger);
+}
+function saKalemKodElleGuncelle(satId, kalemId, deger){
+  ui.saKodManuel.delete(kalemId);
+  saKalemGuncelle(satId, kalemId, 'kod', deger);
+}
 function saKalemDurumDegistir(satId, kalemId){
   const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
   if (s.onayDurumu !== "onaylandi") { toastGoster("Bu talep henüz onaylanmadı.", "hata"); return; }
@@ -295,14 +304,28 @@ function renderSatinAlmaDetay(){
       <div class="kalemBaslikSatir">
         <span style="width:26px"></span><span style="flex:1.6">Ürün</span><span style="width:130px">Kod</span><span style="flex:1">Miktar</span><span style="flex:1">Birim</span><span style="width:150px">Durum</span><span style="width:20px"></span>
       </div>
-      ${sat.kalemler.map((k, i) => `
+      ${sat.kalemler.map((k, i) => {
+        const kategoriKodlari = urunKodlariGetir(k.urun);
+        const elleMod = ui.saKodManuel.has(k.id) || (kategoriKodlari.length === 0);
+        // Ürün adı bilinen bir kategoriyse (örn. "Rulman", "Keçe") ve daha önce
+        // girilmiş kodlar varsa, serbest metin yerine hazır bir açılır liste göster.
+        const kodAlaniHTML = ui.saDuzenle ? (
+          elleMod
+            ? `<input class="parcaGirdi" style="width:130px;flex:none" placeholder="Kod (örn: 6305)" value="${esc(k.kod||'')}" onchange="saKalemKodElleGuncelle('${sat.id}','${k.id}',this.value)" />`
+            : `<select class="parcaGirdi" style="width:130px;flex:none" onchange="saKodSecimDegisti('${sat.id}','${k.id}',this.value)">
+                 <option value="" ${!k.kod?'selected':''}>— kod seç —</option>
+                 ${kategoriKodlari.map(kd => `<option value="${esc(kd)}" ${k.kod===kd?'selected':''}>${esc(kd)}</option>`).join('')}
+                 ${k.kod && !kategoriKodlari.includes(k.kod) ? `<option value="${esc(k.kod)}" selected>${esc(k.kod)}</option>` : ''}
+                 <option value="__yeni__">✎ Yeni kod yaz...</option>
+               </select>`
+        ) : '';
+        return `
         <div class="kalemSatir">
           <span class="kalemNo">${i+1}</span>
           ${urunKritikMi(k.urun) ? `<span class="kritikSolukNokta" title="Bu ürün kritik stokta">●</span>` : ''}
           ${ui.saDuzenle ? `
             <input class="parcaGirdi" style="flex:1.6" list="malzemeListesi" placeholder="Ürün adı" value="${esc(k.urun)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','urun',this.value)" />
-            <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${k.id}" placeholder="Kod (örn: 6305)" value="${esc(k.kod||'')}" onchange="saKalemGuncelle('${sat.id}','${k.id}','kod',this.value)" />
-            <datalist id="kodListesi-${k.id}">${urunKodlariGetir(k.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
+            ${kodAlaniHTML}
             <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
             <input class="parcaGirdi" style="flex:1" placeholder="Birim" value="${esc(k.birim)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)" />
             <span style="width:150px"></span>
@@ -324,7 +347,8 @@ function renderSatinAlmaDetay(){
             </span>
           `}
           ${ui.saDuzenle ? `<span class="silIkon" style="width:20px" onclick="silOnayla('Ürünü Sil', ()=>saKalemSil('${sat.id}','${k.id}'))">×</span>` : `<span style="width:20px"></span>`}
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
 
     h += `<div class="kart">
