@@ -40,7 +40,18 @@ function teyitOnayla(){
     girdi.value = ""; girdi.focus();
   }
 }
+function hizliSilTercihOku(){
+  try { return localStorage.getItem("tys_hizli_sil") === "acik"; }
+  catch(e){ return false; }
+}
+function hizliSilAcKapat(deger){
+  try { localStorage.setItem("tys_hizli_sil", deger ? "acik" : "kapali"); } catch(e){}
+  render();
+}
 function silOnayla(baslik, geriCagirFn){
+  // Sadece Yönetici rolündeki kişi bu hızlı silme tercihini açabiliyor (Ayarlar'da).
+  // Açıksa, matematik onayı sorulmadan doğrudan silme işlemi uygulanır.
+  if (adminMi() && hizliSilTercihOku()) { geriCagirFn(); return; }
   teyitIste(baslik, "Bu kaydı silmek üzeresiniz. Onaylamak için işlemi çözün:", geriCagirFn);
 }
 const bugun = () => {
@@ -195,7 +206,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "55";
+const UYGULAMA_SURUM_NO = "56";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");

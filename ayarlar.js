@@ -142,6 +142,14 @@ function renderAyarlar(){
     </div>`;
 
     if (adminMi()) {
+      h += `<div class="kart" style="border-color:rgba(var(--kirmizi-rgb),0.35)">
+        <div class="kartBaslik" style="margin-bottom:10px">⚡ Hızlı Silme (sadece Yönetici)</div>
+        <div class="bosMetin" style="margin-bottom:12px">Açıkken, herhangi bir kaydı silerken artık matematik onayı sorulmaz — "Sil" işlemi anında, tek tıkla uygulanır. Bu, kazara silme riskini artırır; dikkatli kullanın. Sadece bu tarayıcıda geçerli bir tercihtir.</div>
+        <button class="ty-btn kumImleciToggleBtn ${hizliSilTercihOku()?'kumImleciToggleBtnAktif':''}" onclick="hizliSilAcKapat(${hizliSilTercihOku()?'false':'true'})">${hizliSilTercihOku()?'✓ Açık — kapatmak için tıklayın':'Kapalı — açmak için tıklayın'}</button>
+      </div>`;
+    }
+
+    if (adminMi()) {
       h += `<div class="kart">
         <div class="kartBaslikSatir" style="margin-bottom:10px">
           <span class="kartBaslik">🗄️ Günlük Yedekler</span>
