@@ -26,6 +26,11 @@ function satinAlmaGonder(){
   if (!saTaslak) return;
   const yeni = saTaslak;
   saTaslak = null;
+  // Güvenlik amaçlı: taslak doldurulurken bir Firestore güncellemesi arayla girip
+  // henüz kaydedilmemiş "Kullanılan Malzemeler" eklemesini silmiş olabilir — bu yüzden
+  // gönderilme anında formdaki TÜM ürün adlarını (ve varsa kodlarını) tekrar,
+  // kesin olarak listeye ekliyoruz.
+  (yeni.kalemler || []).forEach(k => { if (k.urun) malzemeGecmisineEkle(k.urun, "", k.kod); });
   state.satinAlmalar.unshift(yeni);
   kaydetIslem("Yeni satın alma talebi oluşturuldu", { view: "satinalma-detay", satId: yeni.id });
   saveData();
