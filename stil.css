@@ -264,7 +264,7 @@
     width: 260px; border-left: 1px solid var(--sinir); background: var(--bg-yan); overflow-y: auto;
     padding: 16px 0 24px; flex-shrink: 0;
   }
-  .islemSatir { padding: 12px 14px; margin: 0 10px 8px; border-radius: 10px; background: var(--bg-yuzey); border: 1px solid var(--sinir-soluk); border-bottom: none; cursor: pointer; transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .islemSatir { padding: 12px 14px; margin: 0 10px 8px; border-radius: 10px; background: var(--bg-yukseltilmis); border: 1px solid var(--sinir-soluk); border-bottom: none; cursor: pointer; transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
   .islemSatir:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.14); }
   .islemSatir:hover { transform: translateX(4px); background: var(--bg-hover); }
   .islemRozet { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid; border-radius: 5px; padding: 2px 7px; margin-bottom: 5px; }
@@ -382,7 +382,7 @@
   }
   .dugumInput:hover, .dugumInput:focus { background: var(--bg); border-color: var(--sinir2); }
   .kritikNokta { color: var(--kirmizi); font-size: 10px; margin-left: 6px; flex-shrink: 0; }
-  .pompaBakimSatir { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; cursor: pointer; }
+  .pompaBakimSatir { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; cursor: pointer; border-top: 1px solid var(--sinir-soluk); }
   .pompaBakimSatir:hover { background: var(--bg-hover); }
   .ozetSatiri { display: flex; gap: 14px; margin-bottom: 20px; }
   .ozetKart { flex: 1; background: var(--bg-yuzey); border: 1px solid var(--sinir); border-top: 3px solid var(--sinir); border-radius: 12px; padding: 20px; text-align: center; transition: transform .18s ease, box-shadow .18s ease; }

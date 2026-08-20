@@ -247,7 +247,7 @@ function renderBakim(){
             ${makineDurumRenk ? `<span class="islemRozet" style="color:${makineDurumRenk};background:rgba(${makineDurumRgb},0.15);border-color:rgba(${makineDurumRgb},0.5);margin-bottom:0">⚠ ${makineGecti>0?`${makineGecti} gecikti`:''}${makineGecti>0&&makineYaklasan>0?' · ':''}${makineYaklasan>0?`${makineYaklasan} yaklaşıyor`:''}</span>` : ''}
           </div>`;
           if (makineAcik) {
-            h += `<div class="acilirIcerik" style="padding:10px 14px 16px 54px">`;
+            h += `<div class="acilirIcerik" style="padding:12px 14px 16px 26px;margin-left:20px;border-left:2px solid var(--sinir2);background:var(--bg)">`;
             h += `<div class="kartBaslik" style="margin-bottom:8px">Pompalar (alt birimler) — her birinin kendi bakım planı</div>`;
             if ((m.pompalar||[]).length === 0) {
               h += `<div class="bosMetin" style="margin-bottom:14px">Bu makinede henüz pompa eklenmedi.</div>`;
@@ -263,7 +263,7 @@ function renderBakim(){
                   ${(p.bakimlar||[]).length ? `<span class="bosMetin" style="font-style:normal">${p.bakimlar.length} plan</span>` : ''}
                 </div>`;
                 if (pompaAcik) {
-                  h += `<div class="acilirIcerik" style="padding:8px 0 14px 30px">`;
+                  h += `<div class="acilirIcerik" style="padding:10px 12px 14px 16px;margin-left:14px;border-left:2px solid var(--sinir2);background:var(--bg-yuzey2)">`;
                   if ((p.bakimlar||[]).length === 0) h += `<div class="bosMetin">Bu pompa için henüz bakım planı eklenmedi.</div>`;
                   else h += `<div class="kalemBaslikSatir" style="padding-left:0">
                     <span style="flex:1.3">Bakım adı</span><span style="width:95px">Periyot (gün)</span><span style="width:95px">Uyarı (gün)</span><span style="width:110px">Son yapılma</span><span style="width:140px">Sonraki tarih</span><span style="width:130px"></span>
