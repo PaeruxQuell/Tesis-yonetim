@@ -286,7 +286,7 @@
   .ekleMiniMakine { background: transparent; color: var(--mavi); border: none; font-size: 12.5px; padding: 10px 14px 10px 34px; display: block; width: 100%; text-align: left; }
   .ekleMiniPompa { background: transparent; color: var(--vurgu); border: none; font-size: 12.5px; padding: 10px 14px 10px 54px; display: block; width: 100%; text-align: left; }
 
-  .tesisKart { margin: 0 12px 14px; border: 1px solid var(--sinir); border-radius: 12px; overflow: hidden; background: var(--bg-yuzey); }
+  .tesisKart { margin: 0 12px 14px; border: 1px solid var(--sinir2); border-radius: 12px; overflow: hidden; background: var(--bg-yuzey); }
   .tesisBaslikSatir { display: flex; align-items: center; gap: 10px; padding: 15px 14px; cursor: pointer; }
   .tesisBaslikSatir:hover { background: var(--bg-hover); }
   .tesisIkon { font-size: 19px; flex-shrink: 0; }
@@ -297,8 +297,8 @@
     flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
   }
   .tesisAdMetin { font-size: 16px; font-weight: 700; color: var(--yazi2); }
-  .makineSatir { display: flex; align-items: center; gap: 9px; padding: 13px 14px 13px 34px; cursor: pointer; border-top: 1px solid var(--sinir-soluk); }
-  .makineSatir:hover { background: var(--bg-hover); }
+  .makineSatir { display: flex; align-items: center; gap: 9px; padding: 13px 14px 13px 30px; cursor: pointer; border-top: 1px solid var(--sinir-soluk); background: var(--bg-yukseltilmis2); border-left: 4px solid var(--turkuaz); margin-left: 8px; }
+  .makineSatir:hover { background: var(--bg-yukseltilmis3); }
   .makineAdMetin { font-size: 14.5px; font-weight: 600; color: var(--yazi-ikincil); }
   .pompaSatir { display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 54px; cursor: pointer; border-top: 1px solid var(--bg-satir-sinir); border-left: 3px solid transparent; }
   .pompaSatir:hover { background: var(--bg-hover); }
@@ -407,8 +407,8 @@
   .bekleyenIcerik { margin: 0 14px 14px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--sinir); border-radius: 8px; }
   .bekleyenAltSatir { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
   .bekleyenCheck { width: 17px; height: 17px; flex-shrink: 0; accent-color: var(--vurgu); }
-  .stokUrunSatirTek { display: flex; gap: 10px; align-items: center; padding: 10px 8px; border-top: 1px solid var(--sinir-guclu); border-radius: 6px; }
-  .stokUrunSatirTek:nth-child(even) { background: var(--bg-zebra); }
+  .stokUrunSatirTek { display: flex; gap: 10px; align-items: center; padding: 10px 10px; border-top: 1px solid var(--sinir2); border-radius: 6px; }
+  .stokUrunSatirTek:nth-child(even) { background: var(--bg-yukseltilmis); }
   .stokUrunSatirTek:hover { background: var(--bg-hover4); }
   .ayarSatiri { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--sinir-soluk); }
   .ayarSatiri:first-child { border-top: none; }

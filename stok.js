@@ -219,7 +219,7 @@ function renderStok(){
               : `<span class="makineAdMetin">${esc(d.ad)}</span>`}
           </div>`;
           if (depoAcik) {
-            h += `<div class="acilirIcerik" style="padding:10px 14px 16px 54px">`;
+            h += `<div class="acilirIcerik" style="padding:12px 14px 16px 26px;margin-left:20px;border-left:2px solid var(--sinir2);background:var(--bg)">`;
             if ((d.urunler || []).length === 0) h += `<div class="bosMetin">Henüz ürün eklenmedi.</div>`;
             else h += `<div class="kalemBaslikSatir" style="padding-left:0">
               <span style="flex:1.6">Ürün</span><span style="width:90px">Kod</span><span style="width:55px">Miktar</span><span style="width:90px">Birim</span>
