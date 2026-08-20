@@ -16,7 +16,7 @@ function cikisUygula(){
     const mevcutMiktar = parseFloat(u.miktar) || 0;
     const dusulecek = Math.min(miktar, mevcutMiktar);
     u.miktar = mevcutMiktar - dusulecek;
-    kullanilanlar.push(`${u.ad} (${dusulecek} ${u.birim||''})`);
+    kullanilanlar.push(`${u.ad}${u.kod?` (${u.kod})`:''} (${dusulecek} ${u.birim||''})`);
   });
   if (kullanilanlar.length === 0) { toastGoster("Lütfen en az bir ürün için miktar girin.", "hata"); return; }
   kaydetIslem(`Malzeme kullanıldı: ${kullanilanlar.join(', ')} (${d.ad} — ${t.ad})`, { view: "stok", tesisId: t.id, depoId: d.id });
@@ -59,7 +59,7 @@ function renderMalzemeCikis(){
         h += `<div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:2">Ürün</span><span style="width:110px">Mevcut</span><span style="width:130px">Kullanılan</span></div>`;
         d.urunler.forEach(u => {
           h += `<div class="stokUrunSatirTek">
-            <span style="flex:2;color:var(--yazi)">${esc(u.ad)}</span>
+            <span style="flex:2;color:var(--yazi)">${esc(u.ad)}${u.kod?` <span style="color:var(--yazi-soluk);font-family:'JetBrains Mono',monospace;font-size:11.5px">(${esc(u.kod)})</span>`:''}</span>
             <span style="width:110px;color:var(--yazi-dim)">${esc(u.miktar)} ${esc(u.birim||'')}</span>
             <input class="parcaGirdi" style="width:130px;flex:none" type="number" min="0" placeholder="0" value="${esc(ui.cikisMiktarlar[u.id]||'')}" onchange="cikisMiktarGuncelle('${u.id}',this.value)" />
           </div>`;

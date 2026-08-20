@@ -155,7 +155,7 @@ function renderRaporlar(){
       <span style="flex:1.4">Tesis / Makine / Pompa</span><span style="flex:2">Kullanılan Malzeme</span><span style="width:110px">Tarih</span>
     </div>`;
     veriler.forEach(v => {
-      const malzemeMetni = v.malzemeler.map(x => `${x.adet} ${x.ad}${x.birim?(' '+x.birim):''}`).join(', ');
+      const malzemeMetni = v.malzemeler.map(x => `${x.adet} ${x.ad}${x.kod?` (${x.kod})`:''}${x.birim?(' '+x.birim):''}`).join(', ');
       h += `<div class="stokUrunSatirTek ty-btn" style="cursor:pointer;align-items:flex-start" onclick="pompaSec('${v.tesisId}','${v.makineId}','${v.pompaId}')">
         <span style="flex:1.4">
           <div style="color:var(--yazi);font-size:13px;font-weight:600">${esc(v.tesis)}</div>

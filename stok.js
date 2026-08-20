@@ -35,7 +35,7 @@ function stokUrunBul(tesisId, depoId, urunId){
 function stokUrunEkle(tesisId, depoId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const d = t.depolar.find(x => x.id === depoId);
-  d.urunler.push({ id: uid(), ad: "", miktar: 0, birim: "", kritikTakip: false, kritikEsik: 0 });
+  d.urunler.push({ id: uid(), ad: "", kod: "", miktar: 0, birim: "", kritikTakip: false, kritikEsik: 0 });
   kaydetIslem(`Stok ürünü eklendi: ${d.ad} (${t.ad})`, { view: "stok", tesisId: t.id, depoId: d.id });
   saveData(); render();
 }
@@ -89,7 +89,7 @@ function bekleyenStokKalemleri(tesisAdi){
     if (!(sat.yerler || []).some(y => y.ad === tesisAdi)) return;
     (sat.kalemler || []).forEach(k => {
       if (!k.stokaAktarildi && k.durum === "Geldi" && k.urun && k.urun.trim()) {
-        sonuc.push({ satId: sat.id, kalemId: k.id, urun: k.urun, miktar: k.miktar, birim: k.birim });
+        sonuc.push({ satId: sat.id, kalemId: k.id, urun: k.urun, kod: k.kod || "", miktar: k.miktar, birim: k.birim });
       }
     });
   });
@@ -134,8 +134,8 @@ function stokBekleyenIsle(tesisId){
     const adTemiz = (k.urun || "").trim();
     const mevcut = depo.urunler.find(u => u.ad.trim().toLowerCase() === adTemiz.toLowerCase());
     const miktar = parseFloat(k.miktar) || 0;
-    if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar) || 0) + miktar; }
-    else { depo.urunler.push({ id: uid(), ad: adTemiz, miktar, birim: k.birim || "", kritikTakip: false, kritikEsik: 0 }); }
+    if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar) || 0) + miktar; if (k.kod && !mevcut.kod) mevcut.kod = k.kod; }
+    else { depo.urunler.push({ id: uid(), ad: adTemiz, kod: k.kod || "", miktar, birim: k.birim || "", kritikTakip: false, kritikEsik: 0 }); }
     k.stokaAktarildi = true;
     sayac++;
   });
@@ -179,7 +179,7 @@ function renderStok(){
           if (bekAcik) {
             h += `<div class="bekleyenIcerik">`;
             h += `<div class="kalemBaslikSatir" style="padding-left:0">
-              <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="width:80px">Miktar</span><span style="width:120px">Birim</span>
+              <span style="width:26px"></span><span style="flex:2">Ürün</span><span style="width:100px">Kod</span><span style="width:80px">Miktar</span><span style="width:120px">Birim</span>
             </div>`;
             bekleyenler.forEach(b => {
               const anahtar = b.satId + "|" + b.kalemId;
@@ -187,6 +187,7 @@ function renderStok(){
               h += `<div class="kalemSatir" style="padding-left:0">
                 <input type="checkbox" class="bekleyenCheck" ${secili?'checked':''} onchange="stokBekleyenSecToggle('${t.id}','${b.satId}','${b.kalemId}')" />
                 <input class="parcaGirdi" style="flex:2" value="${esc(b.urun)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','urun',this.value)" />
+                <input class="parcaGirdi" style="width:100px;flex:none;font-family:'JetBrains Mono',monospace" value="${esc(b.kod)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','kod',this.value)" />
                 <input class="parcaGirdi" style="width:80px;flex:none" value="${esc(b.miktar)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','miktar',this.value)" />
                 <input class="parcaGirdi" style="width:120px;flex:none" value="${esc(b.birim)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)" />
               </div>`;
@@ -221,8 +222,8 @@ function renderStok(){
             h += `<div class="acilirIcerik" style="padding:10px 14px 16px 54px">`;
             if ((d.urunler || []).length === 0) h += `<div class="bosMetin">Henüz ürün eklenmedi.</div>`;
             else h += `<div class="kalemBaslikSatir" style="padding-left:0">
-              <span style="flex:2">Ürün</span><span style="width:60px">Miktar</span><span style="width:110px">Birim</span>
-              <span style="width:80px">Kritik Eşik</span><span style="width:150px">Kritik</span>
+              <span style="flex:1.6">Ürün</span><span style="width:90px">Kod</span><span style="width:55px">Miktar</span><span style="width:90px">Birim</span>
+              <span style="width:75px">Kritik Eşik</span><span style="width:135px">Kritik</span>
             </div>`;
             (d.urunler || []).forEach(u => {
               const kritikRenk = u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0);
@@ -230,21 +231,23 @@ function renderStok(){
               const miktarFlashSinif = miktarDegisimSinifi(u.id, u.miktar);
               h += `<div class="stokUrunSatirTek ${eksiMi?'stokEksiSatir':''}">
                 ${ui.stokDuzenle ? `
-                  <span style="flex:2;display:flex;align-items:center;gap:6px">
+                  <span style="flex:1.6;display:flex;align-items:center;gap:6px">
                     ${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}
                     <input class="parcaGirdi" style="flex:1" list="malzemeListesi" placeholder="Ürün adı" value="${esc(u.ad)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','ad',this.value)" />
                   </span>
-                  <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:60px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
-                  <input class="parcaGirdi" style="width:110px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
-                  <input class="parcaGirdi" style="width:80px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
-                  <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:150px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
+                  <input class="parcaGirdi" style="width:90px;flex:none;font-family:'JetBrains Mono',monospace" placeholder="Kod" value="${esc(u.kod)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kod',this.value)" />
+                  <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:55px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
+                  <input class="parcaGirdi" style="width:90px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
+                  <input class="parcaGirdi" style="width:75px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
+                  <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:135px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
                   ${adminMi() ? `<span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>` : ''}
                 ` : `
-                  <span style="flex:2;color:var(--yazi);display:flex;align-items:center;gap:6px">${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}${esc(u.ad) || '—'}</span>
-                  <span class="${miktarFlashSinif}" style="width:60px;color:${eksiMi?'var(--kirmizi-yazi)':(kritikRenk?'var(--kirmizi-yazi)':'var(--yazi-dim)')};font-weight:${(eksiMi||kritikRenk)?'800':'400'};border-radius:4px;display:inline-block">${eksiMi?'⚠ ':''}${esc(u.miktar)}</span>
-                  <span style="width:110px;color:var(--yazi-dim)">${esc(u.birim) || '—'}</span>
-                  <span style="width:80px;color:var(--yazi-dim)">${esc(u.kritikEsik)}</span>
-                  <span style="width:150px;color:${u.kritikTakip?'var(--kirmizi)':'var(--yazi-soluk)'};font-size:11.5px">${u.kritikTakip?'● İzleniyor':'—'}</span>
+                  <span style="flex:1.6;color:var(--yazi);display:flex;align-items:center;gap:6px">${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}${esc(u.ad) || '—'}</span>
+                  <span style="width:90px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace;font-size:11.5px">${esc(u.kod) || '—'}</span>
+                  <span class="${miktarFlashSinif}" style="width:55px;color:${eksiMi?'var(--kirmizi-yazi)':(kritikRenk?'var(--kirmizi-yazi)':'var(--yazi-dim)')};font-weight:${(eksiMi||kritikRenk)?'800':'400'};border-radius:4px;display:inline-block">${eksiMi?'⚠ ':''}${esc(u.miktar)}</span>
+                  <span style="width:90px;color:var(--yazi-dim)">${esc(u.birim) || '—'}</span>
+                  <span style="width:75px;color:var(--yazi-dim)">${esc(u.kritikEsik)}</span>
+                  <span style="width:135px;color:${u.kritikTakip?'var(--kirmizi)':'var(--yazi-soluk)'};font-size:11.5px">${u.kritikTakip?'● İzleniyor':'—'}</span>
                 `}
               </div>`;
             });

@@ -25,7 +25,7 @@ function transferGonder(){
   urun.miktar = mevcutMiktar - miktar;
   const transfer = {
     id: uid(), kaynakTesisId: kt.id, kaynakTesisAdi: kt.ad, kaynakDepoId: kd.id, kaynakDepoAdi: kd.ad,
-    urunAdi: urun.ad, birim: urun.birim || "", miktar,
+    urunAdi: urun.ad, kod: urun.kod || "", birim: urun.birim || "", miktar,
     hedefTesisId: ht.id, hedefTesisAdi: ht.ad, hedefDepoId: hd.id, hedefDepoAdi: hd.ad,
     durum: "bekliyor", gonderenTarih: bugun(), gonderenSaat: suAn()
   };
@@ -41,8 +41,8 @@ function transferKabulEt(transferId, hedefDepoId){
   const hd = ht?.depolar.find(x => x.id === (hedefDepoId || tr.hedefDepoId));
   if (!hd) { toastGoster("Lütfen bir depo seçin.", "hata"); return; }
   const mevcut = hd.urunler.find(u => u.ad.toLowerCase() === tr.urunAdi.toLowerCase());
-  if (mevcut) mevcut.miktar = (parseFloat(mevcut.miktar)||0) + tr.miktar;
-  else hd.urunler.push({ id: uid(), ad: tr.urunAdi, miktar: tr.miktar, birim: tr.birim, kritikTakip: false, kritikEsik: 0 });
+  if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar)||0) + tr.miktar; if (tr.kod && !mevcut.kod) mevcut.kod = tr.kod; }
+  else hd.urunler.push({ id: uid(), ad: tr.urunAdi, kod: tr.kod || "", miktar: tr.miktar, birim: tr.birim, kritikTakip: false, kritikEsik: 0 });
   tr.durum = "kabul edildi"; tr.hedefDepoId = hd.id; tr.hedefDepoAdi = hd.ad; tr.kabulTarihi = bugun(); tr.kabulSaati = suAn();
   kaydetIslem(`Transfer kabul edildi: ${tr.urunAdi} (${tr.miktar} ${tr.birim||''}) — ${ht.ad}/${hd.ad}`, { view: "transfer", tesisId: ht.id });
   toastGoster("Transfer kabul edildi, stoğunuza eklendi.", "basari");
@@ -54,8 +54,8 @@ function transferIptalEt(transferId){
   const kd = kt?.depolar.find(x => x.id === tr.kaynakDepoId);
   if (kd) {
     const urun = kd.urunler.find(u => u.ad.toLowerCase() === tr.urunAdi.toLowerCase());
-    if (urun) urun.miktar = (parseFloat(urun.miktar)||0) + tr.miktar;
-    else kd.urunler.push({ id: uid(), ad: tr.urunAdi, miktar: tr.miktar, birim: tr.birim, kritikTakip:false, kritikEsik:0 });
+    if (urun) { urun.miktar = (parseFloat(urun.miktar)||0) + tr.miktar; if (tr.kod && !urun.kod) urun.kod = tr.kod; }
+    else kd.urunler.push({ id: uid(), ad: tr.urunAdi, kod: tr.kod || "", miktar: tr.miktar, birim: tr.birim, kritikTakip:false, kritikEsik:0 });
   }
   tr.durum = "iptal edildi";
   kaydetIslem(`Transfer iptal edildi: ${tr.urunAdi} (${tr.miktar} ${tr.birim||''})`, { view: "transfer", tesisId: tr.kaynakTesisId });
@@ -85,7 +85,7 @@ function renderTransfer(){
       const depolar = (ht?.depolar||[]).filter(d=>!d.gizli);
       h += `<div class="ayarSatiri" style="flex-direction:column;align-items:stretch;gap:8px;border-left:3px solid var(--vurgu);padding-left:11px">
         <div>
-          <div style="color:var(--yazi);font-size:13.5px;font-weight:600">${esc(tr.urunAdi)} — ${esc(tr.miktar)} ${esc(tr.birim||'')}</div>
+          <div style="color:var(--yazi);font-size:13.5px;font-weight:600">${esc(tr.urunAdi)}${tr.kod?` · ${esc(tr.kod)}`:''} — ${esc(tr.miktar)} ${esc(tr.birim||'')}</div>
           <div style="color:var(--yazi-soluk);font-size:12px">${esc(tr.kaynakTesisAdi)} / ${esc(tr.kaynakDepoAdi)} → ${esc(tr.hedefTesisAdi)} · ${esc(tr.gonderenTarih)} ${esc(tr.gonderenSaat)}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -121,7 +121,7 @@ function renderTransfer(){
   if (kaynakDepo) {
     h += `<select class="girdi" style="width:190px" onchange="transferUrunSec(this.value)">
       <option value="">Ürün seçin</option>
-      ${kaynakUrunler.map(u=>`<option value="${esc(u.ad)}" ${ui.transferUrunAdi===u.ad?'selected':''}>${esc(u.ad)} (${esc(u.miktar)} ${esc(u.birim||'')})</option>`).join('')}
+      ${kaynakUrunler.map(u=>`<option value="${esc(u.ad)}" ${ui.transferUrunAdi===u.ad?'selected':''}>${esc(u.ad)}${u.kod?` · ${esc(u.kod)}`:''} (${esc(u.miktar)} ${esc(u.birim||'')})</option>`).join('')}
     </select>
     <input class="girdi" style="width:110px" type="number" min="0" placeholder="Miktar" value="${esc(ui.transferMiktar)}" onchange="transferMiktarGuncelle(this.value)" />`;
   }
@@ -156,7 +156,7 @@ function renderTransfer(){
       const renk = tr.durum==='kabul edildi' ? 'var(--yesil)' : tr.durum==='iptal edildi' ? 'var(--kirmizi)' : 'var(--vurgu)';
       h += `<div class="ayarSatiri" style="border-left:3px solid ${renk};padding-left:11px">
         <span style="flex:1">
-          <div style="color:var(--yazi);font-size:13px">${esc(tr.urunAdi)} — ${esc(tr.miktar)} ${esc(tr.birim||'')}</div>
+          <div style="color:var(--yazi);font-size:13px">${esc(tr.urunAdi)}${tr.kod?` · ${esc(tr.kod)}`:''} — ${esc(tr.miktar)} ${esc(tr.birim||'')}</div>
           <div style="color:var(--yazi-soluk);font-size:11.5px">${esc(tr.kaynakTesisAdi)}/${esc(tr.kaynakDepoAdi)} → ${esc(tr.hedefTesisAdi)}${tr.hedefDepoAdi?('/'+esc(tr.hedefDepoAdi)):''}</div>
         </span>
         <span style="color:${renk};font-size:11.5px;font-weight:600;text-transform:capitalize">${esc(tr.durum)}</span>

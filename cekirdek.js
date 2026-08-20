@@ -206,7 +206,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "57";
+const UYGULAMA_SURUM_NO = "58";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -323,6 +323,9 @@ function urunKodlariGetir(urunAdi){
       if ((mz.ad || "").trim().toLowerCase() === adAlt && mz.kod && mz.kod.trim()) kodlar.add(mz.kod.trim());
     }))
   )));
+  (state.tesisler || []).forEach(t => (t.depolar || []).forEach(d => (d.urunler || []).forEach(u => {
+    if ((u.ad || "").trim().toLowerCase() === adAlt && u.kod && u.kod.trim()) kodlar.add(u.kod.trim());
+  })));
   return [...kodlar].sort();
 }
 function kaydetIslem(aciklama, hedef){

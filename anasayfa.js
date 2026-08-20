@@ -100,7 +100,7 @@ function genelAramaSonuclariHesapla(q){
     (t.depolar || []).forEach(d => {
       if (d.ad.toLowerCase().includes(q)) sonuc.push({ tip: "Depo", baslik: d.ad, alt: t.ad, hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
       (d.urunler || []).forEach(u => {
-        if ((u.ad||"").toLowerCase().includes(q)) sonuc.push({ tip: "Stok Ürünü", baslik: u.ad, alt: `${d.ad} — ${t.ad}`, hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
+        if ((u.ad||"").toLowerCase().includes(q) || (u.kod||"").toLowerCase().includes(q)) sonuc.push({ tip: "Stok Ürünü", baslik: `${u.ad}${u.kod?` · ${u.kod}`:''}`, alt: `${d.ad} — ${t.ad}`, hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
       });
     });
   });
