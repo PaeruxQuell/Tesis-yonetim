@@ -543,6 +543,11 @@
     .ozetSatiri { flex-direction: column; }
     .saUstSatir { flex-direction: column; align-items: flex-start !important; gap: 10px; }
     .kalemBaslikSatir { display: none; }
+
+    /* Kod sütunu eklendikten sonra satırlar dar ekranda taşabiliyor —
+       sağdaki sütunlar (Kritik, sil ikonu vb.) kaybolmasın diye kaydırılabilir yapıyoruz. */
+    .kart, .acilirIcerik { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .kalemSatir, .parcaSatir, .stokUrunSatirTek { min-width: max-content; }
   }
 
   @media (max-width: 480px) {
