@@ -1,8 +1,8 @@
 /* ---------------- depolar arası transfer ---------------- */
 function transferGoster(){ if (!izinVar('transfer')) return; ui.view = "transfer"; render(); }
-function transferTesisSec(tesisId){ ui.transferTesisId = tesisId; ui.transferDepoId = ""; ui.transferUrunAdi = ""; render(); }
-function transferDepoSec(depoId){ ui.transferDepoId = depoId; ui.transferUrunAdi = ""; render(); }
-function transferUrunSec(ad){ ui.transferUrunAdi = ad; }
+function transferTesisSec(tesisId){ ui.transferTesisId = tesisId; ui.transferDepoId = ""; ui.transferUrunId = ""; render(); }
+function transferDepoSec(depoId){ ui.transferDepoId = depoId; ui.transferUrunId = ""; render(); }
+function transferUrunSec(id){ ui.transferUrunId = id; render(); }
 function transferMiktarGuncelle(deger){ ui.transferMiktar = deger; }
 function transferHedefTesisSec(tesisId){ ui.transferHedefTesisId = tesisId; ui.transferHedefDepoId = ""; render(); }
 function transferHedefDepoSec(depoId){ ui.transferHedefDepoId = depoId; }
@@ -14,11 +14,14 @@ function transferGonder(){
   const hd = ht?.depolar.find(x=>x.id===ui.transferHedefDepoId);
   const miktar = parseFloat(ui.transferMiktar);
   if (!kd) { toastGoster("Lütfen kaynak depo seçin.", "hata"); return; }
-  if (!ui.transferUrunAdi) { toastGoster("Lütfen bir ürün seçin.", "hata"); return; }
+  if (!ui.transferUrunId) { toastGoster("Lütfen bir ürün seçin.", "hata"); return; }
   if (!miktar || miktar <= 0) { toastGoster("Lütfen geçerli bir miktar girin.", "hata"); return; }
   if (!hd) { toastGoster("Lütfen hedef tesis ve depo seçin.", "hata"); return; }
   if (kt.id === ht.id && kd.id === hd.id) { toastGoster("Kaynak ve hedef depo aynı olamaz.", "hata"); return; }
-  const urun = kd.urunler.find(u => u.ad.toLowerCase() === ui.transferUrunAdi.toLowerCase());
+  // ÖNEMLİ: ürün, isme göre değil KİMLİĞE (id) göre bulunuyor — aynı depoda aynı isimde
+  // ama farklı kodlu birden fazla ürün olsa bile (örn. iki ayrı "Rulman" satırı, 6205 ve
+  // 6305), her zaman ekranda seçilen TAM O ürün transfer edilir, yanlış kodlu ürün gitmez.
+  const urun = kd.urunler.find(u => u.id === ui.transferUrunId);
   if (!urun) { toastGoster("Seçilen ürün kaynak depoda bulunamadı.", "hata"); return; }
   const mevcutMiktar = parseFloat(urun.miktar) || 0;
   if (miktar > mevcutMiktar) { toastGoster("Depoda bu kadar stok yok.", "hata"); return; }
@@ -32,7 +35,7 @@ function transferGonder(){
   state.transferler.unshift(transfer);
   kaydetIslem(`Transfer gönderildi: ${urun.ad} (${miktar} ${urun.birim||''}) — ${kt.ad}/${kd.ad} → ${ht.ad}/${hd.ad}`, { view: "transfer", tesisId: kt.id });
   toastGoster("Transfer gönderildi.", "basari");
-  ui.transferUrunAdi = ""; ui.transferMiktar = "";
+  ui.transferUrunId = ""; ui.transferMiktar = "";
   saveData(); render();
 }
 function transferKabulEt(transferId, hedefDepoId){
@@ -121,7 +124,7 @@ function renderTransfer(){
   if (kaynakDepo) {
     h += `<select class="girdi" style="width:190px" onchange="transferUrunSec(this.value)">
       <option value="">Ürün seçin</option>
-      ${kaynakUrunler.map(u=>`<option value="${esc(u.ad)}" ${ui.transferUrunAdi===u.ad?'selected':''}>${esc(u.ad)}${u.kod?` · ${esc(u.kod)}`:''} (${esc(u.miktar)} ${esc(u.birim||'')})</option>`).join('')}
+      ${kaynakUrunler.map(u=>`<option value="${u.id}" ${ui.transferUrunId===u.id?'selected':''}>${esc(u.ad)}${u.kod?` · ${esc(u.kod)}`:''} (${esc(u.miktar)} ${esc(u.birim||'')})</option>`).join('')}
     </select>
     <input class="girdi" style="width:110px" type="number" min="0" placeholder="Miktar" value="${esc(ui.transferMiktar)}" onchange="transferMiktarGuncelle(this.value)" />`;
   }

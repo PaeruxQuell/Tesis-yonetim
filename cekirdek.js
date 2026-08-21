@@ -137,17 +137,24 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunAdi: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "", duzenlenenId: null };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunId: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "", duzenlenenId: null };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
   if (!v.tesisler) v.tesisler = varsayilanVeri().tesisler;
   if (!v.malzemeGecmisi) v.malzemeGecmisi = [];
   v.malzemeGecmisi = v.malzemeGecmisi.map(x => typeof x === "string" ? { id: uid(), ad: x } : x);
+  // Eski sürümlerde tek bir "kod" alanı vardı — artık her malzeme birden fazla
+  // manuel kod tutabiliyor (manuelKodlar dizisi). Eski tekil kodu kaybetmemek için
+  // diziye taşıyoruz.
+  v.malzemeGecmisi.forEach(x => {
+    if (!Array.isArray(x.manuelKodlar)) x.manuelKodlar = [];
+    if (x.kod && x.kod.trim() && !x.manuelKodlar.includes(x.kod.trim())) x.manuelKodlar.push(x.kod.trim());
+  });
   // Geçmişte (eski sürümlerde) aynı isimle birden fazla kayıt oluşmuş olabilir
   // (örn. "Rulman" iki ayrı satırda, farklı kodlarla) — bunları isme göre
   // (büyük/küçük harf duyarsız) tek kayda birleştiriyoruz; kodlar zaten artık
-  // dinamik olarak (satın alma + rapor geçmişinden) hesaplanıyor.
+  // dinamik olarak (satın alma + rapor geçmişinden + manuel girişlerden) hesaplanıyor.
   {
     const gorulen = new Map();
     const birlesik = [];
@@ -155,7 +162,11 @@ function sanitizeVeri(v){
       const anahtar = (x.ad || "").trim().toLowerCase();
       if (!anahtar) return;
       if (!gorulen.has(anahtar)) { gorulen.set(anahtar, x); birlesik.push(x); }
-      else { const mevcut = gorulen.get(anahtar); if (x.birim && !mevcut.birim) mevcut.birim = x.birim; }
+      else {
+        const mevcut = gorulen.get(anahtar);
+        if (x.birim && !mevcut.birim) mevcut.birim = x.birim;
+        (x.manuelKodlar || []).forEach(kd => { if (!mevcut.manuelKodlar.includes(kd)) mevcut.manuelKodlar.push(kd); });
+      }
     });
     v.malzemeGecmisi = birlesik;
   }
@@ -206,7 +217,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "64";
+const UYGULAMA_SURUM_NO = "66";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -326,6 +337,9 @@ function urunKodlariGetir(urunAdi){
   (state.tesisler || []).forEach(t => (t.depolar || []).forEach(d => (d.urunler || []).forEach(u => {
     if ((u.ad || "").trim().toLowerCase() === adAlt && u.kod && u.kod.trim()) kodlar.add(u.kod.trim());
   })));
+  (state.malzemeGecmisi || []).forEach(m => {
+    if ((m.ad || "").trim().toLowerCase() === adAlt) (m.manuelKodlar || []).forEach(kd => { if (kd && kd.trim()) kodlar.add(kd.trim()); });
+  });
   return [...kodlar].sort();
 }
 function kaydetIslem(aciklama, hedef){

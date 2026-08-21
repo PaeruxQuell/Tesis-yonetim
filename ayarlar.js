@@ -1,9 +1,22 @@
 function malzemeListesiEkle(){
-  state.malzemeGecmisi.unshift({ id: uid(), ad: "", birim: "adet", kod: "" });
+  state.malzemeGecmisi.unshift({ id: uid(), ad: "", birim: "adet", manuelKodlar: [] });
   saveData(); render();
 }
 function malzemeListesiGuncelle(id, alan, deger){
   const m = state.malzemeGecmisi.find(x => x.id === id); if (m) m[alan] = deger;
+  saveData(); render();
+}
+function malzemeManuelKodEkle(id, deger){
+  const m = state.malzemeGecmisi.find(x => x.id === id); if (!m) return;
+  const temiz = (deger || "").trim();
+  if (!temiz) return;
+  if (!Array.isArray(m.manuelKodlar)) m.manuelKodlar = [];
+  if (!m.manuelKodlar.includes(temiz)) m.manuelKodlar.push(temiz);
+  saveData(); render();
+}
+function malzemeManuelKodSil(id, kod){
+  const m = state.malzemeGecmisi.find(x => x.id === id); if (!m) return;
+  m.manuelKodlar = (m.manuelKodlar || []).filter(k => k !== kod);
   saveData(); render();
 }
 function malzemeListesindenSil(id){
@@ -317,24 +330,33 @@ function renderMalzemeler(){
     </div>`;
     h += `<div class="kart">`;
     if (state.malzemeGecmisi.length === 0) h += `<div class="bosMetin">Henüz malzeme eklenmedi.</div>`;
-    else h += `<div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1">Malzeme adı</span><span style="width:200px">Kayıtlı Kodlar</span><span style="width:120px">Birim</span><span style="width:20px"></span></div>`;
+    else h += `<div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1">Malzeme adı</span><span style="width:230px">Kayıtlı Kodlar</span><span style="width:120px">Birim</span><span style="width:20px"></span></div>`;
     state.malzemeGecmisi.forEach(m => {
       const kodlar = urunKodlariGetir(m.ad);
-      h += `<div class="parcaSatir">
-        <input class="parcaGirdi" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}','ad',this.value)" />
-        <span style="width:200px;flex:none;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-          ${kodlar.length === 0
-            ? `<span class="bosMetin" style="margin:0">— kod yok —</span>`
-            : kodlar.map(kd => `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--turkuaz);background:rgba(var(--turkuaz-rgb),0.14);border-radius:5px;padding:2px 7px">${esc(kd)}</span>`).join('')}
+      const manuelKodlar = m.manuelKodlar || [];
+      h += `<div class="parcaSatir" style="align-items:flex-start">
+        <input class="parcaGirdi" style="margin-top:2px" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}','ad',this.value)" />
+        <span style="width:230px;flex:none;display:flex;flex-direction:column;gap:6px">
+          <span style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+            ${kodlar.length === 0
+              ? `<span class="bosMetin" style="margin:0">— kod yok —</span>`
+              : kodlar.map(kd => {
+                  const manuelMi = manuelKodlar.includes(kd);
+                  return `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--turkuaz);background:rgba(var(--turkuaz-rgb),0.14);border-radius:5px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px">${esc(kd)}${manuelMi?`<span class="ty-btn" style="color:var(--kirmizi);cursor:pointer;font-weight:800" onclick="malzemeManuelKodSil('${m.id}','${esc(kd)}')" title="Manuel eklenen bu kodu kaldır">×</span>`:''}</span>`;
+                }).join('')}
+          </span>
+          <span style="display:flex;gap:4px">
+            <input class="parcaGirdi" style="font-size:11px;padding:5px 8px" placeholder="+ kod ekle" onkeydown="if(event.key==='Enter'){malzemeManuelKodEkle('${m.id}',this.value);this.value='';}" />
+          </span>
         </span>
-        <select class="parcaGirdi" style="width:120px;flex:none" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
+        <select class="parcaGirdi" style="width:120px;flex:none;margin-top:2px" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
           ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
         </select>
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>malzemeListesindenSil('${m.id}'))">×</span>
       </div>`;
     });
     h += `</div>`;
-    h += `<div class="bosMetin" style="margin-top:8px">Kodlar bu listeden elle girilmez — bir ürün satın alma ya da rapor kayıtlarında kullanıldıkça, o üründe geçen kodlar burada otomatik olarak toplanıp gösterilir.</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Bir ürün satın alma ya da rapor kayıtlarında kullanıldıkça, o üründe geçen kodlar burada otomatik olarak toplanıp gösterilir. İsterseniz "+ kod ekle" ile elle de bir kod ekleyebilirsiniz (yazıp Enter'a basın) — bu manuel eklenen kodlar kırmızı × ile kaldırılabilir, otomatik toplananlar ise kaldırılamaz.</div>`;
     anaPanelYaz(h);
     return;
 }
