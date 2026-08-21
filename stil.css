@@ -525,7 +525,8 @@
       order: 3; width: 100%; flex-wrap: wrap; justify-content: flex-start;
       padding-bottom: 4px; margin-top: 4px; gap: 6px 8px;
     }
-    .ustNavBtn { white-space: nowrap; padding: 7px 10px; font-size: 11.5px; flex: 1 1 auto; justify-content: center; }
+    .ustNavBtn { white-space: nowrap; padding: 6px 9px; font-size: 11px; flex: 0 0 auto; justify-content: center; }
+    .navIkon { width: 18px; height: 18px; font-size: 10.5px; }
 
     .govde { position: relative; overflow: hidden; }
     .sol, .sag {
