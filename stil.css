@@ -522,11 +522,11 @@
     .ustCubuk { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
     .logoAlani { width: auto; height: 40px; }
     .ustNav {
-      order: 3; width: 100%; flex-wrap: wrap; justify-content: flex-start;
-      padding-bottom: 4px; margin-top: 4px; gap: 6px 8px;
+      order: 3; width: 100%; margin-top: 6px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
     }
-    .ustNavBtn { white-space: nowrap; padding: 6px 9px; font-size: 11px; flex: 0 0 auto; justify-content: center; }
-    .navIkon { width: 18px; height: 18px; font-size: 10.5px; }
+    .ustNavBtn { flex-direction: column; gap: 3px; padding: 8px 3px; font-size: 10px; line-height: 1.15; text-align: center; white-space: normal; justify-content: center; }
+    .navIkon { width: 20px; height: 20px; font-size: 11px; }
 
     .govde { position: relative; overflow: hidden; }
     .sol, .sag {
