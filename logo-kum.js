@@ -173,7 +173,14 @@
     W = letterImg.naturalWidth;
     H = letterImg.naturalHeight;
 
-    const olcek = Math.min(BOX_W / W, BOX_H / H);
+    // Mobilde (dar ekranlarda) logo eskiden sabit 320x85 kutuya göre çiziliyordu ve
+    // ekranın neredeyse tamamını kaplayıp yanındaki menüyü gizliyordu. Dar ekranda
+    // kutuyu %80 küçültüp sol üstte kompakt kalmasını sağlıyoruz.
+    const mobilMi = window.innerWidth <= 900;
+    const kutuW = mobilMi ? BOX_W * 0.2 : BOX_W;
+    const kutuH = mobilMi ? BOX_H * 0.2 : BOX_H;
+
+    const olcek = Math.min(kutuW / W, kutuH / H);
     const dispW = Math.round(W * olcek);
     const dispH = Math.round(H * olcek);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);

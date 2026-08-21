@@ -521,14 +521,11 @@
     .kullaniciRozeti { display: none; }
     .ustCubuk { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
     .logoAlani { width: auto; height: 40px; }
-    .logoAlani img { width: auto !important; height: 40px !important; }
-    .logoAlani .baslik { font-size: 13px; }
-    .logoAlani .altBaslik { display: none; }
     .ustNav {
-      order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      padding-bottom: 6px; margin-top: 4px;
+      order: 3; width: 100%; flex-wrap: wrap; justify-content: flex-start;
+      padding-bottom: 4px; margin-top: 4px; gap: 6px 8px;
     }
-    .ustNavBtn { white-space: nowrap; padding: 8px 11px; font-size: 12px; }
+    .ustNavBtn { white-space: nowrap; padding: 7px 10px; font-size: 11.5px; flex: 1 1 auto; justify-content: center; }
 
     .govde { position: relative; overflow: hidden; }
     .sol, .sag {
