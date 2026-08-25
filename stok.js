@@ -132,7 +132,7 @@ function stokBekleyenIsle(tesisId){
     const sat = satinAlmaBul(b.satId); const k = sat?.kalemler.find(x => x.id === b.kalemId);
     if (!k) return;
     const adTemiz = (k.urun || "").trim();
-    const mevcut = depo.urunler.find(u => u.ad.trim().toLowerCase() === adTemiz.toLowerCase());
+    const mevcut = depo.urunler.find(u => urunEslesiyorMu(u, adTemiz, k.kod));
     const miktar = parseFloat(k.miktar) || 0;
     if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar) || 0) + miktar; if (k.kod && !mevcut.kod) mevcut.kod = k.kod; }
     else { depo.urunler.push({ id: uid(), ad: adTemiz, kod: k.kod || "", miktar, birim: k.birim || "", kritikTakip: false, kritikEsik: 0 }); }

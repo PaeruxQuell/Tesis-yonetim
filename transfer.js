@@ -43,7 +43,7 @@ function transferKabulEt(transferId, hedefDepoId){
   const ht = state.tesisler.find(x => x.id === tr.hedefTesisId);
   const hd = ht?.depolar.find(x => x.id === (hedefDepoId || tr.hedefDepoId));
   if (!hd) { toastGoster("Lütfen bir depo seçin.", "hata"); return; }
-  const mevcut = hd.urunler.find(u => u.ad.toLowerCase() === tr.urunAdi.toLowerCase());
+  const mevcut = hd.urunler.find(u => urunEslesiyorMu(u, tr.urunAdi, tr.kod));
   if (mevcut) { mevcut.miktar = (parseFloat(mevcut.miktar)||0) + tr.miktar; if (tr.kod && !mevcut.kod) mevcut.kod = tr.kod; }
   else hd.urunler.push({ id: uid(), ad: tr.urunAdi, kod: tr.kod || "", miktar: tr.miktar, birim: tr.birim, kritikTakip: false, kritikEsik: 0 });
   tr.durum = "kabul edildi"; tr.hedefDepoId = hd.id; tr.hedefDepoAdi = hd.ad; tr.kabulTarihi = bugun(); tr.kabulSaati = suAn();
@@ -56,7 +56,7 @@ function transferIptalEt(transferId){
   const kt = state.tesisler.find(x => x.id === tr.kaynakTesisId);
   const kd = kt?.depolar.find(x => x.id === tr.kaynakDepoId);
   if (kd) {
-    const urun = kd.urunler.find(u => u.ad.toLowerCase() === tr.urunAdi.toLowerCase());
+    const urun = kd.urunler.find(u => urunEslesiyorMu(u, tr.urunAdi, tr.kod));
     if (urun) { urun.miktar = (parseFloat(urun.miktar)||0) + tr.miktar; if (tr.kod && !urun.kod) urun.kod = tr.kod; }
     else kd.urunler.push({ id: uid(), ad: tr.urunAdi, kod: tr.kod || "", miktar: tr.miktar, birim: tr.birim, kritikTakip:false, kritikEsik:0 });
   }

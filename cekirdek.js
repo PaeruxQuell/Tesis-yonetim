@@ -217,7 +217,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "66";
+const UYGULAMA_SURUM_NO = "67";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -305,6 +305,14 @@ async function girisKaydiTut(user){
     bilgi.sonGirisIp = "alınamadı";
   }
   db.collection("kullanicilar").doc(user.uid).set(bilgi, { merge: true }).catch(err => console.error(err));
+}
+// İki depo ürününün "aynı ürün" sayılması için ad YETMEZ — kod da eşleşmeli.
+// Aksi halde "Rulman 6305" ile "Rulman 6405" yanlışlıkla aynı ürün sayılıp
+// stokları birbirine karışır. Her ikisinde de kod yoksa (boşsa) yine eşleşir,
+// bu da kod kullanılmayan genel ürünlerin eskisi gibi birleşmesini sağlar.
+function urunEslesiyorMu(u, ad, kod){
+  if ((u.ad || "").trim().toLowerCase() !== (ad || "").trim().toLowerCase()) return false;
+  return (u.kod || "").trim().toLowerCase() === (kod || "").trim().toLowerCase();
 }
 function malzemeGecmisineEkle(ad, birim, kod){
   if (!ad) return;

@@ -62,8 +62,7 @@ function raporKaydet(){
   if (!raporForm.gecmiseDonuk) {
     const gorunurDepolar = (t.depolar || []).filter(d => !d.gizli);
     kullanilanlar.filter(x => !x.onemliDegil).forEach(x => {
-      const adAlt = x.ad.toLowerCase();
-      const eslesenDepo = gorunurDepolar.find(d => (d.urunler||[]).some(u => (u.ad||"").trim().toLowerCase() === adAlt));
+      const eslesenDepo = gorunurDepolar.find(d => (d.urunler||[]).some(u => urunEslesiyorMu(u, x.ad, x.kod)));
       if (eslesenDepo) {
         kaydetIslem(
           `Depoda malzeme kullanıldı, stoktan düşülmeli: ${x.adet} ${x.birim} ${x.ad} (${eslesenDepo.ad} — ${t.ad})`,
