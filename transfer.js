@@ -70,6 +70,13 @@ function bekleyenTransferSayisi(){
   const erisilenIdler = erisilenTesisler().map(t=>t.id);
   return state.transferler.filter(tr => tr.durum === "bekliyor" && (adminMi() || erisilenIdler.includes(tr.hedefTesisId))).length;
 }
+function transferGecmistenSil(id){
+  const tr = state.transferler.find(x => x.id === id);
+  state.transferler = state.transferler.filter(x => x.id !== id);
+  if (tr) kaydetIslem(`Transfer geçmişi kaydı silindi: ${tr.urunAdi}${tr.kod?` (${tr.kod})`:''} (${tr.kaynakTesisAdi} → ${tr.hedefTesisAdi})`, { view: "transfer" });
+  saveData(); render();
+}
+
 function renderTransfer(){
   const erisilenIdler = erisilenTesisler().map(t=>t.id);
   let h = `<div class="pompaBaslikSatir" style="margin-bottom:4px">
@@ -164,6 +171,7 @@ function renderTransfer(){
         </span>
         <span style="color:${renk};font-size:11.5px;font-weight:600;text-transform:capitalize">${esc(tr.durum)}</span>
         ${tr.durum==='bekliyor' && erisilenIdler.includes(tr.kaynakTesisId) ? `<span class="silIkon" style="margin-left:8px" onclick="silOnayla('Transferi İptal Et', ()=>transferIptalEt('${tr.id}'))" title="İptal et">×</span>` : ''}
+        ${tr.durum!=='bekliyor' && adminMi() ? `<span class="silIkon" style="margin-left:8px" onclick="silOnayla('Transfer Kaydını Sil', ()=>transferGecmistenSil('${tr.id}'))" title="Geçmişten sil">×</span>` : ''}
       </div>`;
     });
     h += `</div>`;
