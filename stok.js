@@ -50,7 +50,7 @@ function stokUrunSil(tesisId, depoId, urunId){
 function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
   const { t, d, u } = stokUrunBul(tesisId, depoId, urunId); if (u) u[alan] = deger;
   if (alan === "ad") {
-    malzemeGecmisineEkle(deger);
+    malzemeGecmisineEkle(deger, "", u?.kod);
     // Aynı depoda AYNI isimde başka bir ürün zaten varsa uyar — stok yanlışlıkla
     // iki ayrı satıra bölünmesin diye (elle eklerken bu kontrol yoktu).
     const temiz = (deger || "").trim().toLowerCase();
@@ -58,6 +58,8 @@ function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
       const cakisan = d.urunler.find(x => x.id !== urunId && (x.ad||"").trim().toLowerCase() === temiz);
       if (cakisan) toastGoster(`Dikkat: "${deger}" adında bir ürün bu depoda zaten var — stoğunuz iki ayrı satıra bölünmüş olabilir.`, "hata");
     }
+  } else if (alan === "kod" && u?.ad) {
+    malzemeGecmisineEkle(u.ad, "", deger);
   }
   saveData(); render();
 }
@@ -106,7 +108,8 @@ function stokBekleyenSecToggle(tesisId, satId, kalemId){
 function stokBekleyenDepoSec(tesisId, depoId){ ui.stokBekleyenDepo[tesisId] = depoId; render(); }
 function stokBekleyenAlanGuncelle(satId, kalemId, alan, deger){
   const sat = satinAlmaBul(satId); const k = sat?.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
-  if (alan === "urun") malzemeGecmisineEkle(deger);
+  if (alan === "urun") malzemeGecmisineEkle(deger, "", k?.kod);
+  else if (alan === "kod" && k?.urun) malzemeGecmisineEkle(k.urun, "", deger);
   saveData(); render();
 }
 function stokBekleyenOnayla(tesisId){
@@ -190,7 +193,9 @@ function renderStok(){
                 <input class="parcaGirdi" style="width:100px;flex:none;font-family:'JetBrains Mono',monospace" list="kodListesi-bek-${b.kalemId}" value="${esc(b.kod)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','kod',this.value)" />
                 <datalist id="kodListesi-bek-${b.kalemId}">${urunKodlariGetir(b.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                 <input class="parcaGirdi" style="width:80px;flex:none" value="${esc(b.miktar)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','miktar',this.value)" />
-                <input class="parcaGirdi" style="width:120px;flex:none" value="${esc(b.birim)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)" />
+                <select class="parcaGirdi" style="width:120px;flex:none" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)">
+                  ${["adet","koli","tane","kg","litre"].map(bi => `<option value="${bi}" ${(b.birim||'adet')===bi?'selected':''}>${bi}</option>`).join('')}
+                </select>
               </div>`;
             });
             h += `<div class="bekleyenAltSatir">
@@ -239,7 +244,9 @@ function renderStok(){
                   <input class="parcaGirdi" style="width:90px;flex:none;font-family:'JetBrains Mono',monospace" list="kodListesi-${u.id}" placeholder="Kod" value="${esc(u.kod)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kod',this.value)" />
                   <datalist id="kodListesi-${u.id}">${urunKodlariGetir(u.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                   <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:55px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
-                  <input class="parcaGirdi" style="width:90px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
+                  <select class="parcaGirdi" style="width:90px;flex:none" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)">
+                    ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(u.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+                  </select>
                   <input class="parcaGirdi" style="width:75px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
                   <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:135px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>
                   ${adminMi() ? `<span class="silIkon" onclick="silOnayla('Ürünü Sil', ()=>stokUrunSil('${t.id}','${d.id}','${u.id}'))">×</span>` : ''}

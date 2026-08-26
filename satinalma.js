@@ -309,7 +309,9 @@ function renderSatinAlmaDetay(){
             <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${k.id}" placeholder="Kod (örn: 6305)" value="${esc(k.kod||'')}" onchange="saKalemGuncelle('${sat.id}','${k.id}','kod',this.value)" />
             <datalist id="kodListesi-${k.id}">${urunKodlariGetir(k.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
             <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
-            <input class="parcaGirdi" style="flex:1" placeholder="Birim" value="${esc(k.birim)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)" />
+            <select class="parcaGirdi" style="flex:1" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)">
+              ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(k.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+            </select>
             <span style="width:150px"></span>
           ` : `
             <span style="flex:1.6;color:var(--yazi)">${esc(k.urun) || '—'}</span>

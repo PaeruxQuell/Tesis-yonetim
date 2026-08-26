@@ -335,7 +335,7 @@ function renderMalzemeler(){
       const kodlar = urunKodlariGetir(m.ad);
       const manuelKodlar = m.manuelKodlar || [];
       h += `<div class="parcaSatir" style="align-items:flex-start">
-        <input class="parcaGirdi" style="margin-top:2px" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}','ad',this.value)" />
+        <input class="parcaGirdi" style="margin-top:2px" list="malzemeListesi" placeholder="Malzeme adı" value="${esc(m.ad)}" onchange="malzemeListesiGuncelle('${m.id}','ad',this.value)" />
         <span style="width:230px;flex:none;display:flex;flex-direction:column;gap:6px">
           <span style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
             ${kodlar.length === 0
