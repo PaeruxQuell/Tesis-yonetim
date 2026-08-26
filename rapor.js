@@ -148,7 +148,8 @@ function renderRapor(){
     raporForm.malzemeler.forEach(x => {
       h += `<div class="parcaSatir" style="${x.onemliDegil?'opacity:.6':''}">
         <input class="parcaGirdi" style="flex:1.4" list="malzemeListesi" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
-        <input class="parcaGirdi" style="width:130px;flex:none" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
+        <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${x.id}" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
+        <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
         <select class="parcaGirdi" style="width:110px;flex:none" onchange="raporMalzemeGuncelle('${x.id}','birim',this.value)">
           ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${x.birim===b?'selected':''}>${b}</option>`).join('')}

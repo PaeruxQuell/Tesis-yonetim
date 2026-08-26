@@ -187,7 +187,8 @@ function renderStok(){
               h += `<div class="kalemSatir" style="padding-left:0">
                 <input type="checkbox" class="bekleyenCheck" ${secili?'checked':''} onchange="stokBekleyenSecToggle('${t.id}','${b.satId}','${b.kalemId}')" />
                 <input class="parcaGirdi" style="flex:2" value="${esc(b.urun)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','urun',this.value)" />
-                <input class="parcaGirdi" style="width:100px;flex:none;font-family:'JetBrains Mono',monospace" value="${esc(b.kod)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','kod',this.value)" />
+                <input class="parcaGirdi" style="width:100px;flex:none;font-family:'JetBrains Mono',monospace" list="kodListesi-bek-${b.kalemId}" value="${esc(b.kod)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','kod',this.value)" />
+                <datalist id="kodListesi-bek-${b.kalemId}">${urunKodlariGetir(b.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                 <input class="parcaGirdi" style="width:80px;flex:none" value="${esc(b.miktar)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','miktar',this.value)" />
                 <input class="parcaGirdi" style="width:120px;flex:none" value="${esc(b.birim)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)" />
               </div>`;
@@ -235,7 +236,8 @@ function renderStok(){
                     ${eksiMi?'<span class="stokEksiRozet" title="Bu ürün depoya kayıtlı değilken raporda kullanıldığı için eksi bakiyeyle otomatik eklendi. Gerçek stok miktarını girip düzeltin.">⚠ EKSİ STOK</span>':''}
                     <input class="parcaGirdi" style="flex:1" list="malzemeListesi" placeholder="Ürün adı" value="${esc(u.ad)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','ad',this.value)" />
                   </span>
-                  <input class="parcaGirdi" style="width:90px;flex:none;font-family:'JetBrains Mono',monospace" placeholder="Kod" value="${esc(u.kod)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kod',this.value)" />
+                  <input class="parcaGirdi" style="width:90px;flex:none;font-family:'JetBrains Mono',monospace" list="kodListesi-${u.id}" placeholder="Kod" value="${esc(u.kod)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kod',this.value)" />
+                  <datalist id="kodListesi-${u.id}">${urunKodlariGetir(u.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                   <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:55px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
                   <input class="parcaGirdi" style="width:90px;flex:none" placeholder="Birim" maxlength="16" value="${esc(u.birim)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)" />
                   <input class="parcaGirdi" style="width:75px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />

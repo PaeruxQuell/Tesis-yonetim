@@ -108,7 +108,8 @@ function renderPompa(){
             ${(g.malzemeler || []).map(x => `
               <div class="parcaSatir" style="border-top:1px solid var(--sinir-soluk)">
                 <input class="parcaGirdi" style="flex:1.4" list="malzemeListesi" placeholder="Malzeme adı" value="${esc(x.ad)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','ad',this.value)" />
-                <input class="parcaGirdi" style="width:110px;flex:none" placeholder="Kod" value="${esc(x.kod)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','kod',this.value)" />
+                <input class="parcaGirdi" style="width:110px;flex:none" list="kodListesi-${x.id}" placeholder="Kod" value="${esc(x.kod)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','kod',this.value)" />
+                <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                 <input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(x.adet)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','adet',this.value)" />
                 <select class="parcaGirdi" style="width:95px;flex:none" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','birim',this.value)">
                   ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(x.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
