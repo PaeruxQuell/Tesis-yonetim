@@ -481,6 +481,58 @@ function renderKullanicilar(){
 }
 
 /* ---------------- silinen verileri geri getir (ayrı sayfa) ---------------- */
+function silinenDetaySatiri(etiket, deger){
+  if (deger === undefined || deger === null || deger === "") return "";
+  return `<div style="display:flex;gap:8px;padding:4px 0;font-size:12.5px"><span style="width:120px;flex:none;color:var(--yazi-soluk)">${esc(etiket)}</span><span style="color:var(--yazi)">${esc(deger)}</span></div>`;
+}
+function silinenDetayHTML(kayit){
+  const v = kayit.veri || {};
+  let h = "";
+  if (kayit.tip === "stokUrun") {
+    h += silinenDetaySatiri("Ürün adı", v.ad);
+    h += silinenDetaySatiri("Kod", v.kod);
+    h += silinenDetaySatiri("Miktar", v.miktar);
+    h += silinenDetaySatiri("Birim", v.birim);
+    h += silinenDetaySatiri("Kritik Eşik", v.kritikEsik);
+    h += silinenDetaySatiri("Kritik Takip", v.kritikTakip ? "Açık" : "Kapalı");
+  } else if (kayit.tip === "satinalma") {
+    h += silinenDetaySatiri("Sipariş No", v.siparisNo);
+    h += silinenDetaySatiri("Firma", v.firma);
+    h += silinenDetaySatiri("Onay Durumu", v.onayDurumu === "onaylandi" ? "Onaylandı" : "Onay bekliyordu");
+    h += silinenDetaySatiri("Kullanıldığı Yer", (v.yerler||[]).map(y=>y.ad).filter(Boolean).join(", "));
+    (v.kalemler || []).forEach((k, i) => {
+      h += silinenDetaySatiri(`Ürün ${i+1}`, `${k.urun || '(isimsiz)'}${k.kod?` · ${k.kod}`:''} — ${k.miktar||''} ${k.birim||''} (${k.durum||''})`);
+    });
+  } else if (kayit.tip === "parca") {
+    h += silinenDetaySatiri("Parça adı", v.ad);
+    h += silinenDetaySatiri("Malzeme", v.malzeme);
+  } else if (kayit.tip === "bakim" || kayit.tip === "bakimPompa") {
+    h += silinenDetaySatiri("Bakım adı", v.ad);
+    h += silinenDetaySatiri("Periyot (gün)", v.periyotGun);
+    h += silinenDetaySatiri("Son Yapılma Tarihi", v.sonYapilmaTarihi);
+    h += silinenDetaySatiri("Uyarı Günü", v.uyariGunu);
+  } else if (kayit.tip === "depo") {
+    h += silinenDetaySatiri("Depo adı", v.ad);
+    h += silinenDetaySatiri("Ürün Sayısı", (v.urunler||[]).length);
+    (v.urunler || []).forEach((u, i) => {
+      h += silinenDetaySatiri(`Ürün ${i+1}`, `${u.ad || '(isimsiz)'}${u.kod?` · ${u.kod}`:''} — ${u.miktar||0} ${u.birim||''}`);
+    });
+  } else if (kayit.tip === "makine") {
+    h += silinenDetaySatiri("Makine adı", v.ad);
+    h += silinenDetaySatiri("Pompa Sayısı", (v.pompalar||[]).length);
+    h += silinenDetaySatiri("Bakım Planı Sayısı", (v.bakimlar||[]).length);
+  } else if (kayit.tip === "pompa") {
+    h += silinenDetaySatiri("Pompa adı", v.ad);
+    h += silinenDetaySatiri("Parça Sayısı", (v.parcalar||[]).length);
+    h += silinenDetaySatiri("Geçmiş Kayıt Sayısı", (v.gecmis||[]).length);
+    h += silinenDetaySatiri("Bakım Planı Sayısı", (v.bakimlar||[]).length);
+  } else if (kayit.tip === "tesis") {
+    h += silinenDetaySatiri("Tesis adı", v.ad);
+    h += silinenDetaySatiri("Makine Sayısı", (v.makineler||[]).length);
+    h += silinenDetaySatiri("Depo Sayısı", (v.depolar||[]).length);
+  }
+  return h || `<div class="bosMetin">Ek detay yok.</div>`;
+}
 function renderSilinenler(){
   let h = `<div class="geriDon ty-btn" onclick="ayarlarGoster()"><span style="font-size:17px;line-height:1">‹</span> Ayarlar'a dön</div>`;
   h += `<div class="pompaAdBaslik" style="margin-bottom:4px">Silinen Verileri Geri Getir</div>
@@ -505,6 +557,7 @@ function renderSilinenler(){
       </div>`;
     if (acikMi) {
       h += `<div class="acilirIcerik" style="padding:0 16px 16px">
+        <div class="kart" style="background:var(--bg-yuzey2);margin-bottom:12px">${silinenDetayHTML(kayit)}</div>
         <button class="eklePrimer ty-btn" onclick="silOnayla('Bu Kaydı Geri Getir', ()=>silinenGeriGetir('${kayit.id}'))">↺ Geri Getir</button>
       </div>`;
     }
