@@ -128,6 +128,7 @@ function varsayilanVeri(){
     malzemeGecmisi: [],
     sonIslemler: [],
     transferler: [],
+    silinenler: [],
     logoUrl: "",
     logoUrlKoyu: "",
     logoUrlAcik: "",
@@ -137,7 +138,7 @@ function varsayilanVeri(){
 
 /* ---------------- durum ---------------- */
 let state = null;
-let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunId: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "", duzenlenenId: null };
+let ui = { view: "anasayfa", secim: {}, acikTesis: new Set(), acikMakine: new Set(), acikGecmis: new Set(), duzenle: false, mesaj: "", saSecim: null, saDuzenle: false, saArama: "", saFiltre: "tumu", stokAcikTesis: new Set(), stokAcikDepo: new Set(), stokDuzenle: false, stokBekleyenAcik: new Set(), stokBekleyenSecim: {}, stokBekleyenDepo: {}, bakimAcikTesis: new Set(), bakimAcikMakine: new Set(), bakimAcikPompa: new Set(), genelArama: "", siralaModu: false, sistemKayitlariAcik: false, kayitTesisFiltre: "", cikisTesisId: "", cikisDepoId: "", cikisMiktarlar: {}, transferTesisId: "", transferDepoId: "", transferUrunId: "", transferMiktar: "", transferHedefTesisId: "", transferHedefDepoId: "", raporFiltre: "haftalik", saTesisFiltre: "", raporOzelBaslangic: "", raporOzelBitis: "", raporTakvimYil: 0, raporTakvimAy: 0, bakimGorunum: "liste", bakimTakvimYil: 0, bakimTakvimAy: 0, bakimTakvimSecili: "", yedekSecili: "", yedekAltSekme: "", kullaniciAcikId: "", duzenlenenId: null, silinenAcikId: "" };
 
 function sanitizeVeri(v){
   if (!v) v = varsayilanVeri();
@@ -150,6 +151,8 @@ function sanitizeVeri(v){
   v.malzemeGecmisi.forEach(x => {
     if (!Array.isArray(x.manuelKodlar)) x.manuelKodlar = [];
     if (x.kod && x.kod.trim() && !x.manuelKodlar.includes(x.kod.trim())) x.manuelKodlar.push(x.kod.trim());
+    delete x.kod; // eski tekil alanı kalıcı olarak temizle — aksi halde silinen
+                  // manuel kod her veri yenilendiğinde bu alandan geri geliyordu.
   });
   // Geçmişte (eski sürümlerde) aynı isimle birden fazla kayıt oluşmuş olabilir
   // (örn. "Rulman" iki ayrı satırda, farklı kodlarla) — bunları isme göre
@@ -173,6 +176,7 @@ function sanitizeVeri(v){
   if (!v.satinAlmalar) v.satinAlmalar = [];
   if (!v.sonIslemler) v.sonIslemler = [];
   if (!v.transferler) v.transferler = [];
+  if (!v.silinenler) v.silinenler = [];
   if (typeof v.logoUrl !== "string") v.logoUrl = "";
   if (typeof v.logoUrlKoyu !== "string") v.logoUrlKoyu = v.logoUrl || "";
   if (typeof v.logoUrlAcik !== "string") v.logoUrlAcik = "";
@@ -217,7 +221,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "71";
+const UYGULAMA_SURUM_NO = "72";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -372,6 +376,7 @@ function hedefeGit(h){
   else if (h.view === "anasayfa") anaSayfaGoster();
   else if (h.view === "transfer") transferGoster();
   else if (h.view === "ayarlar") ayarlarGoster();
+  else if (h.view === "silinenler") silinenlerGoster();
 }
 function islemeGitById(id){
   const islem = (state.sonIslemler || []).find(x => x.id === id);
@@ -390,7 +395,107 @@ function kapsamTesisler(){
   return state.tesisler.filter(t => mevcutTesisErisimi.includes(t.id));
 }
 function erisilenTesisAdlari(){ return new Set(erisilenTesisler().map(t => t.ad)); }
-const IZIN_VARSAYILAN_KAPALI = ["malzemeCikis", "transfer", "satinAlmaOnay"];
+
+/* ---------------- silinen veriler (geri getirme) ---------------- */
+// Yapısal öneme sahip kayıtlar (tesis/makine/pompa/parça, bakım planı, depo,
+// stok ürünü, satın alma talebi) silinmeden HEMEN ÖNCE buraya (state.silinenler)
+// bir kopyası düşülür. "baglam" alanı, geri getirirken hangi tesis/makine/depo/
+// pompanın altına konması gerektiğini hatırlamak için kullanılır.
+function copeAt(tip, veri, baglam){
+  if (!state.silinenler) state.silinenler = [];
+  state.silinenler.unshift({
+    id: uid(), tip, veri: JSON.parse(JSON.stringify(veri)), baglam: baglam || {},
+    silenKullanici: mevcutIsim || (mevcutKullanici ? mevcutKullanici.email : ""),
+    tarih: bugun(), saat: suAn()
+  });
+  if (state.silinenler.length > 300) state.silinenler.length = 300;
+}
+// Bir çöp kaydının, GÖRÜNTÜLEYEN kişiye gösterilip gösterilmeyeceğine karar verir.
+// Yönetici her zaman görür. "silinenGeriGetir" yetkisi olmayan hiç göremez.
+// Yetkisi olan biri ise, sadece KENDİ erişebildiği tesislere ait silinen
+// kayıtları görür (örn. sadece Yıkama tesisine erişimi olan, sadece Yıkama'daki
+// silinenleri görür).
+function silinenGorunurMu(kayit){
+  if (adminMi()) return true;
+  if (!izinVar('silinenGeriGetir')) return false;
+  if (!mevcutTesisErisimi) return true;
+  if (kayit.baglam && kayit.baglam.tesisId) return mevcutTesisErisimi.includes(kayit.baglam.tesisId);
+  if (kayit.tip === "satinalma" && kayit.baglam && Array.isArray(kayit.baglam.yerAdlari)) {
+    const adlar = erisilenTesisAdlari();
+    return kayit.baglam.yerAdlari.some(ad => adlar.has(ad));
+  }
+  return false;
+}
+function silinenBaslikHesapla(kayit){
+  const v = kayit.veri || {};
+  const tipAdlari = { tesis:"Tesis", makine:"Makine", pompa:"Pompa", parca:"Parça", bakim:"Bakım Planı", bakimPompa:"Bakım Planı", depo:"Depo", stokUrun:"Stok Ürünü", satinalma:"Satın Alma Talebi" };
+  const ad = v.ad || v.urun || v.siparisNo || "(isimsiz)";
+  return `${tipAdlari[kayit.tip] || kayit.tip}: ${ad}`;
+}
+function silinenlerGoster(){
+  if (!adminMi() && !izinVar('silinenGeriGetir')) return;
+  ui.view = "silinenler"; render();
+}
+function silinenAcKapat(id){ ui.silinenAcikId = (ui.silinenAcikId === id) ? "" : id; render(); }
+function silinenGeriGetir(id){
+  const kayit = (state.silinenler || []).find(x => x.id === id);
+  if (!kayit || !silinenGorunurMu(kayit)) return;
+  const v = kayit.veri;
+  const b = kayit.baglam || {};
+  try {
+    if (kayit.tip === "tesis") {
+      state.tesisler.push(v);
+    } else if (kayit.tip === "makine") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      if (!t) { toastGoster("Bu tesis artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      t.makineler.push(v);
+    } else if (kayit.tip === "pompa") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      const m = t?.makineler.find(x => x.id === b.makineId);
+      if (!m) { toastGoster("Bu makine artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      m.pompalar.push(v);
+    } else if (kayit.tip === "parca") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      const m = t?.makineler.find(x => x.id === b.makineId);
+      const p = m?.pompalar.find(x => x.id === b.pompaId);
+      if (!p) { toastGoster("Bu pompa artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      p.parcalar.push(v);
+    } else if (kayit.tip === "bakim") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      const m = t?.makineler.find(x => x.id === b.makineId);
+      if (!m) { toastGoster("Bu makine artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      m.bakimlar.push(v);
+    } else if (kayit.tip === "bakimPompa") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      const m = t?.makineler.find(x => x.id === b.makineId);
+      const p = m?.pompalar.find(x => x.id === b.pompaId);
+      if (!p) { toastGoster("Bu pompa artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      p.bakimlar.push(v);
+    } else if (kayit.tip === "depo") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      if (!t) { toastGoster("Bu tesis artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      t.depolar.push(v);
+    } else if (kayit.tip === "stokUrun") {
+      const t = state.tesisler.find(x => x.id === b.tesisId);
+      const d = t?.depolar.find(x => x.id === b.depoId);
+      if (!d) { toastGoster("Bu depo artık mevcut değil, geri getirilemiyor.", "hata"); return; }
+      d.urunler.push(v);
+    } else if (kayit.tip === "satinalma") {
+      state.satinAlmalar.push(v);
+    } else {
+      toastGoster("Bilinmeyen kayıt türü, geri getirilemiyor.", "hata"); return;
+    }
+    state.silinenler = state.silinenler.filter(x => x.id !== id);
+    kaydetIslem(`Silinen veri geri getirildi: ${silinenBaslikHesapla(kayit)}`, { view: "silinenler" });
+    toastGoster("Geri getirildi.", "basari");
+    saveData(); render();
+  } catch (e) {
+    console.error(e);
+    toastGoster("Geri getirilemedi — bağlı olduğu üst kayıt bulunamadı olabilir.", "hata");
+  }
+}
+
+const IZIN_VARSAYILAN_KAPALI = ["malzemeCikis", "transfer", "satinAlmaOnay", "silinenGeriGetir"];
 function izinVar(ad){
   if (adminMi()) return true;
   const kapaliMi = IZIN_VARSAYILAN_KAPALI.includes(ad);
@@ -539,6 +644,7 @@ function renderAna(){
   else if (ui.view === "ayarlar") renderAyarlar();
   else if (ui.view === "malzemeler") renderMalzemeler();
   else if (ui.view === "kullanicilar") renderKullanicilar();
+  else if (ui.view === "silinenler") renderSilinenler();
   else if (ui.view === "bos") renderBos();
   else if (ui.view === "anasayfa") renderAnaSayfa();
   else if (ui.view === "bakim") renderBakim();

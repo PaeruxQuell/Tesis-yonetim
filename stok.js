@@ -14,6 +14,7 @@ function depoEkle(tesisId){
 function depoSil(tesisId, depoId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const d = t.depolar.find(x => x.id === depoId);
+  if (d) copeAt("depo", d, { tesisId });
   t.depolar = t.depolar.filter(d => d.id !== depoId);
   if (d) kaydetIslem(`Depo silindi: ${d.ad} (${t.ad})`, { view: "stok", tesisId: t.id });
   saveData(); render();
@@ -43,6 +44,7 @@ function stokUrunSil(tesisId, depoId, urunId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const d = t.depolar.find(x => x.id === depoId);
   const u = d.urunler.find(x => x.id === urunId);
+  if (u) copeAt("stokUrun", u, { tesisId, depoId });
   d.urunler = d.urunler.filter(x => x.id !== urunId);
   if (u) kaydetIslem(`Stok ürünü silindi: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, { view: "stok", tesisId: t.id, depoId: d.id });
   saveData(); render();

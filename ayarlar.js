@@ -126,6 +126,19 @@ function renderAyarlar(){
       </div>`;
     }
 
+    if (adminMi() || izinVar('silinenGeriGetir')) {
+      h += `<div class="kart malzemeKisayolKart" onclick="silinenlerGoster()">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="malzemeKisayolIkon" style="background:rgba(var(--kirmizi-rgb),0.16)">🗑️</span>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:var(--yazi)">Silinen Verileri Geri Getir</div>
+            <div class="bosMetin" style="margin:2px 0 0">Yanlışlıkla silinen tesis, makine, pompa, bakım, stok ürünü ya da satın alma taleplerini geri yükleyin — ${(state.silinenler||[]).length} kayıt</div>
+          </div>
+          <span class="okBuyuk" style="transform:rotate(90deg);font-size:22px;color:var(--kirmizi)">›</span>
+        </div>
+      </div>`;
+    }
+
     if (izinVar('kullanilanMalzemeler')) {
       h += `<div class="kart ty-btn malzemeKisayolKart" onclick="malzemeListesiGoster()">
         <div style="display:flex;align-items:center;gap:16px">
@@ -442,6 +455,7 @@ function renderKullanicilar(){
           { anahtar: 'kullanilanMalzemeler', etiket: '🧾 Kullanılan Malzemeler' },
           { anahtar: 'malzemeCikis', etiket: '📉 Malzeme Kullan', varsayilanKapali: true },
           { anahtar: 'transfer', etiket: '🔄 Transfer', varsayilanKapali: true },
+          { anahtar: 'silinenGeriGetir', etiket: '🗑️ Silinen Verileri Geri Getir', varsayilanKapali: true },
         ];
         h += `<div style="margin-bottom:18px">
           <div class="kullaniciAlanBasligi">Erişebileceği Tesisler${kErisimi.length===0?' <span class="kullaniciAlanIpucu">— hiçbiri seçilmedi, tümünü görür</span>':''}</div>
@@ -459,6 +473,40 @@ function renderKullanicilar(){
 
       h += `<div class="bosMetin" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sinir-soluk)">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>`;
       h += `</div>`;
+    }
+    h += `</div>`;
+  });
+
+  anaPanelYaz(h);
+}
+
+/* ---------------- silinen verileri geri getir (ayrı sayfa) ---------------- */
+function renderSilinenler(){
+  let h = `<div class="geriDon ty-btn" onclick="ayarlarGoster()"><span style="font-size:17px;line-height:1">‹</span> Ayarlar'a dön</div>`;
+  h += `<div class="pompaAdBaslik" style="margin-bottom:4px">Silinen Verileri Geri Getir</div>
+    <div class="altBaslik2" style="margin-bottom:20px">yanlışlıkla silinen kayıtları buradan geri yükleyebilirsiniz — sadece erişiminiz olan tesislere ait kayıtları görürsünüz</div>`;
+
+  const liste = (state.silinenler || []).filter(silinenGorunurMu);
+  if (liste.length === 0) {
+    h += `<div class="kart"><div class="bosMetin">Görebileceğiniz silinmiş bir kayıt yok.</div></div>`;
+    anaPanelYaz(h);
+    return;
+  }
+
+  liste.forEach(kayit => {
+    const acikMi = ui.silinenAcikId === kayit.id;
+    h += `<div class="kart" style="padding:0;overflow:hidden">
+      <div class="ayarSatiri ty-btn" style="padding:14px 16px;margin:0" onclick="silinenAcKapat('${kayit.id}')">
+        <span style="flex:1;min-width:0">
+          <div style="color:var(--yazi);font-weight:600;font-size:13.5px">${esc(silinenBaslikHesapla(kayit))}</div>
+          <div class="bosMetin" style="margin:1px 0 0">${esc(kayit.tarih)} · ${esc(kayit.saat)}${kayit.silenKullanici?` · ${esc(kayit.silenKullanici)}`:''}</div>
+        </span>
+        <span class="okBuyuk" style="transform:${acikMi?'rotate(90deg)':'none'}">›</span>
+      </div>`;
+    if (acikMi) {
+      h += `<div class="acilirIcerik" style="padding:0 16px 16px">
+        <button class="eklePrimer ty-btn" onclick="silOnayla('Bu Kaydı Geri Getir', ()=>silinenGeriGetir('${kayit.id}'))">↺ Geri Getir</button>
+      </div>`;
     }
     h += `</div>`;
   });

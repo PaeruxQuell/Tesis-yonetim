@@ -13,6 +13,7 @@ function tesisEkle(){
 }
 function tesisSil(tesisId){
   const t = state.tesisler.find(x => x.id === tesisId);
+  if (t) copeAt("tesis", t, { tesisId: t.id });
   state.tesisler = state.tesisler.filter(t => t.id !== tesisId);
   if (ui.secim.tesisId === tesisId) { ui.secim = {}; ui.view = "bos"; }
   if (t) kaydetIslem(`Tesis silindi: ${t.ad}`, { view: "anasayfa", tesisId: t.id });
@@ -33,6 +34,7 @@ function makineEkle(tesisId){
 function makineSil(tesisId, makineId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const m = t.makineler.find(x => x.id === makineId);
+  if (m) copeAt("makine", m, { tesisId });
   t.makineler = t.makineler.filter(m => m.id !== makineId);
   if (ui.secim.makineId === makineId) { ui.secim = {}; ui.view = "bos"; }
   if (m) kaydetIslem(`Makine silindi: ${m.ad} (${t.ad})`, { view: "anasayfa", tesisId: t.id });
@@ -56,6 +58,7 @@ function pompaSil(tesisId, makineId, pompaId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const m = t.makineler.find(x => x.id === makineId);
   const p = m.pompalar.find(x => x.id === pompaId);
+  if (p) copeAt("pompa", p, { tesisId, makineId });
   m.pompalar = m.pompalar.filter(p => p.id !== pompaId);
   if (ui.secim.pompaId === pompaId) { ui.secim = {}; ui.view = "bos"; }
   if (p) kaydetIslem(`Pompa silindi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "anasayfa", tesisId: t.id, makineId: m.id });

@@ -21,6 +21,7 @@ function parcaGuncelle(parcaId, alan, deger){
 function parcaSil(parcaId){
   const { t, m, p } = pompaBul();
   const pr = p.parcalar.find(x => x.id === parcaId);
+  if (pr) copeAt("parca", pr, { tesisId: t.id, makineId: m.id, pompaId: p.id });
   p.parcalar = p.parcalar.filter(x => x.id !== parcaId);
   if (pr) kaydetIslem(`Parça silindi: ${pr.ad || '(isimsiz)'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
   saveData(); render();

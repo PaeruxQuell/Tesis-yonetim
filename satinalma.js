@@ -59,6 +59,7 @@ function satinAlmaGuncelle(id, alan, deger){
 }
 function satinAlmaSil(id){
   const sat = satinAlmaBul(id);
+  if (sat) copeAt("satinalma", sat, { yerAdlari: (sat.yerler || []).map(y => y.ad).filter(Boolean) });
   state.satinAlmalar = state.satinAlmalar.filter(x => x.id !== id);
   if (ui.saSecim === id) { ui.view = "satinalma"; ui.saSecim = null; }
   if (sat) kaydetIslem(`Satın alma talebi silindi: ${sat.siparisNo || 'sipariş no yok'}`, { view: "anasayfa" });

@@ -18,6 +18,7 @@ function bakimSil(tesisId, makineId, bakimId){
   const t = state.tesisler.find(x => x.id === tesisId);
   const m = t.makineler.find(x => x.id === makineId);
   const b = m.bakimlar.find(x => x.id === bakimId);
+  if (b) copeAt("bakim", b, { tesisId, makineId });
   m.bakimlar = m.bakimlar.filter(b => b.id !== bakimId);
   if (b) kaydetIslem(`Bakım planı silindi: ${b.ad || '(isimsiz)'} (${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id });
   saveData(); render();
@@ -53,6 +54,7 @@ function bakimPompaEkle(tesisId, makineId, pompaId){
 function bakimPompaSil(tesisId, makineId, pompaId, bakimId){
   const { t, m, p } = bakimPompaBul(tesisId, makineId, pompaId); if (!p) return;
   const b = p.bakimlar.find(x => x.id === bakimId);
+  if (b) copeAt("bakimPompa", b, { tesisId, makineId, pompaId });
   p.bakimlar = p.bakimlar.filter(b => b.id !== bakimId);
   if (b) kaydetIslem(`Bakım planı silindi: ${b.ad || '(isimsiz)'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id, pompaId: p.id });
   saveData(); render();
