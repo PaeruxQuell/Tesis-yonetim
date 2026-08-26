@@ -43,11 +43,34 @@ function yedeklemeZamanlayiciKur(){
   }, ms);
 }
 
+// Eğer bir gün, saat 23:59'da uygulama hiç açık değilken geçtiyse, o günün
+// yedeği "kapandı" olarak işaretlenemeden kalıyordu (senin fark ettiğin hata).
+// Bu fonksiyon, BUGÜNDEN ÖNCEKİ tüm günler arasında hâlâ "kapanmadı" görünen
+// kayıtları bulup geriye dönük olarak düzeltiyor — hem geçmişteki hatalı
+// kayıtları onarır hem de bundan sonra aynı şeyin kalıcı görünmesini engeller.
+async function gecmisYedekleriKapat(){
+  if (!adminMi()) return;
+  try {
+    const bugunSira = yedekSiraAnahtari(bugun());
+    const snap = await db.collection("yedekler").where("kapandi", "==", false).get();
+    const guncellenecekler = snap.docs.filter(doc => {
+      const veri = doc.data();
+      return veri.sira && veri.sira < bugunSira;
+    });
+    if (guncellenecekler.length === 0) return;
+    await Promise.all(guncellenecekler.map(doc => doc.ref.update({ kapandi: true })));
+    if (ui.view === "ayarlar") yedeklerYukle();
+  } catch (err) {
+    console.error("Geçmiş yedekler kapatılamadı:", err);
+  }
+}
+
 window.yedeklemeBaslat = function(){
   if (yedeklemeZamanlayicisiKuruldu) return;
   if (!adminMi()) return;
   yedeklemeZamanlayicisiKuruldu = true;
   bugununYedeginiGuncelle(false).catch(err => console.error("Otomatik yedekleme hatası:", err)); // güne dair ilk (henüz kapanmamış) yedek
+  gecmisYedekleriKapat();
   yedeklemeZamanlayiciKur();
 };
 
