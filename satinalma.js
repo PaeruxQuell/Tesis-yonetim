@@ -176,7 +176,6 @@ function saListesiRender(){
           <div class="saListeAltBilgi">${[sat.siparisNo && ('Sipariş No: '+sat.siparisNo), yerMetni].filter(Boolean).map(esc).join(' · ') || '—'}</div>
         </div>
         <span class="rozetDurum" style="color:${renk};border-color:rgba(${renkRgb},0.33);background:rgba(${renkRgb},0.1)">${bekliyorMu ? '⏳ Onay Bekliyor' : `${gelenSayi}/${toplam} geldi`}</span>
-        <button class="ustBtn ty-btn" style="margin-left:8px" onclick="event.stopPropagation(); satinAlmaYazdir('${sat.id}')" title="Talep formu olarak görüntüle / yazdır">🖨️ Görüntüle</button>
       </div>`;
     });
   }
@@ -259,7 +258,6 @@ function renderSatinAlmaDetay(){
     h += `<div class="pompaBaslikSatir">
       <div class="pompaAdBaslik">${taslakMi ? 'Yeni Satın Alma Talebi' : (esc(sat.siparisNo) ? ('Sipariş No: ' + esc(sat.siparisNo)) : 'İsimsiz Satınalma Talebi')}</div>
       <div style="display:flex;gap:8px">
-        ${taslakMi ? '' : `<button class="ustBtn ty-btn" onclick="satinAlmaYazdir('${sat.id}')" title="Talep formu olarak görüntüle / yazdır">🖨️ Görüntüle</button>`}
         ${taslakMi ? '' : `<button class="${ui.saDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="satinAlmaDuzenleAcKapat()">${ui.saDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>`}
         ${taslakMi ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Taslağı Kapat', ()=>satinAlmaTaslaktanVazgec())">Vazgeç</button>` : (adminMi() ? `<button class="ustBtn ty-btn" style="color:var(--kirmizi)" onclick="silOnayla('Satın Alma Talebini Sil', ()=>satinAlmaSil('${sat.id}'))">Sil</button>` : '')}
       </div>
