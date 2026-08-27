@@ -144,10 +144,11 @@ function renderRapor(){
 
     h += `<div class="kart">
       <div class="kartBaslikSatir"><span class="kartBaslik">Kullanılan malzemeler</span><button class="ekleMini ty-btn" onclick="raporMalzemeEkle()">+ malzeme ekle</button></div>
+      <datalist id="raporTesisMalzemeListesi">${tesisDepoUrunAdlari(raporForm.tesisId).map(ad => `<option value="${esc(ad)}"></option>`).join('')}</datalist>
       <div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1.4">Malzeme</span><span style="width:130px">Kod</span><span style="width:80px">Miktar</span><span style="width:110px">Birim</span><span style="width:120px">Stok Uyarısı</span><span style="width:20px"></span></div>`;
     raporForm.malzemeler.forEach(x => {
       h += `<div class="parcaSatir" style="${x.onemliDegil?'opacity:.6':''}">
-        <input class="parcaGirdi" style="flex:1.4" list="malzemeListesi" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
+        <input class="parcaGirdi" style="flex:1.4" list="raporTesisMalzemeListesi" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
         <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${x.id}" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
         <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
@@ -161,7 +162,7 @@ function renderRapor(){
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>raporMalzemeSil('${x.id}'))">×</span>
       </div>`;
     });
-    h += `<div class="bosMetin" style="margin-top:8px">Yazmaya başladığında daha önce kullanılmış malzemeler öneri olarak çıkar. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Malzeme adı yazarken sadece seçtiğiniz tesisin deposunda kayıtlı ürünler öneri olarak çıkar — depoda hiç olmayan bir ürün yazarken öneri gelmez. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
     h += `</div>`;
 
     h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;

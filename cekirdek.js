@@ -221,7 +221,7 @@ const db = firebase.firestore();
 const veriRef = db.collection("veri").doc("ana");
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "73";
+const UYGULAMA_SURUM_NO = "74";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -395,6 +395,17 @@ function kapsamTesisler(){
   return state.tesisler.filter(t => mevcutTesisErisimi.includes(t.id));
 }
 function erisilenTesisAdlari(){ return new Set(erisilenTesisler().map(t => t.ad)); }
+// Bir tesisin depolarında KAYITLI olan (stokta bulunan) tüm ürün adlarını döndürür.
+// Rapor Ekle'de "Malzeme adı" yazarken, sadece SEÇİLİ tesisin deposunda gerçekten
+// olan ürünleri önermek için kullanılır — depoda olmayan bir ürün yazınca hiçbir
+// öneri çıkmaz.
+function tesisDepoUrunAdlari(tesisId){
+  const t = state.tesisler.find(x => x.id === tesisId);
+  if (!t) return [];
+  const adlar = new Set();
+  (t.depolar || []).forEach(d => (d.urunler || []).forEach(u => { if (u.ad && u.ad.trim()) adlar.add(u.ad.trim()); }));
+  return [...adlar].sort();
+}
 
 /* ---------------- silinen veriler (geri getirme) ---------------- */
 // Yapısal öneme sahip kayıtlar (tesis/makine/pompa/parça, bakım planı, depo,
