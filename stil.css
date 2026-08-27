@@ -520,6 +520,7 @@
     .ustBtnMetin { display: none; }
     .kullaniciRozeti { display: none; }
     .ustCubuk { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+    .ustSolGrup { flex-wrap: wrap; flex: 1 1 100%; }
     .logoAlani { width: auto; height: 40px; }
     .ustNav {
       order: 3; width: 100%; margin-top: 6px;
@@ -593,3 +594,8 @@
   .raporStokBtn { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 14px 18px; border-radius: 12px; border: 2px solid var(--sinir2); background: var(--bg-yuzey); cursor: pointer; margin-bottom: 18px; }
   .raporStokBtn:hover { border-color: var(--turkuaz); }
   .raporStokBtnAktif { border-color: var(--turkuaz); background: rgba(var(--turkuaz-rgb),0.1); }
+
+  /* ---------------- stok listesi: tesis sıralama okları ---------------- */
+  .siraOkBtn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 11px; border-radius: 6px; background: var(--bg-yuzey2); border: 1px solid var(--sinir2); color: var(--yazi-soluk); }
+  .siraOkBtn:hover:not(:disabled) { background: var(--bg-hover); color: var(--yazi); border-color: var(--vurgu); }
+  .siraOkBtn:disabled { opacity: .3; cursor: default; }

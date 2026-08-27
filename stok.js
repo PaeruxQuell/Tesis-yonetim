@@ -161,7 +161,8 @@ function renderStok(){
       <button class="${ui.stokDuzenle?'duzenleBtnAktif':'duzenleBtn'} ty-btn" onclick="stokDuzenleAcKapat()">${ui.stokDuzenle?'Düzenlemeyi bitir':'Düzenle'}</button>
     </div>`;
     h += `<div style="height:8px"></div>`;
-    erisilenTesisler().forEach(t => {
+    const siraliListeDizi = siraliTesisler();
+    siraliListeDizi.forEach((t, i) => {
       const acik = ui.stokAcikTesis.has(t.id);
       const kritik = tesisKritikMi(t);
       const bekleyenler = bekleyenStokKalemleri(t.ad);
@@ -172,6 +173,10 @@ function renderStok(){
           <span class="tesisAdMetin">${esc(t.ad)}</span>
           ${kritik ? `<span class="kritikNokta" title="Kritik stok var">●</span>` : ''}
           ${bekleyenler.length ? `<span class="bekleyenRozet">${bekleyenler.length} bekleyen</span>` : ''}
+          <span style="display:flex;gap:2px;margin-left:auto" onclick="event.stopPropagation()">
+            <button class="ty-btn siraOkBtn" ${i===0?'disabled':''} onclick="tesisYukariTasi('${t.id}')" title="Yukarı taşı">▲</button>
+            <button class="ty-btn siraOkBtn" ${i===siraliListeDizi.length-1?'disabled':''} onclick="tesisAsagiTasi('${t.id}')" title="Aşağı taşı">▼</button>
+          </span>
         </div>`;
       if (acik) {
         if (bekleyenler.length > 0) {

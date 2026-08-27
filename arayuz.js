@@ -16,6 +16,27 @@ function siraliTesisler(){
   const harita = {}; state.tesisler.forEach(t => harita[t.id] = t);
   return idSirasi.map(id => harita[id]).filter(Boolean);
 }
+// Stok Listesi'ndeki ▲▼ butonları için: tesisi sıralı listede bir yukarı/aşağı taşır.
+// Aynı localStorage tabanlı sıralamayı kullanır — burada yapılan değişiklik
+// Tesis ağacındaki sıralamaya da (ve tam tersi) yansır, tek bir ortak sıra vardır.
+function tesisYukariTasi(tesisId){
+  const sira = siraOku();
+  const liste = siraliListe(erisilenTesisler().map(t => t.id), sira.tesisler);
+  const idx = liste.indexOf(tesisId);
+  if (idx <= 0) return;
+  [liste[idx-1], liste[idx]] = [liste[idx], liste[idx-1]];
+  sira.tesisler = liste;
+  siraYaz(sira); render();
+}
+function tesisAsagiTasi(tesisId){
+  const sira = siraOku();
+  const liste = siraliListe(erisilenTesisler().map(t => t.id), sira.tesisler);
+  const idx = liste.indexOf(tesisId);
+  if (idx === -1 || idx >= liste.length - 1) return;
+  [liste[idx], liste[idx+1]] = [liste[idx+1], liste[idx]];
+  sira.tesisler = liste;
+  siraYaz(sira); render();
+}
 function siraliMakineler(tesisId, makineler){
   const sira = siraOku();
   const idler = makineler.map(m => m.id);
