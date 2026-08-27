@@ -402,7 +402,7 @@ function renderMalzemeler(){
           </span>
         </span>
         <select class="parcaGirdi" style="width:120px;flex:none;margin-top:2px" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
-          ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+          ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
         </select>
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>malzemeListesindenSil('${m.id}'))">×</span>
       </div>`;

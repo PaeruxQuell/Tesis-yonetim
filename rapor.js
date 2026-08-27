@@ -153,7 +153,7 @@ function renderRapor(){
         <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
         <select class="parcaGirdi" style="width:110px;flex:none" onchange="raporMalzemeGuncelle('${x.id}','birim',this.value)">
-          ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${x.birim===b?'selected':''}>${b}</option>`).join('')}
+          ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${x.birim===b?'selected':''}>${b}</option>`).join('')}
         </select>
         <label style="width:120px;flex:none;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--yazi-soluk);cursor:pointer" title="İşaretlerseniz bu malzeme için depo stoğundan düşülmesi gerektiğine dair kimseye bildirim gitmez. Yine de raporlarda ve makine geçmişinde görünmeye devam eder.">
           <input type="checkbox" ${x.onemliDegil?'checked':''} onchange="raporMalzemeGuncelle('${x.id}','onemliDegil',this.checked)" />

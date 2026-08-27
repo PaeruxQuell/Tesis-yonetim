@@ -113,7 +113,7 @@ function renderPompa(){
                 <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                 <input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(x.adet)}" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','adet',this.value)" />
                 <select class="parcaGirdi" style="width:95px;flex:none" onchange="gecmisMalzemeGuncelle('${g.id}','${x.id}','birim',this.value)">
-                  ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(x.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+                  ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${(x.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
                 </select>
                 <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>gecmisMalzemeSil('${g.id}','${x.id}'))">×</span>
               </div>`).join('')}

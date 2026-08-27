@@ -201,7 +201,7 @@ function renderStok(){
                 <datalist id="kodListesi-bek-${b.kalemId}">${urunKodlariGetir(b.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                 <input class="parcaGirdi" style="width:80px;flex:none" value="${esc(b.miktar)}" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','miktar',this.value)" />
                 <select class="parcaGirdi" style="width:120px;flex:none" onchange="stokBekleyenAlanGuncelle('${b.satId}','${b.kalemId}','birim',this.value)">
-                  ${["adet","koli","tane","kg","litre"].map(bi => `<option value="${bi}" ${(b.birim||'adet')===bi?'selected':''}>${bi}</option>`).join('')}
+                  ${["adet","koli","tane","kg","litre","metre","milimetre"].map(bi => `<option value="${bi}" ${(b.birim||'adet')===bi?'selected':''}>${bi}</option>`).join('')}
                 </select>
               </div>`;
             });
@@ -252,7 +252,7 @@ function renderStok(){
                   <datalist id="kodListesi-${u.id}">${urunKodlariGetir(u.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
                   <input class="parcaGirdi ${kritikRenk?'stokKritikGirdi':''} ${eksiMi?'stokEksiGirdi':''} ${miktarFlashSinif}" style="width:55px;flex:none" type="number" max="9999" maxlength="4" value="${esc(u.miktar)}" onchange="this.value=this.value.slice(0,4); stokUrunGuncelle('${t.id}','${d.id}','${u.id}','miktar',this.value)" />
                   <select class="parcaGirdi" style="width:90px;flex:none" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','birim',this.value)">
-                    ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(u.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+                    ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${(u.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
                   </select>
                   <input class="parcaGirdi" style="width:75px;flex:none" type="number" value="${esc(u.kritikEsik)}" onchange="stokUrunGuncelle('${t.id}','${d.id}','${u.id}','kritikEsik',this.value)" />
                   <button class="ty-btn kritikToggleBtn ${u.kritikTakip?'kritikToggleAktif':''}" style="width:135px;flex:none" onclick="stokKritikDegistir('${t.id}','${d.id}','${u.id}')">${u.kritikTakip?'● İzleniyor':'Kritik işaretle'}</button>

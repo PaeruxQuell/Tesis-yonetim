@@ -311,7 +311,7 @@ function renderSatinAlmaDetay(){
             <datalist id="kodListesi-${k.id}">${urunKodlariGetir(k.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
             <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
             <select class="parcaGirdi" style="flex:1" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)">
-              ${["adet","koli","tane","kg","litre"].map(b => `<option value="${b}" ${(k.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+              ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${(k.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
             </select>
             <span style="width:150px"></span>
           ` : `
