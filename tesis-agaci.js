@@ -17,7 +17,11 @@ function tesisSil(tesisId){
   state.tesisler = state.tesisler.filter(t => t.id !== tesisId);
   if (ui.secim.tesisId === tesisId) { ui.secim = {}; ui.view = "bos"; }
   if (t) kaydetIslem(`Tesis silindi: ${t.ad}`, { view: "anasayfa", tesisId: t.id });
-  saveData(); render();
+  saveData();
+  // saveData() artık sadece state.tesisler'de KALANLARI yazıyor — silinen tesisin
+  // kendi Firestore belgesi otomatik silinmez, bu yüzden burada ayrıca siliyoruz.
+  tesislerRef.doc(tesisId).delete().catch(err => console.error("Tesis belgesi silinemedi:", err));
+  render();
 }
 function tesisAdGuncelle(tesisId, ad){
   const t = state.tesisler.find(x => x.id === tesisId); if (t) t.ad = ad;

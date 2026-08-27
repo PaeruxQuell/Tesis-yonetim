@@ -168,22 +168,41 @@ function renderAyarlar(){
     </div>`;
 
     if (adminMi()) {
-      const boyutBayt = new Blob([JSON.stringify(state)]).size;
-      const limitBayt = 1048576; // Firestore'un tek belge için sert üst sınırı: 1 MB
-      const yuzde = Math.min(100, (boyutBayt / limitBayt) * 100);
-      const boyutRenk = yuzde > 85 ? 'var(--kirmizi)' : yuzde > 60 ? 'var(--vurgu)' : 'var(--yesil)';
+      const limitBayt = 1048576; // Firestore'un HER BELGE için sert üst sınırı: 1 MB
+      const belgeler = [];
+      (state.tesisler || []).forEach(t => belgeler.push({ ad: `Tesis: ${t.ad}`, bayt: new Blob([JSON.stringify(t)]).size }));
+      belgeler.push({ ad: "Satın Almalar", bayt: new Blob([JSON.stringify(state.satinAlmalar||[])]).size });
+      belgeler.push({ ad: "Kullanılan Malzemeler", bayt: new Blob([JSON.stringify(state.malzemeGecmisi||[])]).size });
+      belgeler.push({ ad: "Sistem Kayıtları", bayt: new Blob([JSON.stringify(state.sonIslemler||[])]).size });
+      belgeler.push({ ad: "Transferler", bayt: new Blob([JSON.stringify(state.transferler||[])]).size });
+      belgeler.push({ ad: "Silinen Veriler", bayt: new Blob([JSON.stringify(state.silinenler||[])]).size });
+      belgeler.sort((a,b) => b.bayt - a.bayt);
+      const enBuyuk = belgeler[0] || { ad: "—", bayt: 0 };
+      const enBuyukYuzde = Math.min(100, (enBuyuk.bayt / limitBayt) * 100);
+      const boyutRenk = enBuyukYuzde > 85 ? 'var(--kirmizi)' : enBuyukYuzde > 60 ? 'var(--vurgu)' : 'var(--yesil)';
       h += `<div class="kart">
         <div class="kartBaslik" style="margin-bottom:10px">💾 Veri Boyutu (sadece Yönetici)</div>
-        <div class="bosMetin" style="margin-bottom:12px">Tüm sistem verisi (tesisler, satın almalar, raporlar, malzeme geçmişi vb.) tek bir dosyada tutuluyor ve bu dosyanın 1 MB'lık kesin bir üst sınırı var. Sınıra ulaşılırsa hiçbir yeni kayıt eklenemez, hiçbir değişiklik kaydedilemez.</div>
+        <div class="bosMetin" style="margin-bottom:12px">Veri artık TEK bir dosyada değil, her tesis ve her ortak kayıt türü (satın almalar, malzeme geçmişi vb.) KENDİ ayrı dosyasında tutuluyor — her birinin kendi 1 MB'lık sınırı var. Aşağıda en dolu olan dosya gösteriliyor; bir dosya sınıra ulaşırsa sadece O dosyaya yeni kayıt eklenemez, diğerleri etkilenmez.</div>
+        <div style="font-size:12.5px;color:var(--yazi);font-weight:600;margin-bottom:4px">En dolu: ${esc(enBuyuk.ad)}</div>
         <div style="background:var(--bg-yuzey2);border-radius:8px;height:12px;overflow:hidden;margin-bottom:8px">
-          <div style="background:${boyutRenk};height:100%;width:${yuzde.toFixed(1)}%;transition:width .3s ease"></div>
+          <div style="background:${boyutRenk};height:100%;width:${enBuyukYuzde.toFixed(1)}%;transition:width .3s ease"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--yazi-soluk)">
-          <span>${(boyutBayt/1024).toFixed(0)} KB kullanılıyor</span>
-          <span style="color:${boyutRenk};font-weight:700">%${yuzde.toFixed(1)}</span>
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--yazi-soluk);margin-bottom:12px">
+          <span>${(enBuyuk.bayt/1024).toFixed(0)} KB kullanılıyor</span>
+          <span style="color:${boyutRenk};font-weight:700">%${enBuyukYuzde.toFixed(1)}</span>
           <span>Sınır: 1024 KB</span>
         </div>
-        ${yuzde > 70 ? `<div class="bosMetin" style="margin-top:10px;color:${boyutRenk}">⚠ Sınıra yaklaşılıyor — eski verilerin arşivlenmesi ya da verinin birden fazla dosyaya bölünmesi gerekebilir.</div>` : ''}
+        ${enBuyukYuzde > 70 ? `<div class="bosMetin" style="margin-bottom:12px;color:${boyutRenk}">⚠ "${esc(enBuyuk.ad)}" sınıra yaklaşıyor.</div>` : ''}
+        <div style="border-top:1px solid var(--sinir-soluk);padding-top:10px">
+          ${belgeler.map(b => {
+            const y = Math.min(100, (b.bayt/limitBayt)*100);
+            return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11.5px">
+              <span style="width:170px;flex:none;color:var(--yazi-soluk);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.ad)}</span>
+              <span style="flex:1;background:var(--bg-yuzey2);border-radius:4px;height:6px;overflow:hidden"><span style="display:block;background:${y>85?'var(--kirmizi)':y>60?'var(--vurgu)':'var(--yesil)'};height:100%;width:${y.toFixed(1)}%"></span></span>
+              <span style="width:55px;flex:none;text-align:right;color:var(--yazi-dim)">${(b.bayt/1024).toFixed(0)} KB</span>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`;
     }
 

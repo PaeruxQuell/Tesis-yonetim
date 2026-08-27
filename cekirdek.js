@@ -218,10 +218,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const veriRef = db.collection("veri").doc("ana");
+
+// ---------------------------------------------------------------------
+// VERİ YAPISI (V76'dan itibaren): Tüm veri artık TEK bir "veri/ana" belgesi
+// yerine BİRDEN FAZLA belgeye bölünmüş durumda — her belgenin kendi 1MB'lık
+// bütçesi olsun diye:
+//   tesisler/{tesisId}      -> her tesis (makineler, depolar dahil) kendi belgesi
+//   ortak/satinAlmalar      -> { satinAlmalar: [...] }
+//   ortak/malzemeGecmisi    -> { malzemeGecmisi: [...] }
+//   ortak/sonIslemler       -> { sonIslemler: [...] }
+//   ortak/transferler       -> { transferler: [...] }
+//   ortak/silinenler        -> { silinenler: [...] }
+// Eski "veri/ana" belgesi SİLİNMİYOR — ilk açılışta oradan yeni yapıya
+// tek seferlik otomatik bir göç yapılıyor, sonra bir daha dokunulmuyor.
+// Uygulamanın geri kalanı (render fonksiyonları, tüm ekle/sil/güncelle
+// fonksiyonları) hiç değişmedi — hepsi hâlâ tek bir `state` nesnesi
+// üzerinden çalışıyor; state artık sadece BİRLEŞTİRİLEREK oluşturuluyor.
+// ---------------------------------------------------------------------
+const eskiVeriRef = db.collection("veri").doc("ana");
+const tesislerRef = db.collection("tesisler");
+const ortakRef = db.collection("ortak");
+const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler"];
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "75";
+const UYGULAMA_SURUM_NO = "76";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -244,28 +264,76 @@ function satinAlmaOnaylayabilirMi(){
 
 function saveData(){
   if (!state) return;
-  veriRef.set(state).catch(err => {
-    console.error("Kaydetme hatası:", err);
-    toastGoster("Değişiklik kaydedilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.", "hata");
+  (state.tesisler || []).forEach(t => {
+    tesislerRef.doc(t.id).set(t).catch(err => {
+      console.error(`Tesis kaydetme hatası (${t.ad}):`, err);
+      toastGoster(`"${t.ad}" tesisi kaydedilemedi — bu tesisin verisi 1MB sınırına yaklaşmış olabilir.`, "hata");
+    });
+  });
+  ORTAK_ALANLAR.forEach(alan => {
+    ortakRef.doc(alan).set({ [alan]: state[alan] || [] }).catch(err => {
+      console.error(`"${alan}" kaydetme hatası:`, err);
+      toastGoster("Değişiklik kaydedilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.", "hata");
+    });
   });
 }
+
+// Eski tek-belgeli veriyi yeni (bölünmüş) yapıya BİR KEZ aktarır.
+// "tesisler" koleksiyonu zaten doluysa (göç daha önce yapılmışsa) hiçbir
+// şey yapmaz — bu yüzden yanlışlıkla üzerine yazma riski yoktur.
+async function eskiVeridenGocEt(){
+  const kontrol = await tesislerRef.limit(1).get();
+  if (!kontrol.empty) return; // zaten göç edilmiş
+  const eskiSnap = await eskiVeriRef.get();
+  const kaynak = eskiSnap.exists ? sanitizeVeri(eskiSnap.data()) : varsayilanVeri();
+  await Promise.all((kaynak.tesisler || []).map(t => tesislerRef.doc(t.id).set(t)));
+  await Promise.all(ORTAK_ALANLAR.map(alan => ortakRef.doc(alan).set({ [alan]: kaynak[alan] || [] })));
+  console.log("Veri, bölünmüş (çoklu belge) yapıya aktarıldı.");
+}
+
+let tesislerYuklendi = false;
+let ortakYuklenenler = new Set();
+let sonTesislerHam = [];
+let sonOrtakHam = {};
+
+function stateBirlestirVeRenderla(){
+  if (!tesislerYuklendi || ortakYuklenenler.size < ORTAK_ALANLAR.length) return; // henüz tüm parçalar gelmedi
+  const ham = {
+    tesisler: [...sonTesislerHam].sort((a,b) => (a.id||"").localeCompare(b.id||"")),
+    satinAlmalar: sonOrtakHam.satinAlmalar || [],
+    malzemeGecmisi: sonOrtakHam.malzemeGecmisi || [],
+    sonIslemler: sonOrtakHam.sonIslemler || [],
+    transferler: sonOrtakHam.transferler || [],
+    silinenler: sonOrtakHam.silinenler || [],
+    logoUrl: "", logoUrlKoyu: "", logoUrlAcik: "", satinAlmaOnaycisiId: ""
+  };
+  state = sanitizeVeri(ham);
+  if (document.getElementById("uygulama").style.display !== "none") {
+    if (!ui.acikTesis || ui.acikTesis.size === 0) ui.acikTesis.add(state.tesisler[0]?.id);
+    render();
+  }
+  if (window.yedeklemeBaslat) window.yedeklemeBaslat();
+}
+
 function veriDinlemeyeBasla(){
   if (dinleyiciBaslatildi) return;
   dinleyiciBaslatildi = true;
-  veriRef.get().then(snap => {
-    if (!snap.exists) { veriRef.set(varsayilanVeri()); }
-  });
-  veriRef.onSnapshot(snap => {
-    if (!snap.exists) return;
-    state = sanitizeVeri(snap.data());
-    if (document.getElementById("uygulama").style.display !== "none") {
-      if (!ui.acikTesis || ui.acikTesis.size === 0) ui.acikTesis.add(state.tesisler[0]?.id);
-      render();
-    }
-    if (window.yedeklemeBaslat) window.yedeklemeBaslat();
-  }, err => {
-    console.error("Veri dinleme hatası:", err);
-    toastGoster("Veri sunucusuna bağlanılamadı. İnternet bağlantınızı kontrol edin.", "hata");
+  eskiVeridenGocEt().catch(err => console.error("Göç hatası:", err)).finally(() => {
+    tesislerRef.onSnapshot(snap => {
+      sonTesislerHam = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      tesislerYuklendi = true;
+      stateBirlestirVeRenderla();
+    }, err => {
+      console.error("Tesisler dinleme hatası:", err);
+      toastGoster("Veri sunucusuna bağlanılamadı. İnternet bağlantınızı kontrol edin.", "hata");
+    });
+    ORTAK_ALANLAR.forEach(alan => {
+      ortakRef.doc(alan).onSnapshot(snap => {
+        sonOrtakHam[alan] = snap.exists ? (snap.data()[alan] || []) : [];
+        ortakYuklenenler.add(alan);
+        stateBirlestirVeRenderla();
+      }, err => console.error(`"${alan}" dinleme hatası:`, err));
+    });
   });
 }
 async function kullaniciRoluAyarla(user){
