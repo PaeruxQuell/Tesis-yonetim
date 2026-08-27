@@ -168,6 +168,26 @@ function renderAyarlar(){
     </div>`;
 
     if (adminMi()) {
+      const boyutBayt = new Blob([JSON.stringify(state)]).size;
+      const limitBayt = 1048576; // Firestore'un tek belge için sert üst sınırı: 1 MB
+      const yuzde = Math.min(100, (boyutBayt / limitBayt) * 100);
+      const boyutRenk = yuzde > 85 ? 'var(--kirmizi)' : yuzde > 60 ? 'var(--vurgu)' : 'var(--yesil)';
+      h += `<div class="kart">
+        <div class="kartBaslik" style="margin-bottom:10px">💾 Veri Boyutu (sadece Yönetici)</div>
+        <div class="bosMetin" style="margin-bottom:12px">Tüm sistem verisi (tesisler, satın almalar, raporlar, malzeme geçmişi vb.) tek bir dosyada tutuluyor ve bu dosyanın 1 MB'lık kesin bir üst sınırı var. Sınıra ulaşılırsa hiçbir yeni kayıt eklenemez, hiçbir değişiklik kaydedilemez.</div>
+        <div style="background:var(--bg-yuzey2);border-radius:8px;height:12px;overflow:hidden;margin-bottom:8px">
+          <div style="background:${boyutRenk};height:100%;width:${yuzde.toFixed(1)}%;transition:width .3s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--yazi-soluk)">
+          <span>${(boyutBayt/1024).toFixed(0)} KB kullanılıyor</span>
+          <span style="color:${boyutRenk};font-weight:700">%${yuzde.toFixed(1)}</span>
+          <span>Sınır: 1024 KB</span>
+        </div>
+        ${yuzde > 70 ? `<div class="bosMetin" style="margin-top:10px;color:${boyutRenk}">⚠ Sınıra yaklaşılıyor — eski verilerin arşivlenmesi ya da verinin birden fazla dosyaya bölünmesi gerekebilir.</div>` : ''}
+      </div>`;
+    }
+
+    if (adminMi()) {
       h += `<div class="kart" style="border-color:rgba(var(--kirmizi-rgb),0.35)">
         <div class="kartBaslik" style="margin-bottom:10px">⚡ Hızlı Silme (sadece Yönetici)</div>
         <div class="bosMetin" style="margin-bottom:12px">Açıkken, herhangi bir kaydı silerken artık matematik onayı sorulmaz — "Sil" işlemi anında, tek tıkla uygulanır. Bu, kazara silme riskini artırır; dikkatli kullanın. Sadece bu tarayıcıda geçerli bir tercihtir.</div>
