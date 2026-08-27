@@ -4,7 +4,7 @@ function bosSatinAlmaKaydi(){
   return {
     id: uid(), siparisNo: "", gelisTarihi: bugun(),
     kalemler: [bosKalem()], yerler: [bosYer()],
-    firma: "",
+    firma: "", not: "",
     onayDurumu: "bekliyor",
     eklenmeTarihi: bugun(), eklenmeSaati: suAn()
   };
@@ -333,6 +333,14 @@ function renderSatinAlmaDetay(){
           `}
           ${ui.saDuzenle ? `<span class="silIkon" style="width:20px" onclick="silOnayla('Ürünü Sil', ()=>saKalemSil('${sat.id}','${k.id}'))">×</span>` : `<span style="width:20px"></span>`}
         </div>`).join('')}
+    </div>`;
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:8px">Not</div>
+      <div class="bosMetin" style="margin-bottom:8px">Ürün(ler) hakkında eklemek istediğiniz bir not — sadece bu satın alma talebinde görünür, başka hiçbir yere (stok, rapor vb.) yansımaz.</div>
+      ${ui.saDuzenle
+        ? `<textarea class="girdi" rows="3" style="resize:vertical;font-family:inherit" placeholder="Örn: acil ihtiyaç, belirli bir markaya öncelik verilsin vb." onchange="satinAlmaGuncelle('${sat.id}','not',this.value)">${esc(sat.not||'')}</textarea>`
+        : `<div class="deger" style="white-space:pre-wrap">${esc(sat.not) || '—'}</div>`}
     </div>`;
 
     h += `<div class="kart">
