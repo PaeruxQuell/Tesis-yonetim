@@ -42,6 +42,28 @@ function raporAlanGuncelle(alan, deger){ raporForm[alan] = deger; }
 function raporGecmiseDonukDegistir(deger){ raporForm.gecmiseDonuk = deger; render(); }
 function raporMalzemeEkle(){ raporForm.malzemeler.push({ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }); render(); }
 function raporMalzemeSil(id){ raporForm.malzemeler = raporForm.malzemeler.filter(x => x.id !== id); render(); }
+// Malzeme adı kutusuna en az 2 harf yazılınca, o harfleri İÇEREN (sadece başında
+// değil) daha önce kullanılmış tüm malzemeleri gösteren özel öneri kutusu.
+// Tam sayfa render() TETİKLEMİYOR (sadece bu küçük kutuyu dolduruyor) — aksi
+// halde her harfte imleç input'un başına sıçrardı.
+function malzemeAdOnerileriGoster(malzemeId, inputEl){
+  const kutu = document.getElementById('malzemeOneri-'+malzemeId);
+  if (!kutu) return;
+  const deger = inputEl.value.trim().toLowerCase();
+  if (deger.length < 2) { kutu.innerHTML = ''; kutu.style.display = 'none'; return; }
+  const tumAdlar = [...new Set([...tesisDepoUrunAdlari(raporForm.tesisId), ...(state.malzemeGecmisi||[]).map(m=>m.ad).filter(Boolean)])];
+  const eslesenler = tumAdlar.filter(ad => ad.toLowerCase().includes(deger)).sort().slice(0, 8);
+  if (eslesenler.length === 0) { kutu.innerHTML = ''; kutu.style.display = 'none'; return; }
+  kutu.innerHTML = eslesenler.map(ad => `<div class="malzemeOneriSatir" onmousedown="malzemeOneriSec('${malzemeId}', this.textContent)">${esc(ad)}</div>`).join('');
+  kutu.style.display = 'block';
+}
+function malzemeOneriSec(malzemeId, ad){
+  const girdi = document.getElementById('malzemeAdInput-'+malzemeId);
+  if (girdi) girdi.value = ad;
+  raporMalzemeGuncelle(malzemeId, 'ad', ad);
+  const kutu = document.getElementById('malzemeOneri-'+malzemeId);
+  if (kutu) { kutu.innerHTML = ''; kutu.style.display = 'none'; }
+}
 function raporMalzemeGuncelle(id, alan, deger){
   const x = raporForm.malzemeler.find(x => x.id === id); if (x) x[alan] = deger;
   render();
@@ -164,11 +186,15 @@ function renderRapor(){
 
     h += `<div class="kart">
       <div class="kartBaslikSatir"><span class="kartBaslik">Kullanılan malzemeler</span><button class="ekleMini ty-btn" onclick="raporMalzemeEkle()">+ malzeme ekle</button></div>
-      <datalist id="raporTesisMalzemeListesi">${[...new Set([...tesisDepoUrunAdlari(raporForm.tesisId), ...(state.malzemeGecmisi||[]).map(m=>m.ad).filter(Boolean)])].sort().map(ad => `<option value="${esc(ad)}"></option>`).join('')}</datalist>
       <div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1.4">Malzeme</span><span style="width:130px">Kod</span><span style="width:80px">Miktar</span><span style="width:110px">Birim</span><span style="width:120px">Stok Uyarısı</span><span style="width:20px"></span></div>`;
     raporForm.malzemeler.forEach(x => {
       h += `<div class="parcaSatir" style="${x.onemliDegil?'opacity:.6':''}">
-        <input class="parcaGirdi" style="flex:1.4" list="raporTesisMalzemeListesi" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}" onchange="raporMalzemeGuncelle('${x.id}','ad',this.value)" />
+        <span style="flex:1.4;position:relative">
+          <input class="parcaGirdi" id="malzemeAdInput-${x.id}" style="width:100%" autocomplete="off" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}"
+            oninput="malzemeAdOnerileriGoster('${x.id}', this)"
+            onblur="raporMalzemeGuncelle('${x.id}','ad',this.value); setTimeout(()=>{const k=document.getElementById('malzemeOneri-${x.id}'); if(k) k.style.display='none';}, 150)" />
+          <div id="malzemeOneri-${x.id}" class="malzemeOneriKutu" style="display:none"></div>
+        </span>
         <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${x.id}" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
         <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
@@ -182,7 +208,7 @@ function renderRapor(){
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>raporMalzemeSil('${x.id}'))">×</span>
       </div>`;
     });
-    h += `<div class="bosMetin" style="margin-top:8px">Malzeme adı yazarken hem seçtiğiniz tesisin deposunda kayıtlı ürünler hem de daha önce herhangi bir yerde yazdığınız tüm malzeme adları (2 harf sonrası) öneri olarak çıkar. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Malzeme adına en az 2 harf yazınca, o harfleri İÇEREN (sadece başında değil, herhangi bir yerinde geçen) daha önce kullanılmış tüm malzemeler öneri olarak çıkar — hem seçtiğiniz tesisin deposundakiler hem genel geçmişteki tüm malzemeler dahildir. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
     h += `</div>`;
 
     h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;
