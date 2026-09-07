@@ -136,6 +136,7 @@ function raporKaydet(){
 function renderRapor(){
     const t = state.tesisler.find(x => x.id === raporForm.tesisId);
     const m = t?.makineler.find(x => x.id === raporForm.makineId);
+    const p = m?.pompalar.find(x => x.id === raporForm.pompaId);
 
     let h = `<div class="pompaAdBaslik">Rapor Ekle</div><div class="altBaslik2" style="margin-bottom:20px">bir tesis / makine / pompa için yapılan işi kaydet</div>`;
 
@@ -212,6 +213,23 @@ function renderRapor(){
     h += `</div>`;
 
     h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;
+
+    if (izinVar('raporEkle') && izinVar('raporGor') && p) {
+      const sonIslemler = (p.gecmis || []).slice(0, 8);
+      h += `<div class="kart" style="margin-top:20px">
+        <div class="kartBaslik" style="margin-bottom:8px">Son Yapılan İşlemler — ${esc(m.ad)} / ${esc(p.ad)}</div>`;
+      if (sonIslemler.length === 0) {
+        h += `<div class="bosMetin">Bu pompa için henüz bir işlem kaydı yok.</div>`;
+      } else {
+        sonIslemler.forEach(g => {
+          h += `<div class="ayarSatiri" style="padding:6px 0">
+            <span style="width:90px;flex:none;color:var(--yazi-soluk);font-size:11.5px;font-family:'JetBrains Mono',monospace">${esc(g.tarih)}</span>
+            <span style="flex:1;font-size:12.5px;color:var(--yazi)">${esc(g.aciklama)}</span>
+          </div>`;
+        });
+      }
+      h += `</div>`;
+    }
 
     anaPanelYaz(h);
     return;
