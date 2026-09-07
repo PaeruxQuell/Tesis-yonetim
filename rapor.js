@@ -46,16 +46,71 @@ function raporMalzemeSil(id){ raporForm.malzemeler = raporForm.malzemeler.filter
 // değil) daha önce kullanılmış tüm malzemeleri gösteren özel öneri kutusu.
 // Tam sayfa render() TETİKLEMİYOR (sadece bu küçük kutuyu dolduruyor) — aksi
 // halde her harfte imleç input'un başına sıçrardı.
+let malzemeOneriListesi = {}; // malzemeId -> o an gösterilen öneri dizisi
+let malzemeOneriIndex = {};   // malzemeId -> ok tuşlarıyla vurgulanan satır (-1 = yok)
+
 function malzemeAdOnerileriGoster(malzemeId, inputEl){
   const kutu = document.getElementById('malzemeOneri-'+malzemeId);
   if (!kutu) return;
   const deger = inputEl.value.trim().toLowerCase();
-  if (deger.length < 2) { kutu.innerHTML = ''; kutu.style.display = 'none'; return; }
+  malzemeOneriIndex[malzemeId] = -1;
+  if (deger.length < 2) { kutu.innerHTML = ''; kutu.style.display = 'none'; malzemeOneriListesi[malzemeId] = []; return; }
   const tumAdlar = [...new Set([...tesisDepoUrunAdlari(raporForm.tesisId), ...(state.malzemeGecmisi||[]).map(m=>m.ad).filter(Boolean)])];
   const eslesenler = tumAdlar.filter(ad => ad.toLowerCase().includes(deger)).sort().slice(0, 8);
+  malzemeOneriListesi[malzemeId] = eslesenler;
   if (eslesenler.length === 0) { kutu.innerHTML = ''; kutu.style.display = 'none'; return; }
-  kutu.innerHTML = eslesenler.map(ad => `<div class="malzemeOneriSatir" onmousedown="malzemeOneriSec('${malzemeId}', this.textContent)">${esc(ad)}</div>`).join('');
+  kutu.innerHTML = eslesenler.map((ad,i) => `<div class="malzemeOneriSatir" data-idx="${i}" onmousedown="malzemeOneriSec('${malzemeId}', this.textContent)">${esc(ad)}</div>`).join('');
   kutu.style.display = 'block';
+}
+function malzemeOneriVurguGuncelle(malzemeId){
+  const kutu = document.getElementById('malzemeOneri-'+malzemeId);
+  if (!kutu) return;
+  const idx = malzemeOneriIndex[malzemeId];
+  [...kutu.children].forEach((el, i) => {
+    const vurgulu = i === idx;
+    el.classList.toggle('malzemeOneriVurgulu', vurgulu);
+    if (vurgulu) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+// Malzeme adı kutusundaki ok tuşları (▲▼ ile önerilerde gezinme, Enter ile seçme)
+// ve Tab tuşu (Kod alanına GEÇMESİ gerekirken geçmiyordu — sebebi: değişiklik
+// olunca tüm sayfa yeniden çiziliyor, tarayıcının "sıradaki alana geç" mekanizması
+// eski (artık var olmayan) elemente göre çalıştığı için başarısız oluyordu. Şimdi
+// Tab'ı kendimiz yakalayıp, yeniden çizimden SONRA doğru Kod kutusuna elle
+// odaklanıyoruz.)
+function malzemeAdKeydown(malzemeId, event){
+  const kutu = document.getElementById('malzemeOneri-'+malzemeId);
+  const liste = malzemeOneriListesi[malzemeId] || [];
+  const acikMi = kutu && kutu.style.display === 'block' && liste.length > 0;
+
+  if (event.key === 'ArrowDown'){
+    if (!acikMi) return;
+    event.preventDefault();
+    malzemeOneriIndex[malzemeId] = ((malzemeOneriIndex[malzemeId] ?? -1) + 1) % liste.length;
+    malzemeOneriVurguGuncelle(malzemeId);
+  } else if (event.key === 'ArrowUp'){
+    if (!acikMi) return;
+    event.preventDefault();
+    malzemeOneriIndex[malzemeId] = ((malzemeOneriIndex[malzemeId] ?? -1) - 1 + liste.length) % liste.length;
+    malzemeOneriVurguGuncelle(malzemeId);
+  } else if (event.key === 'Enter'){
+    if (acikMi && (malzemeOneriIndex[malzemeId] ?? -1) >= 0){
+      event.preventDefault();
+      malzemeOneriSec(malzemeId, liste[malzemeOneriIndex[malzemeId]]);
+    }
+  } else if (event.key === 'Escape'){
+    if (kutu) { kutu.style.display = 'none'; kutu.innerHTML = ''; }
+  } else if (event.key === 'Tab' && !event.shiftKey){
+    event.preventDefault();
+    // Öneri vurgulanmışsa önce onu seç, sonra Kod'a geç.
+    if (acikMi && (malzemeOneriIndex[malzemeId] ?? -1) >= 0) {
+      malzemeOneriSec(malzemeId, liste[malzemeOneriIndex[malzemeId]]);
+    } else {
+      raporMalzemeGuncelle(malzemeId, 'ad', event.target.value);
+    }
+    const kodEl = document.getElementById('kodInput-'+malzemeId);
+    if (kodEl) kodEl.focus();
+  }
 }
 function malzemeOneriSec(malzemeId, ad){
   const girdi = document.getElementById('malzemeAdInput-'+malzemeId);
@@ -63,6 +118,7 @@ function malzemeOneriSec(malzemeId, ad){
   raporMalzemeGuncelle(malzemeId, 'ad', ad);
   const kutu = document.getElementById('malzemeOneri-'+malzemeId);
   if (kutu) { kutu.innerHTML = ''; kutu.style.display = 'none'; }
+  malzemeOneriIndex[malzemeId] = -1;
 }
 function raporMalzemeGuncelle(id, alan, deger){
   const x = raporForm.malzemeler.find(x => x.id === id); if (x) x[alan] = deger;
@@ -73,6 +129,8 @@ function raporKaydet(){
   const m = t?.makineler.find(x => x.id === raporForm.makineId);
   const p = m?.pompalar.find(x => x.id === raporForm.pompaId);
   if (!t || !m || !p) { toastGoster("Lütfen tesis, makine ve pompa seçin.", "hata"); return; }
+  if (!raporForm.sebep || !raporForm.sebep.trim()) { toastGoster("Lütfen rapor sebebini yazın.", "hata"); return; }
+  if (!raporForm.is || !raporForm.is.trim()) { toastGoster("Lütfen yapılan işi yazın.", "hata"); return; }
   const tarih = raporForm.tarih || bugun();
   const kullanilanlar = raporForm.malzemeler
     .map(x => ({ id: uid(), ad: x.ad.trim(), kod: (x.kod||"").trim(), adet: x.adet || 1, birim: x.birim || "adet", onemliDegil: !!x.onemliDegil }))
@@ -193,10 +251,11 @@ function renderRapor(){
         <span style="flex:1.4;position:relative">
           <input class="parcaGirdi" id="malzemeAdInput-${x.id}" style="width:100%" autocomplete="off" placeholder="Malzeme adı (örn: Rulman)" value="${esc(x.ad)}"
             oninput="malzemeAdOnerileriGoster('${x.id}', this)"
+            onkeydown="malzemeAdKeydown('${x.id}', event)"
             onblur="raporMalzemeGuncelle('${x.id}','ad',this.value); setTimeout(()=>{const k=document.getElementById('malzemeOneri-${x.id}'); if(k) k.style.display='none';}, 150)" />
           <div id="malzemeOneri-${x.id}" class="malzemeOneriKutu" style="display:none"></div>
         </span>
-        <input class="parcaGirdi" style="width:130px;flex:none" list="kodListesi-${x.id}" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
+        <input class="parcaGirdi" id="kodInput-${x.id}" style="width:130px;flex:none" list="kodListesi-${x.id}" placeholder="Kod (örn: 6305)" value="${esc(x.kod)}" onchange="raporMalzemeGuncelle('${x.id}','kod',this.value)" />
         <datalist id="kodListesi-${x.id}">${urunKodlariGetir(x.ad).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
         <input class="parcaGirdi" style="width:80px;flex:none" type="number" placeholder="Miktar" value="${esc(x.adet)}" onchange="raporMalzemeGuncelle('${x.id}','adet',this.value)" />
         <select class="parcaGirdi" style="width:110px;flex:none" onchange="raporMalzemeGuncelle('${x.id}','birim',this.value)">
