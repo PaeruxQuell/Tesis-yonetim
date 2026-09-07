@@ -190,3 +190,33 @@ function mobilMenuleriKapat(){
   if (sag) sag.classList.remove("mobilAcik");
   if (bg) bg.classList.remove("aktif");
 }
+
+// Yukarıdaki tesisYukariTasi/tesisAsagiTasi SADECE erişilebilir (görünür) tesisleri
+// kapsıyor — Stok Listesi'nde doğru davranış bu. Ama Ayarlar sayfasında GİZLİ
+// tesisleri de sıralayabilmek gerekiyor, bu yüzden aşağıdakiler TÜM tesisleri
+// (gizli dahil) kapsıyor. İkisi de AYNI ortak "sira.tesisler" listesini kullanıyor,
+// birinde yapılan değişiklik diğerinde de görünür.
+function tumTesislerSirali(){
+  const sira = siraOku();
+  const idSirasi = siraliListe(state.tesisler.map(t => t.id), sira.tesisler);
+  const harita = {}; state.tesisler.forEach(t => harita[t.id] = t);
+  return idSirasi.map(id => harita[id]).filter(Boolean);
+}
+function tesisYukariTasiTumu(tesisId){
+  const sira = siraOku();
+  const liste = siraliListe(state.tesisler.map(t => t.id), sira.tesisler);
+  const idx = liste.indexOf(tesisId);
+  if (idx <= 0) return;
+  [liste[idx-1], liste[idx]] = [liste[idx], liste[idx-1]];
+  sira.tesisler = liste;
+  siraYaz(sira); render();
+}
+function tesisAsagiTasiTumu(tesisId){
+  const sira = siraOku();
+  const liste = siraliListe(state.tesisler.map(t => t.id), sira.tesisler);
+  const idx = liste.indexOf(tesisId);
+  if (idx === -1 || idx >= liste.length - 1) return;
+  [liste[idx], liste[idx+1]] = [liste[idx+1], liste[idx]];
+  sira.tesisler = liste;
+  siraYaz(sira); render();
+}

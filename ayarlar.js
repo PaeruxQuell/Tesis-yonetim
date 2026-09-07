@@ -302,15 +302,20 @@ function renderAyarlar(){
     h += `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px">`;
 
     h += `<div class="kart" style="flex:1;min-width:240px;padding:14px 16px">
-      <div class="kartBaslik" style="margin-bottom:6px;font-size:13px">Tesis Görünürlüğü</div>`;
-    state.tesisler.forEach(t => {
+      <div class="kartBaslik" style="margin-bottom:6px;font-size:13px">Tesis Görünürlüğü ve Sıralaması</div>`;
+    const siraliTumTesisler = tumTesislerSirali();
+    siraliTumTesisler.forEach((t, i) => {
       h += `<div class="ayarSatiri" style="padding:6px 0;gap:8px">
+        <span style="display:flex;gap:2px">
+          <button class="ty-btn siraOkBtn" ${i===0?'disabled':''} onclick="tesisYukariTasiTumu('${t.id}')" title="Yukarı taşı">▲</button>
+          <button class="ty-btn siraOkBtn" ${i===siraliTumTesisler.length-1?'disabled':''} onclick="tesisAsagiTasiTumu('${t.id}')" title="Aşağı taşı">▼</button>
+        </span>
         <span class="tesisIkon" style="font-size:14px">🏭</span>
         <span style="flex:1;font-size:12.5px;color:${t.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(t.ad)}${t.gizli?' (gizli)':''}</span>
         <button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" style="padding:3px 10px;font-size:11px" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>
       </div>`;
     });
-    h += `<div class="bosMetin" style="margin-top:8px;font-size:11px">Gizlenenler sol menü ve Stok Listesi'nde görünmez.</div>
+    h += `<div class="bosMetin" style="margin-top:8px;font-size:11px">Gizlenenler sol menü ve Stok Listesi'nde görünmez. ▲▼ ile sıralarını değiştirebilirsiniz — bu sıra, Rapor Ekle gibi tesis seçilen tüm yerlerde aynı şekilde uygulanır.</div>
     </div>`;
 
     h += `<div class="kart" style="flex:1;min-width:240px;padding:14px 16px">

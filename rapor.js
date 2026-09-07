@@ -1,12 +1,24 @@
 let raporForm = { tesisId: "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", gecmiseDonuk: false, malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
 function raporGoster(){
   if (!izinVar('raporEkle')) return;
-  raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", gecmiseDonuk: false, malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
-  if (raporForm.tesisId) {
+  // Önceki seçilen tesis/makine/pompa hâlâ geçerliyse (silinmemişse) koru —
+  // aynı ekipman için art arda rapor girerken her seferinde yeniden seçmeye
+  // gerek kalmasın. Geçersizse (ilk giriş ya da o kayıt silinmişse) varsayılana dön.
+  const oncekiTesisGecerliMi = raporForm.tesisId && erisilenTesisler().some(x => x.id === raporForm.tesisId);
+  if (!oncekiTesisGecerliMi) {
+    raporForm = { tesisId: erisilenTesisler()[0]?.id || "", makineId: "", pompaId: "", tarih: bugun(), sebep: "", is: "", gecmiseDonuk: false, malzemeler: [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }] };
+    if (raporForm.tesisId) {
+      const t = state.tesisler.find(x => x.id === raporForm.tesisId);
+      raporForm.makineId = t?.makineler[0]?.id || "";
+      const m = t?.makineler.find(x => x.id === raporForm.makineId);
+      raporForm.pompaId = m?.pompalar[0]?.id || "";
+    }
+  } else {
     const t = state.tesisler.find(x => x.id === raporForm.tesisId);
-    raporForm.makineId = t?.makineler[0]?.id || "";
-    const m = t?.makineler.find(x => x.id === raporForm.makineId);
-    raporForm.pompaId = m?.pompalar[0]?.id || "";
+    if (!t.makineler.some(x => x.id === raporForm.makineId)) raporForm.makineId = t.makineler[0]?.id || "";
+    const m = t.makineler.find(x => x.id === raporForm.makineId);
+    if (!m || !m.pompalar.some(x => x.id === raporForm.pompaId)) raporForm.pompaId = m?.pompalar[0]?.id || "";
+    raporForm.tarih = bugun();
   }
   ui.view = "rapor"; render();
 }
@@ -86,7 +98,15 @@ function raporKaydet(){
 
   saveData();
   toastGoster("Rapor kaydedildi.", "basari");
-  pompaSec(t.id, m.id, p.id);
+  // Rapor Ekle sayfasında KAL (başka bir sayfaya atmıyoruz) — tesis/makine/pompa
+  // ve "geçmişe dönük" seçimini de koruyoruz ki aynı ekipman için art arda rapor
+  // girerken her seferinde yeniden seçmek zorunda kalınmasın. Sadece o raporun
+  // kendine özgü alanları (malzemeler, sebep, iş açıklaması) sıfırlanıyor.
+  raporForm.malzemeler = [{ id: uid(), ad: "", kod: "", adet: 1, birim: "adet", onemliDegil: false }];
+  raporForm.sebep = "";
+  raporForm.is = "";
+  raporForm.tarih = bugun();
+  render();
 }
 
 /* ---------------- satın alma ---------------- */
@@ -112,7 +132,7 @@ function renderRapor(){
         <div style="flex:1">
           <div class="bosMetin" style="margin-bottom:5px;font-style:normal">Tesis</div>
           <select class="girdi" onchange="raporTesisSec(this.value)">
-            ${erisilenTesisler().map(x => `<option value="${x.id}" ${x.id===raporForm.tesisId?'selected':''}>${esc(x.ad)}</option>`).join('')}
+            ${siraliTesisler().map(x => `<option value="${x.id}" ${x.id===raporForm.tesisId?'selected':''}>${esc(x.ad)}</option>`).join('')}
           </select>
         </div>
         <div style="flex:1">

@@ -12,7 +12,14 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!bildirimPaneliAcik) return;
     const panel = document.getElementById("bildirimPaneli");
     const btn = document.getElementById("canBtn");
-    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+    // e.target yerine e.composedPath() kullanıyoruz: "Tümünü gör" gibi panel
+    // İÇİNDEKİ bir butona tıklayınca panel.innerHTML yeniden yazılıyor (eski
+    // buton DOM'dan kopuyor), bu da panel.contains(e.target) kontrolünü
+    // yanıltıp paneli "dışarı tıklandı" sanıp anında kapatıyordu. composedPath,
+    // tıklama anındaki GERÇEK yayılma yolunu sabit tutar, bu sorunu ortadan kaldırır.
+    const yol = e.composedPath ? e.composedPath() : [e.target];
+    const icerde = (panel && yol.includes(panel)) || (btn && yol.includes(btn));
+    if (panel && btn && !icerde) {
       bildirimPaneliAcik = false;
       panel.style.display = "none";
     }
@@ -21,7 +28,9 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!genelAramaPaneliAcikMi) return;
     const panel = document.getElementById("genelAramaPaneli");
     const btn = document.getElementById("aramaBtn");
-    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+    const yol = e.composedPath ? e.composedPath() : [e.target];
+    const icerde = (panel && yol.includes(panel)) || (btn && yol.includes(btn));
+    if (panel && btn && !icerde) {
       genelAramaPaneliAcikMi = false;
       panel.style.display = "none";
       panel.innerHTML = "";

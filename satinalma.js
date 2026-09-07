@@ -223,7 +223,7 @@ function renderSatinAlma(){
       <input class="girdi saArama" style="flex:1;min-width:220px" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />
       <select class="girdi" style="width:200px" onchange="saTesisFiltreDegistir(this.value)">
         <option value="">Tüm tesisler</option>
-        ${erisilenTesisler().map(t => `<option value="${esc(t.ad)}" ${ui.saTesisFiltre===t.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+        ${siraliTesisler().map(t => `<option value="${esc(t.ad)}" ${ui.saTesisFiltre===t.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
       </select>
     </div>`;
     const onayliListe = state.satinAlmalar.filter(satinAlmaGorunurMu).filter(s => s.onayDurumu === "onaylandi");
@@ -354,7 +354,7 @@ function renderSatinAlmaDetay(){
           ${ui.saDuzenle
             ? `<select class="parcaGirdi" style="flex:1" onchange="saYerGuncelle('${sat.id}','${y.id}',this.value)">
                  <option value="">— tesis seç —</option>
-                 ${erisilenTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
+                 ${siraliTesisler().map(t => `<option value="${esc(t.ad)}" ${t.ad===y.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
                </select>
                <span class="silIkon" style="width:20px" onclick="silOnayla('Satırı Sil', ()=>saYerSil('${sat.id}','${y.id}'))">×</span>`
             : `<span style="flex:1;color:var(--yazi-ikincil)">${esc(y.ad) || '—'}</span>`}

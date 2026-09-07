@@ -36,7 +36,7 @@ function renderMalzemeCikis(){
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <select class="girdi" style="width:220px" onchange="cikisTesisSec(this.value)">
         <option value="">Tesis seçin</option>
-        ${erisilenTesisler().map(t => `<option value="${t.id}" ${ui.cikisTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
+        ${siraliTesisler().map(t => `<option value="${t.id}" ${ui.cikisTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
       </select>`;
   if (ui.cikisTesisId) {
     const t = state.tesisler.find(x=>x.id===ui.cikisTesisId);

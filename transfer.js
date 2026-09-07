@@ -115,7 +115,7 @@ function renderTransfer(){
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <select class="girdi" style="width:190px" onchange="transferTesisSec(this.value)">
           <option value="">Kaynak tesis</option>
-          ${erisilenTesisler().map(t=>`<option value="${t.id}" ${ui.transferTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
+          ${siraliTesisler().map(t=>`<option value="${t.id}" ${ui.transferTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
         </select>`;
   let kaynakDepo = null, kaynakUrunler = [];
   if (ui.transferTesisId) {
@@ -140,7 +140,7 @@ function renderTransfer(){
   h += `<div style="display:flex;gap:10px;flex-wrap:wrap">
     <select class="girdi" style="width:190px" onchange="transferHedefTesisSec(this.value)">
       <option value="">Hedef tesis</option>
-      ${state.tesisler.filter(t=>!t.gizli).map(t=>`<option value="${t.id}" ${ui.transferHedefTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
+      ${siraliTesisler().map(t=>`<option value="${t.id}" ${ui.transferHedefTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
     </select>`;
   if (ui.transferHedefTesisId) {
     const ht = state.tesisler.find(x=>x.id===ui.transferHedefTesisId);
