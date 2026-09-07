@@ -129,6 +129,7 @@ function varsayilanVeri(){
     sonIslemler: [],
     transferler: [],
     silinenler: [],
+    birimListesi: ["adet","koli","tane","kg","litre","metre","milimetre"],
     logoUrl: "",
     logoUrlKoyu: "",
     logoUrlAcik: "",
@@ -177,6 +178,11 @@ function sanitizeVeri(v){
   if (!v.sonIslemler) v.sonIslemler = [];
   if (!v.transferler) v.transferler = [];
   if (!v.silinenler) v.silinenler = [];
+  // Birim listesi boşsa (hiç kaydedilmemişse) varsayılan setle başla — ama
+  // kullanıcı Ayarlar'dan eklediği/kaldırdığı birimleri her zaman korunur.
+  if (!Array.isArray(v.birimListesi) || v.birimListesi.length === 0) {
+    v.birimListesi = ["adet","koli","tane","kg","litre","metre","milimetre"];
+  }
   if (typeof v.logoUrl !== "string") v.logoUrl = "";
   if (typeof v.logoUrlKoyu !== "string") v.logoUrlKoyu = v.logoUrl || "";
   if (typeof v.logoUrlAcik !== "string") v.logoUrlAcik = "";
@@ -238,10 +244,10 @@ const db = firebase.firestore();
 const eskiVeriRef = db.collection("veri").doc("ana");
 const tesislerRef = db.collection("tesisler");
 const ortakRef = db.collection("ortak");
-const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler"];
+const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler", "birimListesi"];
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "86";
+const UYGULAMA_SURUM_NO = "87";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -305,6 +311,7 @@ function stateBirlestirVeRenderla(){
     sonIslemler: sonOrtakHam.sonIslemler || [],
     transferler: sonOrtakHam.transferler || [],
     silinenler: sonOrtakHam.silinenler || [],
+    birimListesi: sonOrtakHam.birimListesi || [],
     logoUrl: "", logoUrlKoyu: "", logoUrlAcik: "", satinAlmaOnaycisiId: ""
   };
   state = sanitizeVeri(ham);

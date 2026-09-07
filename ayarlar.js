@@ -27,6 +27,24 @@ function malzemeListesindenSil(id){
 }
 function malzemeListesiGoster(){ if (!izinVar('kullanilanMalzemeler')) return; ui.view = "malzemeler"; render(); }
 
+function birimListesineEkle(deger){
+  if (!adminMi()) return;
+  const temiz = (deger || "").trim().toLowerCase();
+  if (!temiz) return;
+  if (!state.birimListesi) state.birimListesi = [];
+  if (state.birimListesi.includes(temiz)) { toastGoster(`"${temiz}" zaten listede.`, "hata"); return; }
+  state.birimListesi.push(temiz);
+  kaydetIslem(`Yeni birim eklendi: ${temiz}`, { view: "ayarlar" });
+  saveData(); render();
+}
+function birimListesindenSil(birim){
+  if (!adminMi()) return;
+  if ((state.birimListesi||[]).length <= 1) { toastGoster("En az bir birim kalmalı.", "hata"); return; }
+  state.birimListesi = state.birimListesi.filter(b => b !== birim);
+  kaydetIslem(`Birim kaldırıldı: ${birim}`, { view: "ayarlar" });
+  saveData(); render();
+}
+
 /* ---------------- son işlemler ---------------- */
 function kayitlarGoster(){ if (!adminMi()) return; ayarlarGoster(); }
 let kullanicilarListesi = [];
@@ -205,6 +223,18 @@ function renderAyarlar(){
         </div>
       </div>`;
     }
+
+    h += `<div class="kart">
+      <div class="kartBaslik" style="margin-bottom:10px">📏 Birim Listesi</div>
+      <div class="bosMetin" style="margin-bottom:12px">Satın Alma, Rapor Ekle, Stok Listesi ve Kullanılan Malzemeler'deki "Birim" seçeneklerini buradan yönetebilirsiniz — buraya eklediğiniz her birim, sitedeki tüm birim seçim listelerinde otomatik olarak görünür.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        ${(state.birimListesi||[]).map(b => `<span class="tesisErisimBtn tesisErisimBtnAktif" style="display:inline-flex;align-items:center;gap:6px">${esc(b)}${adminMi()?`<span class="ty-btn" style="color:var(--kirmizi);font-weight:800;cursor:pointer" onclick="birimListesindenSil('${esc(b)}')" title="Bu birimi kaldır">×</span>`:''}</span>`).join('')}
+      </div>
+      ${adminMi() ? `<div style="display:flex;gap:8px">
+        <input class="girdi" id="yeniBirimGirdi" style="flex:1;max-width:220px" placeholder="Yeni birim (örn: paket, ton)" onkeydown="if(event.key==='Enter'){birimListesineEkle(this.value);this.value='';}" />
+        <button class="ustBtn ty-btn" onclick="const g=document.getElementById('yeniBirimGirdi'); birimListesineEkle(g.value); g.value='';">+ Ekle</button>
+      </div>` : ''}
+    </div>`;
 
     if (adminMi()) {
       h += `<div class="kart" style="border-color:rgba(var(--kirmizi-rgb),0.35)">
@@ -407,7 +437,7 @@ function renderMalzemeler(){
           </span>
         </span>
         <select class="parcaGirdi" style="width:120px;flex:none;margin-top:2px" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
-          ${["adet","koli","tane","kg","litre","metre","milimetre"].map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+          ${(state.birimListesi||["adet","koli","tane","kg","litre","metre","milimetre"]).map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
         </select>
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>malzemeListesindenSil('${m.id}'))">×</span>
       </div>`;
