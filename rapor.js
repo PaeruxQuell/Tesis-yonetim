@@ -164,7 +164,7 @@ function renderRapor(){
 
     h += `<div class="kart">
       <div class="kartBaslikSatir"><span class="kartBaslik">Kullanılan malzemeler</span><button class="ekleMini ty-btn" onclick="raporMalzemeEkle()">+ malzeme ekle</button></div>
-      <datalist id="raporTesisMalzemeListesi">${tesisDepoUrunAdlari(raporForm.tesisId).map(ad => `<option value="${esc(ad)}"></option>`).join('')}</datalist>
+      <datalist id="raporTesisMalzemeListesi">${[...new Set([...tesisDepoUrunAdlari(raporForm.tesisId), ...(state.malzemeGecmisi||[]).map(m=>m.ad).filter(Boolean)])].sort().map(ad => `<option value="${esc(ad)}"></option>`).join('')}</datalist>
       <div class="kalemBaslikSatir" style="padding-left:0"><span style="flex:1.4">Malzeme</span><span style="width:130px">Kod</span><span style="width:80px">Miktar</span><span style="width:110px">Birim</span><span style="width:120px">Stok Uyarısı</span><span style="width:20px"></span></div>`;
     raporForm.malzemeler.forEach(x => {
       h += `<div class="parcaSatir" style="${x.onemliDegil?'opacity:.6':''}">
@@ -182,7 +182,7 @@ function renderRapor(){
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>raporMalzemeSil('${x.id}'))">×</span>
       </div>`;
     });
-    h += `<div class="bosMetin" style="margin-top:8px">Malzeme adı yazarken sadece seçtiğiniz tesisin deposunda kayıtlı ürünler öneri olarak çıkar — depoda hiç olmayan bir ürün yazarken öneri gelmez. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
+    h += `<div class="bosMetin" style="margin-top:8px">Malzeme adı yazarken hem seçtiğiniz tesisin deposunda kayıtlı ürünler hem de daha önce herhangi bir yerde yazdığınız tüm malzeme adları (2 harf sonrası) öneri olarak çıkar. Depoda karşılığı olan bir malzeme yazarsanız, "Önemli değil" işaretlemediğiniz sürece o tesiste stoktan düşme yetkisi olan kişiye otomatik bildirim gider — stok kendiliğinden düşülmez, sadece haber verilir.</div>`;
     h += `</div>`;
 
     h += `<button class="eklePrimer ty-btn" style="padding:10px 20px;font-size:13.5px" onclick="raporKaydet()">Raporu kaydet</button>`;
