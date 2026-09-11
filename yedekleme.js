@@ -12,10 +12,37 @@ function yedekSiraAnahtari(tarihStr){
   return `${y}-${a}-${g}`;
 }
 
+function toplamRaporSayisi(){
+  let sayac = 0;
+  (state.tesisler || []).forEach(t => (t.makineler || []).forEach(m => (m.pompalar || []).forEach(p => {
+    sayac += (p.gecmis || []).length;
+  })));
+  return sayac;
+}
+
 async function bugununYedeginiGuncelle(kapandiMi){
   if (!state || !adminMi()) return;
   const tarihStr = bugun();
   const id = yedekDokumanId(tarihStr);
+  const veriJSON = JSON.stringify(state);
+
+  // Bugüne dair HENÜZ bir yedek yoksa (bu oturumda ilk kez oluşturuluyorsa),
+  // önce en son (bir önceki) günün yedeğiyle karşılaştır. Veri hiç değişmemişse
+  // (hiçbir şey eklenmemiş/güncellenmemişse) bugün için AYRI bir kayıt AÇMIYORUZ
+  // — depoda gereksiz yer kaplamasın. Bir şey değiştiği an, o gün için normal
+  // şekilde yeni bir yedek oluşur.
+  const bugunkuMevcut = await db.collection("yedekler").doc(id).get();
+  if (!bugunkuMevcut.exists) {
+    const oncekiSnap = await db.collection("yedekler").orderBy("sira", "desc").limit(1).get();
+    if (!oncekiSnap.empty) {
+      const oncekiId = oncekiSnap.docs[0].id;
+      const oncekiVeriSnap = await db.collection("yedekVerileri").doc(oncekiId).get();
+      if (oncekiVeriSnap.exists && oncekiVeriSnap.data().veriJSON === veriJSON) {
+        return "atlandi"; // veri bir önceki yedekle birebir aynı — bugün için kayıt açma
+      }
+    }
+  }
+
   const ozet = {
     tarih: tarihStr,
     saat: suAn(),
@@ -24,12 +51,14 @@ async function bugununYedeginiGuncelle(kapandiMi){
     malzemeGecmisiSayisi: (state.malzemeGecmisi || []).length,
     satinAlmaSayisi: (state.satinAlmalar || []).length,
     transferSayisi: (state.transferler || []).length,
+    raporSayisi: toplamRaporSayisi(),
     kapandi: !!kapandiMi
   };
   // Not: hata burada YUTULMUYOR — çağıran taraf (manuelYedekAl) gerçek
   // başarı/başarısızlık durumunu görüp kullanıcıya doğru mesajı gösterebilsin.
   await db.collection("yedekler").doc(id).set(ozet, { merge: true });
-  await db.collection("yedekVerileri").doc(id).set({ veriJSON: JSON.stringify(state) });
+  await db.collection("yedekVerileri").doc(id).set({ veriJSON });
+  return "yapildi";
 }
 
 function yedeklemeZamanlayiciKur(){
@@ -82,10 +111,14 @@ async function manuelYedekAl(){
   manuelYedekAliniyor = true;
   render();
   try {
-    await bugununYedeginiGuncelle(false);
-    kaydetIslem("Günlük yedek manuel olarak alındı.", { view: "ayarlar" });
+    const sonuc = await bugununYedeginiGuncelle(false);
     yedekOnizlemeVerisi = {};
-    toastGoster("Yedek başarıyla alındı.", "basari");
+    if (sonuc === "atlandi") {
+      toastGoster("Veri, en son yedekle birebir aynı — yeni bir kayıt oluşturulmadı.", "basari");
+    } else {
+      kaydetIslem("Günlük yedek manuel olarak alındı.", { view: "ayarlar" });
+      toastGoster("Yedek başarıyla alındı.", "basari");
+    }
     try { await yedeklerYukle(); } catch (e) { console.error("Liste yenilenemedi:", e); }
   } catch (err) {
     console.error(err);

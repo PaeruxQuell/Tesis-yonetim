@@ -261,7 +261,8 @@ function renderAyarlar(){
           <span class="kartBaslik">🗄️ Günlük Yedekler</span>
           <button class="ustBtn ty-btn" ${manuelYedekAliniyor?'disabled':''} onclick="manuelYedekAl()">${manuelYedekAliniyor?'⏳ Yedekleniyor...':'⬇ Şimdi Yedekle'}</button>
         </div>
-        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. "Şimdi Yedekle" ile bugünün yedeğini istediğiniz an manuel olarak da alabilirsiniz. Eski yedekler burada kalıcı olarak durur; birine tıklayıp yalnızca önizleyebilir ve isterseniz .json olarak indirebilirsiniz.</div>
+        <div class="bosMetin" style="margin-bottom:14px">Sistem her gün otomatik olarak kendini yedekler — gün içinde açık kaldıkça güncellenir, saat 23:59'da o günün yedeği kapanır ve yeni gün için ayrı bir yedek başlar. Eğer bir gün boyunca hiçbir veri değişmemişse (bir önceki günle birebir aynıysa), o gün için ayrı bir kayıt açılmaz — gereksiz yer kaplanmaz. "Şimdi Yedekle" ile bugünün yedeğini istediğiniz an manuel olarak da alabilirsiniz. Eski yedekler burada kalıcı olarak durur; birine tıklayıp yalnızca önizleyebilir ve isterseniz .json olarak indirebilirsiniz.</div>
+        <div class="bosMetin" style="margin-bottom:14px">Yedeklenen dosya, tesisler, makineler, pompalar, <b>tüm raporlar (her pompanın geçmiş kayıtları)</b>, satın almalar, transferler, kullanılan malzemeler ve sistem kayıtları dahil olmak üzere <b>her şeyi</b> içerir.</div>
         ${yedeklerListesi.length === 0 ? `<div class="bosMetin">Henüz bir yedek oluşmadı.</div>` : ''}`;
       yedeklerListesi.forEach(y => {
         const acikMi = ui.yedekSecili === y.id;
@@ -282,6 +283,7 @@ function renderAyarlar(){
             const alt = ui.yedekAltSekme || "";
             const kategoriler = [
               { anahtar: "tesis", etiket: "Tesis", sayi: y.tesisSayisi },
+              { anahtar: "rapor", etiket: "Raporlar", sayi: y.raporSayisi },
               { anahtar: "malzeme", etiket: "Kayıtlı Malzeme", sayi: y.malzemeGecmisiSayisi },
               { anahtar: "satinalma", etiket: "Satın Alma", sayi: y.satinAlmaSayisi },
               { anahtar: "transfer", etiket: "Transfer", sayi: y.transferSayisi },
@@ -302,6 +304,19 @@ function renderAyarlar(){
                 if (liste.length === 0) h += `<div class="bosMetin">Bu yedekte tesis yok.</div>`;
                 liste.forEach(t => {
                   h += `<div class="ayarSatiri" style="padding:6px 0"><span style="flex:1;font-size:12.5px;color:var(--yazi)">${esc(t.ad)}</span><span class="bosMetin" style="margin:0">${(t.makineler||[]).length} makine · ${(t.depolar||[]).length} depo</span></div>`;
+                });
+              } else if (alt === "rapor") {
+                const raporlar = [];
+                (veriObj.tesisler || []).forEach(t => (t.makineler||[]).forEach(m => (m.pompalar||[]).forEach(p => (p.gecmis||[]).forEach(g => {
+                  raporlar.push({ tarih: g.tarih, aciklama: g.aciklama, yol: `${t.ad} > ${m.ad} > ${p.ad}` });
+                }))));
+                raporlar.sort((a,b) => (b.tarih||'').localeCompare(a.tarih||''));
+                if (raporlar.length === 0) h += `<div class="bosMetin">Bu yedekte rapor yok.</div>`;
+                raporlar.forEach(r => {
+                  h += `<div class="ayarSatiri" style="padding:6px 0;flex-direction:column;align-items:stretch;gap:2px">
+                    <div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:12.5px;color:var(--yazi);font-weight:600">${esc(r.yol)}</span><span class="bosMetin" style="margin:0">${esc(r.tarih||'')}</span></div>
+                    <span class="bosMetin" style="margin:0">${esc(r.aciklama||'—')}</span>
+                  </div>`;
                 });
               } else if (alt === "malzeme") {
                 const liste = veriObj.malzemeGecmisi || [];
