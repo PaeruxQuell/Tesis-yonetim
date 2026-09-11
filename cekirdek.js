@@ -247,7 +247,7 @@ const ortakRef = db.collection("ortak");
 const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler", "birimListesi"];
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "93";
+const UYGULAMA_SURUM_NO = "94";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -433,7 +433,10 @@ function kaydetIslem(aciklama, hedef){
   if (!state.sonIslemler) state.sonIslemler = [];
   const kullanici = mevcutKullanici ? mevcutKullanici.email : "";
   state.sonIslemler.unshift({ id: uid(), aciklama, kullanici, hedef, tarih: bugun(), saat: suAn() });
-  if (state.sonIslemler.length > 300) state.sonIslemler.length = 300;
+  // Sistem Kayıtları artık kendi ayrı Firestore belgesinde (ortak/sonIslemler) —
+  // kendi 1MB'lık bütçesi var. Ortalama bir kaydın ~300-400 bayt tuttuğunu
+  // varsayarsak, 2000 kayıt bu sınırın güvenli bir payla (~%50-60) altında kalır.
+  if (state.sonIslemler.length > 2000) state.sonIslemler.length = 2000;
   saveData();
 }
 function hedefeGit(h){
