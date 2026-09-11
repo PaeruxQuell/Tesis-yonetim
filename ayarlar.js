@@ -204,6 +204,7 @@ function renderAyarlar(){
       belgeler.push({ ad: "Sistem Kayıtları", bayt: new Blob([JSON.stringify(state.sonIslemler||[])]).size });
       belgeler.push({ ad: "Transferler", bayt: new Blob([JSON.stringify(state.transferler||[])]).size });
       belgeler.push({ ad: "Silinen Veriler", bayt: new Blob([JSON.stringify(state.silinenler||[])]).size });
+      belgeler.push({ ad: "Birim Listesi", bayt: new Blob([JSON.stringify(state.birimListesi||[])]).size });
       belgeler.sort((a,b) => b.bayt - a.bayt);
       const enBuyuk = belgeler[0] || { ad: "—", bayt: 0 };
       const enBuyukYuzde = Math.min(100, (enBuyuk.bayt / limitBayt) * 100);

@@ -247,7 +247,7 @@ const ortakRef = db.collection("ortak");
 const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler", "birimListesi"];
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "91";
+const UYGULAMA_SURUM_NO = "92";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
