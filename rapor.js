@@ -141,7 +141,8 @@ function raporKaydet(){
   const aciklama = raporForm.sebep ? `${raporForm.sebep}: ${raporForm.is}` : raporForm.is;
   p.gecmis.unshift({ id: uid(), tarih, aciklama: aciklama.trim() || "—", malzemeler: kullanilanlar });
 
-  kaydetIslem(`Rapor eklendi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  const malzemeMetni = kullanilanlar.length ? ` — Malzemeler: ${kullanilanlar.map(x => `${x.adet} ${x.birim} ${x.ad}${x.kod?` (${x.kod})`:''}`).join(', ')}` : '';
+  kaydetIslem(`Rapor eklendi: "${aciklama.trim() || '—'}" — ${p.ad} (${t.ad} / ${m.ad})${malzemeMetni}`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
 
   // "Önemli değil" işaretlenmeyen malzemelerden, bu tesisin depolarında adı eşleşen
   // bir ürün varsa, stoktan düşülmesi için malzemeCikis yetkisi olanlara bildirim gönder.

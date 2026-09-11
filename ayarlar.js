@@ -3,7 +3,13 @@ function malzemeListesiEkle(){
   saveData(); render();
 }
 function malzemeListesiGuncelle(id, alan, deger){
-  const m = state.malzemeGecmisi.find(x => x.id === id); if (m) m[alan] = deger;
+  const m = state.malzemeGecmisi.find(x => x.id === id); if (!m) return;
+  const eski = m[alan];
+  m[alan] = deger;
+  const alanAdlari = { ad: "Malzeme adı", birim: "Birim" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi (Kullanılan Malzemeler): "${eski || '(boş)'}" → "${deger || '(boş)'}"`, { view: "malzemeler" });
+  }
   saveData(); render();
 }
 function malzemeManuelKodEkle(id, deger){
@@ -102,9 +108,12 @@ function kullaniciIzinDegistir(kullaniciId, izinAdi){
   const kapaliMi = IZIN_VARSAYILAN_KAPALI.includes(izinAdi);
   const suankiEfektif = kapaliMi ? (mevcut[izinAdi] === true) : (mevcut[izinAdi] !== false);
   mevcut[izinAdi] = !suankiEfektif;
+  const IZIN_TURKCE = { stokListesi:"Stok Listesi", satinAlmalar:"Satın Almalar", raporEkle:"Rapor Ekle", raporGor:"Raporlar",
+    periyodikBakim:"Periyodik Bakım", kullanilanMalzemeler:"Kullanılan Malzemeler", malzemeCikis:"Malzeme Kullan",
+    transfer:"Transfer", satinAlmaOnay:"Satın Alma Onay", silinenGeriGetir:"Silinen Verileri Geri Getir" };
   db.collection("kullanicilar").doc(kullaniciId).update({ izinler: mevcut }).then(() => {
     k.izinler = mevcut;
-    kaydetIslem(`Bölüm izni değiştirildi: ${k.eposta} — ${izinAdi} ${mevcut[izinAdi]?'açıldı':'kapatıldı'}`, { view: "kayitlar" });
+    kaydetIslem(`Bölüm izni değiştirildi: ${k.eposta} — ${IZIN_TURKCE[izinAdi]||izinAdi} ${mevcut[izinAdi]?'açıldı':'kapatıldı'}`, { view: "kayitlar" });
     saveData(); render();
   }).catch(err => { console.error(err); toastGoster("İzin güncellenemedi.", "hata"); });
 }

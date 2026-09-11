@@ -32,7 +32,9 @@ function satinAlmaGonder(){
   // kesin olarak listeye ekliyoruz.
   (yeni.kalemler || []).forEach(k => { if (k.urun) malzemeGecmisineEkle(k.urun, "", k.kod); });
   state.satinAlmalar.unshift(yeni);
-  kaydetIslem("Yeni satın alma talebi oluşturuldu", { view: "satinalma-detay", satId: yeni.id });
+  const urunMetni = (yeni.kalemler||[]).filter(k=>k.urun).map(k => `${k.miktar||''} ${k.birim||''} ${k.urun}${k.kod?` (${k.kod})`:''}`).join(', ') || 'ürün girilmedi';
+  const yerMetni = (yeni.yerler||[]).map(y=>y.ad).filter(Boolean).join(', ');
+  kaydetIslem(`Yeni satın alma talebi oluşturuldu: ${urunMetni}${yeni.firma?` — Firma: ${yeni.firma}`:''}${yerMetni?` — Yer: ${yerMetni}`:''}${yeni.siparisNo?` — Sipariş No: ${yeni.siparisNo}`:''}`, { view: "satinalma-detay", satId: yeni.id });
   saveData();
   toastGoster("Satın alma talebi gönderildi.", "basari");
   ui.saDuzenle = false;
@@ -53,7 +55,13 @@ function satinAlmaOnayla(satId){
   saveData(); render();
 }
 function satinAlmaGuncelle(id, alan, deger){
-  const s = satinAlmaBul(id); if (s) s[alan] = deger;
+  const s = satinAlmaBul(id); if (!s) return;
+  const eski = s[alan];
+  s[alan] = deger;
+  const alanAdlari = { siparisNo: "Sipariş No", gelisTarihi: "Geliş Tarihi", firma: "Firma", not: "Not" };
+  if (!satinAlmaTaslakMi(id) && String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — Sipariş: ${s.siparisNo || 'no yok'}`, { view: "satinalma-detay", satId: s.id });
+  }
   if (!satinAlmaTaslakMi(id)) saveData();
   render();
 }
@@ -91,7 +99,13 @@ function saKalemSil(satId, kalemId){
   render();
 }
 function saKalemGuncelle(satId, kalemId, alan, deger){
-  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (k) k[alan] = deger;
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
+  const eski = k[alan];
+  k[alan] = deger;
+  const alanAdlari = { urun: "Ürün adı", kod: "Kod", miktar: "Miktar", birim: "Birim" };
+  if (!satinAlmaTaslakMi(satId) && String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${k.urun || '(isimsiz ürün)'} (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+  }
   if (alan === "urun" || alan === "kod") { if (k && k.urun) malzemeGecmisineEkle(k.urun, "", k.kod); }
   if (!satinAlmaTaslakMi(satId)) saveData();
   render();
@@ -118,7 +132,12 @@ function saYerSil(satId, yerId){
   render();
 }
 function saYerGuncelle(satId, yerId, deger){
-  const s = satinAlmaBul(satId); const y = s.yerler.find(x => x.id === yerId); if (y) y.ad = deger;
+  const s = satinAlmaBul(satId); const y = s.yerler.find(x => x.id === yerId); if (!y) return;
+  const eski = y.ad;
+  y.ad = deger;
+  if (!satinAlmaTaslakMi(satId) && eski !== deger) {
+    kaydetIslem(`Kullanıldığı yer değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+  }
   if (!satinAlmaTaslakMi(satId)) saveData();
   render();
 }

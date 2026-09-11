@@ -50,7 +50,13 @@ function stokUrunSil(tesisId, depoId, urunId){
   saveData(); render();
 }
 function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
-  const { t, d, u } = stokUrunBul(tesisId, depoId, urunId); if (u) u[alan] = deger;
+  const { t, d, u } = stokUrunBul(tesisId, depoId, urunId); if (!u) return;
+  const eski = u[alan];
+  u[alan] = deger;
+  const alanAdlari = { ad: "Ürün adı", kod: "Kod", miktar: "Miktar", birim: "Birim", kritikEsik: "Kritik eşik" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${u.ad || '(isimsiz ürün)'} (${d.ad} — ${t.ad})`, { view: "stok", tesisId: t.id, depoId: d.id });
+  }
   if (alan === "ad") {
     malzemeGecmisineEkle(deger, "", u?.kod);
     // Aynı depoda AYNI isimde başka bir ürün zaten varsa uyar — stok yanlışlıkla

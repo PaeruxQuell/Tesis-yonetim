@@ -14,7 +14,13 @@ function gecmisMalzemeyiParcayaEkle(gecmisId, malzemeId){
   saveData(); render();
 }
 function parcaGuncelle(parcaId, alan, deger){
-  const { p } = pompaBul(); const pr = p.parcalar.find(x => x.id === parcaId); if (pr) pr[alan] = deger;
+  const { t, m, p } = pompaBul(); const pr = p.parcalar.find(x => x.id === parcaId); if (!pr) return;
+  const eski = pr[alan];
+  pr[alan] = deger;
+  const alanAdlari = { ad: "Parça adı", malzeme: "Malzeme" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${pr.ad || '(isimsiz parça)'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  }
   if (alan === "ad") malzemeGecmisineEkle(deger);
   saveData(); render();
 }
@@ -32,7 +38,13 @@ function gecmisEkle(){
   saveData(); render();
 }
 function gecmisGuncelle(girdiId, alan, deger){
-  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === girdiId); if (g) g[alan] = deger;
+  const { t, m, p } = pompaBul(); const g = p.gecmis.find(x => x.id === girdiId); if (!g) return;
+  const eski = g[alan];
+  g[alan] = deger;
+  const alanAdlari = { tarih: "Tarih", aciklama: "Açıklama" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi (geçmiş kaydı): "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  }
   saveData(); render();
 }
 function gecmisSil(girdiId){
@@ -49,10 +61,16 @@ function gecmisMalzemeEkle(gecmisId){
   saveData(); render();
 }
 function gecmisMalzemeGuncelle(gecmisId, malzemeId, alan, deger){
-  const { p } = pompaBul(); const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
-  const m = g.malzemeler.find(x => x.id === malzemeId); if (m) m[alan] = deger;
-  if (alan === "ad") malzemeGecmisineEkle(deger, m?.birim, m?.kod);
-  else if (alan === "kod" && m?.ad) malzemeGecmisineEkle(m.ad, m.birim, deger);
+  const { t, m, p } = pompaBul(); const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
+  const mz = g.malzemeler.find(x => x.id === malzemeId); if (!mz) return;
+  const eski = mz[alan];
+  mz[alan] = deger;
+  const alanAdlari = { ad: "Malzeme adı", kod: "Kod", adet: "Adet", birim: "Birim" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi (kullanılan malzeme): "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  }
+  if (alan === "ad") malzemeGecmisineEkle(deger, mz?.birim, mz?.kod);
+  else if (alan === "kod" && mz?.ad) malzemeGecmisineEkle(mz.ad, mz.birim, deger);
   saveData(); render();
 }
 function gecmisMalzemeSil(gecmisId, malzemeId){

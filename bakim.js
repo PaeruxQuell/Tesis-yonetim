@@ -26,7 +26,13 @@ function bakimSil(tesisId, makineId, bakimId){
 function bakimGuncelle(tesisId, makineId, bakimId, alan, deger){
   const t = state.tesisler.find(x => x.id === tesisId);
   const m = t.makineler.find(x => x.id === makineId);
-  const b = m.bakimlar.find(x => x.id === bakimId); if (b) b[alan] = deger;
+  const b = m.bakimlar.find(x => x.id === bakimId); if (!b) return;
+  const eski = b[alan];
+  b[alan] = deger;
+  const alanAdlari = { ad: "Bakım adı", periyotGun: "Periyot (gün)", sonYapilmaTarihi: "Son yapılma tarihi", uyariGunu: "Uyarı günü" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${b.ad || '(isimsiz bakım planı)'} (${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id });
+  }
   saveData(); render();
 }
 function bakimYapildiIsaretle(tesisId, makineId, bakimId){
@@ -60,8 +66,14 @@ function bakimPompaSil(tesisId, makineId, pompaId, bakimId){
   saveData(); render();
 }
 function bakimPompaGuncelle(tesisId, makineId, pompaId, bakimId, alan, deger){
-  const { p } = bakimPompaBul(tesisId, makineId, pompaId); if (!p) return;
-  const b = p.bakimlar.find(x => x.id === bakimId); if (b) b[alan] = deger;
+  const { t, m, p } = bakimPompaBul(tesisId, makineId, pompaId); if (!p) return;
+  const b = p.bakimlar.find(x => x.id === bakimId); if (!b) return;
+  const eski = b[alan];
+  b[alan] = deger;
+  const alanAdlari = { ad: "Bakım adı", periyotGun: "Periyot (gün)", sonYapilmaTarihi: "Son yapılma tarihi", uyariGunu: "Uyarı günü" };
+  if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
+    kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${b.ad || '(isimsiz bakım planı)'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "bakim", tesisId: t.id, makineId: m.id, pompaId: p.id });
+  }
   saveData(); render();
 }
 function bakimPompaYapildiIsaretle(tesisId, makineId, pompaId, bakimId){
