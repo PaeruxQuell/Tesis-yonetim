@@ -109,7 +109,16 @@ function renderPompa(){
     h += `</div>`;
 
     h += `<div class="kart"><div class="kartBaslikSatir"><span class="kartBaslik">İşlem geçmişi</span>${ui.duzenle?'<button class="ekleMini ty-btn" onclick="gecmisEkle()">+ kayıt ekle</button>':''}</div>`;
-    p.gecmis.forEach(g => {
+    // Kayıtlar eklendiği sıraya göre değil, TARİHE göre gösteriliyor — en yakın
+    // (en yeni) tarih her zaman en üstte. Tarih formatı gg.aa.yyyy olmalı.
+    const siraliGecmis = [...p.gecmis].sort((a, b) => {
+      const ta = tarihAyristir(a.tarih), tb = tarihAyristir(b.tarih);
+      if (!ta && !tb) return 0;
+      if (!ta) return 1;
+      if (!tb) return -1;
+      return tb - ta;
+    });
+    siraliGecmis.forEach(g => {
       const malzemeVar = g.malzemeler && g.malzemeler.length > 0;
       const acik = ui.acikGecmis.has(g.id);
       if (ui.duzenle) {
