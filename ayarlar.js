@@ -56,6 +56,7 @@ function kayitlarGoster(){ if (!adminMi()) return; ayarlarGoster(); }
 let kullanicilarListesi = [];
 /* ---------------- yazı boyutu ---------------- */
 function sistemKayitlariAcKapat(){ ui.sistemKayitlariAcik = !ui.sistemKayitlariAcik; render(); }
+function kayitAcKapat(id){ ui.kayitAcikId = (ui.kayitAcikId === id) ? "" : id; render(); }
 function kayitTesisFiltreDegistir(deger){ ui.kayitTesisFiltre = deger; render(); }
 function sonIslemleriTemizle(){
   if (!adminMi()) return;
@@ -399,13 +400,33 @@ function renderAyarlar(){
         if (kayitlar.length === 0) h += `<div class="bosMetin" style="padding:16px">${ui.kayitTesisFiltre ? 'Bu tesise ait kayıt bulunamadı.' : 'Henüz kayıt yok.'}</div>`;
         kayitlar.forEach(k => {
           const rozet = islemBadge(k.aciklama);
-          h += `<div class="tabloSatir ty-satir" style="border-left:3px solid ${rozet.renk}">
-            <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
-            <span style="flex:1;color:var(--yazi-ikincil)">${esc(k.aciklama)}</span>
-            <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
-            <span style="width:110px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.tarih)}</span>
-            <span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.saat)}</span>
-          </div>`;
+          const raporMu = (k.aciklama || "").startsWith("Rapor eklendi");
+          const acikMi = ui.kayitAcikId === k.id;
+          if (raporMu && k.hedef) {
+            const t = state.tesisler.find(x => x.id === k.hedef.tesisId);
+            const m = t?.makineler.find(x => x.id === k.hedef.makineId);
+            const p = m?.pompalar.find(x => x.id === k.hedef.pompaId);
+            const yol = [t?.ad, m?.ad, p?.ad].filter(Boolean).join(' > ') || '(bilinmiyor)';
+            h += `<div class="tabloSatir ty-satir" style="border-left:3px solid ${rozet.renk};flex-direction:column;align-items:stretch;gap:0;cursor:pointer" onclick="kayitAcKapat('${k.id}')">
+              <div style="display:flex;align-items:center;gap:10px;width:100%">
+                <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
+                <span style="flex:1;color:var(--yazi-ikincil);font-weight:600">${esc(yol)}</span>
+                <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
+                <span style="width:110px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.tarih)}</span>
+                <span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.saat)}</span>
+                <span class="okBuyuk" style="transform:${acikMi?'rotate(90deg)':'none'};flex-shrink:0">›</span>
+              </div>
+              ${acikMi ? `<div style="padding:10px 0 4px 106px;color:var(--yazi-soluk);font-size:12.5px;white-space:pre-wrap">${esc(k.aciklama)}</div>` : ''}
+            </div>`;
+          } else {
+            h += `<div class="tabloSatir ty-satir" style="border-left:3px solid ${rozet.renk}">
+              <span style="width:96px;flex-shrink:0"><span class="islemRozet" style="color:${rozet.renk};background:rgba(${rozet.renkRgb},0.12);border-color:rgba(${rozet.renkRgb},0.4);margin-bottom:0">${rozet.etiket}</span></span>
+              <span style="flex:1;color:var(--yazi-ikincil)">${esc(k.aciklama)}</span>
+              <span style="width:170px;color:var(--yazi-dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k.kullanici) || '—'}</span>
+              <span style="width:110px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.tarih)}</span>
+              <span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">${esc(k.saat)}</span>
+            </div>`;
+          }
         });
         h += `</div></div>`;
       }
