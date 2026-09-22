@@ -293,10 +293,10 @@ function renderSatinAlmaDetay(){
     if (!sat) { ui.view = "satinalma"; renderAna(); return; }
     const taslakMi = satinAlmaTaslakMi(sat.id);
     const sonSiparisNo = satinAlmaOnaylayabilirMi() ? sonYazdigimSiparisNo() : null;
-    const baslikAlan = (etiket, key, genislik, ipucu) => `
+    const baslikAlan = (etiket, key, genislik, ipucu, zorlaDuzenle) => `
       <div style="${genislik?`width:${genislik}px`:'flex:1'}">
         <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}${ipucu ? ` <span style="color:var(--vurgu);font-weight:700">— Son yazılan: ${esc(ipucu)}</span>` : ''}</div>
-        ${ui.saDuzenle
+        ${(ui.saDuzenle || zorlaDuzenle)
           ? `<input class="girdi" value="${esc(sat[key])}" onchange="satinAlmaGuncelle('${sat.id}','${key}',this.value)" />`
           : `<div class="deger">${esc(sat[key]) || '—'}</div>`}
       </div>`;
@@ -336,7 +336,7 @@ function renderSatinAlmaDetay(){
       <div class="kartBaslik" style="margin-bottom:12px">Satınalma Talep Formu</div>
       <div style="display:flex;gap:14px;margin-bottom:14px">
         ${baslikAlan('Geliş Tarihi', 'gelisTarihi', 140)}
-        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo', null, (sonSiparisNo && sonSiparisNo !== sat.siparisNo) ? sonSiparisNo : null)}
+        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo', null, (sonSiparisNo && sonSiparisNo !== sat.siparisNo) ? sonSiparisNo : null, satinAlmaOnaylayabilirMi() && sat.onayDurumu !== "onaylandi")}
       </div>
     </div>`;
 
