@@ -254,16 +254,6 @@ function renderSatinAlma(){
         <button class="eklePrimer ty-btn" onclick="satinAlmaYeniAc()">+ satın alma ekle</button>
       </div>
     </div>`;
-    if (satinAlmaOnaylayabilirMi()) {
-      const sonNo = sonYazdigimSiparisNo();
-      if (sonNo) {
-        h += `<div class="kart" style="padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;border-color:rgba(var(--vurgu-rgb),0.35);background:rgba(var(--vurgu-rgb),0.06)">
-          <span style="font-size:18px">🔢</span>
-          <span class="bosMetin" style="margin:0">Son yazdığınız Sipariş No:</span>
-          <span style="font-weight:800;font-size:15px;color:var(--vurgu);font-family:'JetBrains Mono',monospace">${esc(sonNo)}</span>
-        </div>`;
-      }
-    }
     h += `<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
       <input class="girdi saArama" style="flex:1;min-width:220px" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />
       <select class="girdi" style="width:200px" onchange="saTesisFiltreDegistir(this.value)">
@@ -291,9 +281,10 @@ function renderSatinAlmaDetay(){
     const sat = satinAlmaBul(ui.saSecim);
     if (!sat) { ui.view = "satinalma"; renderAna(); return; }
     const taslakMi = satinAlmaTaslakMi(sat.id);
-    const baslikAlan = (etiket, key, genislik) => `
+    const sonSiparisNo = satinAlmaOnaylayabilirMi() ? sonYazdigimSiparisNo() : null;
+    const baslikAlan = (etiket, key, genislik, ipucu) => `
       <div style="${genislik?`width:${genislik}px`:'flex:1'}">
-        <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}</div>
+        <div class="bosMetin" style="margin-bottom:5px;font-style:normal">${etiket}${ipucu ? ` <span style="color:var(--vurgu);font-weight:700">— Son yazılan: ${esc(ipucu)}</span>` : ''}</div>
         ${ui.saDuzenle
           ? `<input class="girdi" value="${esc(sat[key])}" onchange="satinAlmaGuncelle('${sat.id}','${key}',this.value)" />`
           : `<div class="deger">${esc(sat[key]) || '—'}</div>`}
@@ -334,7 +325,7 @@ function renderSatinAlmaDetay(){
       <div class="kartBaslik" style="margin-bottom:12px">Satınalma Talep Formu</div>
       <div style="display:flex;gap:14px;margin-bottom:14px">
         ${baslikAlan('Geliş Tarihi', 'gelisTarihi', 140)}
-        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo')}
+        ${baslikAlan('Satınalma (Sipariş) No', 'siparisNo', null, (sonSiparisNo && sonSiparisNo !== sat.siparisNo) ? sonSiparisNo : null)}
       </div>
     </div>`;
 
