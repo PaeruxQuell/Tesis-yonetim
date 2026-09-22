@@ -119,7 +119,7 @@ function renderUstNav(){
     <div class="ustNavBtn ${ui.view==='stok'?'ustNavBtnAktif':''} ty-btn" onclick="stokGoster()">${ikon('box','yesil')} Stok Listesi</div>`;
   if (izinVar('satinAlmalar')) h += `
     <div class="ustNavBtn ${(ui.view==='satinalma'||ui.view==='satinalma-detay')?'ustNavBtnAktif':''} ty-btn" onclick="satinAlmaGoster()">${ikon('cart','mor')} Satın Almalar
-      ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${saTumKalemler().filter(k=>k.durum==='Gelmedi').length}</span>` : ''}
+      ${saTumKalemler().some(k=>k.durum==='Gelmedi') ? `<span class="rozet">${new Set(saTumKalemler().filter(k=>k.durum==='Gelmedi').map(k=>k.satId)).size}</span>` : ''}
     </div>`;
   if (izinVar('periyodikBakim')) h += `
     <div class="ustNavBtn ${ui.view==='bakim'?'ustNavBtnAktif':''} ty-btn" onclick="bakimGoster()">${ikon('wrench','kirmizi')} Periyodik Bakım

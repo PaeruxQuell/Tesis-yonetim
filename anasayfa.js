@@ -166,7 +166,9 @@ function aramaSonucunaGit(i){
 function renderAnaSayfa(){
     const kapsam = kapsamTesisler();
     const kritikSayisi = kapsam.reduce((top, t) => top + (t.depolar||[]).reduce((d, dep) => d + (dep.urunler||[]).filter(u => u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)).length, 0), 0);
-    const bekleyenSatinAlma = saTumKalemler().filter(k => k.durum === "Gelmedi").length;
+    // Ürün (kalem) sayısı değil, İÇİNDE en az bir "Gelmedi" ürün olan BENZERSİZ
+    // satın alma talebi sayısı — 5 ürünlü tek bir talep burada 5 değil, 1 sayılır.
+    const bekleyenSatinAlma = new Set(saTumKalemler().filter(k => k.durum === "Gelmedi").map(k => k.satId)).size;
     const bekleyenBakim = bakimUyariSayisi();
 
     let h = `<div class="pompaAdBaslik" style="margin-bottom:4px">Ana Sayfa</div>
