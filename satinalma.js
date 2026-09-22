@@ -64,6 +64,8 @@ function satinAlmaOnayla(satId){
   const s = satinAlmaBul(satId); if (!s) return;
   if (!s.siparisNo || !s.siparisNo.trim()) { toastGoster("Onaylamadan önce Satınalma (Sipariş) No alanını doldurun.", "hata"); return; }
   s.onayDurumu = "onaylandi";
+  s.onayTarihi = bugun();
+  s.onaySaati = suAn();
   kaydetIslem(`Satın alma onaylandı: ${s.siparisNo || 'sipariş no yok'}`, { view: "satinalma-detay", satId: s.id });
   toastGoster("Satın alma talebi onaylandı.", "basari");
   konfetiPatlat();
@@ -141,8 +143,18 @@ function saKalemDurumDegistir(satId, kalemId){
   if (s.onayDurumu !== "onaylandi") { toastGoster("Bu talep henüz onaylanmadı.", "hata"); return; }
   if (k.stokaAktarildi) { toastGoster("Bu ürün zaten stoğa eklendi, durumu değiştirilemez.", "hata"); return; }
   k.durum = k.durum === "Geldi" ? "Gelmedi" : "Geldi";
-  k.gelisTarihi = k.durum === "Geldi" ? bugun() : "";
+  if (k.durum === "Geldi" && !k.gelisTarihi) k.gelisTarihi = bugun(); // ilk işaretlerken varsayılan bugün, sonra elle değiştirilebilir
+  if (k.durum === "Gelmedi") k.gelisTarihi = "";
   kaydetIslem(`Satın alma durumu değiştirildi: ${k.urun || '(isimsiz)'} → ${k.durum}`, { view: "satinalma-detay", satId: s.id });
+  saveData(); render();
+}
+function saKalemGelisTarihiGuncelle(satId, kalemId, deger){
+  const s = satinAlmaBul(satId); const k = s.kalemler.find(x => x.id === kalemId); if (!k) return;
+  const eski = k.gelisTarihi;
+  k.gelisTarihi = deger;
+  if (eski !== deger) {
+    kaydetIslem(`Geliş tarihi değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${k.urun || '(isimsiz)'} (Sipariş: ${s.siparisNo||'no yok'})`, { view: "satinalma-detay", satId: s.id });
+  }
   saveData(); render();
 }
 /* kullanıldığı yer satırları */
@@ -173,6 +185,41 @@ function saTumKalemler(){
 }
 function saDurumFiltreDegistir(f){ ui.saFiltre = f; render(); }
 function saTesisFiltreDegistir(deger){ ui.saTesisFiltre = deger; render(); }
+function saSiralamaDegistir(deger){ ui.saSiralama = deger; render(); }
+// Satın alma listesini istenen ölçüte göre sıralar: sipariş no, tesis (ilk
+// kullanıldığı yer), yazıldığı (eklenme) tarih, onaylandığı tarih ya da en son
+// ürünün geldiği tarih.
+function saSiraliYap(liste, mod){
+  const kopya = [...liste];
+  if (mod === "siparis") {
+    kopya.sort((a,b) => (a.siparisNo||"").localeCompare(b.siparisNo||"", undefined, { numeric: true, sensitivity: "base" }));
+  } else if (mod === "tesis") {
+    kopya.sort((a,b) => ((a.yerler&&a.yerler[0]&&a.yerler[0].ad)||"").localeCompare((b.yerler&&b.yerler[0]&&b.yerler[0].ad)||"", "tr"));
+  } else if (mod === "eklenme") {
+    kopya.sort((a,b) => {
+      const ta = tarihAyristir(a.eklenmeTarihi), tb = tarihAyristir(b.eklenmeTarihi);
+      if (!ta && !tb) return 0; if (!ta) return 1; if (!tb) return -1;
+      const fark = tb - ta; return fark !== 0 ? fark : (b.eklenmeSaati||"").localeCompare(a.eklenmeSaati||"");
+    });
+  } else if (mod === "onay") {
+    kopya.sort((a,b) => {
+      const ta = tarihAyristir(a.onayTarihi), tb = tarihAyristir(b.onayTarihi);
+      if (!ta && !tb) return 0; if (!ta) return 1; if (!tb) return -1;
+      return tb - ta;
+    });
+  } else if (mod === "gelis") {
+    const enSonGelis = s => {
+      const tarihler = (s.kalemler||[]).map(k => tarihAyristir(k.gelisTarihi)).filter(Boolean);
+      return tarihler.length ? new Date(Math.max(...tarihler)) : null;
+    };
+    kopya.sort((a,b) => {
+      const ta = enSonGelis(a), tb = enSonGelis(b);
+      if (!ta && !tb) return 0; if (!ta) return 1; if (!tb) return -1;
+      return tb - ta;
+    });
+  }
+  return kopya;
+}
 function saFiltreliListe(){
   const q = (ui.saArama || "").trim().toLowerCase();
   let liste = state.satinAlmalar.filter(satinAlmaGorunurMu);
@@ -193,10 +240,14 @@ function saFiltreliListe(){
     liste = liste.filter(s => s.onayDurumu === "onaylandi");
     if (ui.saFiltre === "gelen") {
       liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
-      liste = [...liste].sort((a, b) => (a.siparisNo || "").localeCompare(b.siparisNo || "", undefined, { numeric: true, sensitivity: "base" }));
     } else if (ui.saFiltre === "gelmeyen") {
       liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
     }
+  }
+  if (ui.saSiralama) {
+    liste = saSiraliYap(liste, ui.saSiralama);
+  } else if (ui.saFiltre === "gelen") {
+    liste = [...liste].sort((a, b) => (a.siparisNo || "").localeCompare(b.siparisNo || "", undefined, { numeric: true, sensitivity: "base" }));
   }
   return liste;
 }
@@ -271,6 +322,14 @@ function renderSatinAlma(){
         <option value="">Tüm tesisler</option>
         ${siraliTesisler().map(t => `<option value="${esc(t.ad)}" ${ui.saTesisFiltre===t.ad?'selected':''}>${esc(t.ad)}</option>`).join('')}
       </select>
+      <select class="girdi" style="width:190px" onchange="saSiralamaDegistir(this.value)">
+        <option value="">Sırala: Varsayılan</option>
+        <option value="siparis" ${ui.saSiralama==='siparis'?'selected':''}>Sırala: Sipariş No</option>
+        <option value="tesis" ${ui.saSiralama==='tesis'?'selected':''}>Sırala: Tesis</option>
+        <option value="eklenme" ${ui.saSiralama==='eklenme'?'selected':''}>Sırala: Yazıldığı Tarih</option>
+        <option value="onay" ${ui.saSiralama==='onay'?'selected':''}>Sırala: Onay Tarihi</option>
+        <option value="gelis" ${ui.saSiralama==='gelis'?'selected':''}>Sırala: Geliş Tarihi</option>
+      </select>
     </div>`;
     const onayliListe = state.satinAlmalar.filter(satinAlmaGorunurMu).filter(s => s.onayDurumu === "onaylandi");
     const tumSayi = onayliListe.length;
@@ -330,6 +389,14 @@ function renderSatinAlmaDetay(){
           ${satinAlmaOnaylayabilirMi() ? `<button class="eklePrimer ty-btn" onclick="silOnayla('Satın Almayı Onayla', ()=>satinAlmaOnayla('${sat.id}'))">✓ Onayla</button>` : ''}
         </div>
       </div>`;
+    } else {
+      h += `<div class="kart" style="border-color:rgba(var(--yesil-rgb),0.4);background:rgba(var(--yesil-rgb),0.06);padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">✓</span>
+          <span class="bosMetin" style="margin:0">Onaylandı:</span>
+          <span style="font-weight:700;color:var(--yesil);font-family:'JetBrains Mono',monospace">${esc(sat.onayTarihi) || '—'} ${esc(sat.onaySaati) || ''}</span>
+        </div>
+      </div>`;
     }
 
     h += `<div class="kart">
@@ -374,7 +441,7 @@ function renderSatinAlmaDetay(){
                 ${k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'JetBrains Mono',monospace">${esc(k.gelisTarihi)}</div>` : ''}
               ` : `
                 <button class="ty-btn" style="width:110px;background:rgba(${durumRenkRgb[k.durum]},0.1);color:${durumRenk[k.durum]};font-weight:600;border:1px solid rgba(${durumRenkRgb[k.durum]},0.33);border-radius:6px;padding:6px 0;font-size:11.5px" onclick="saKalemDurumDegistir('${sat.id}','${k.id}')">${k.durum}</button>
-                ${k.durum==='Geldi' && k.gelisTarihi ? `<div style="color:var(--yazi-soluk);font-size:10.5px;font-family:'JetBrains Mono',monospace;margin-top:2px">${esc(k.gelisTarihi)}</div>` : ''}
+                ${k.durum==='Geldi' ? `<input class="parcaGirdi" style="width:110px;margin-top:3px;font-size:10.5px;padding:3px 6px;font-family:'JetBrains Mono',monospace" placeholder="gg.aa.yyyy" value="${esc(k.gelisTarihi)}" onchange="saKalemGelisTarihiGuncelle('${sat.id}','${k.id}',this.value)" title="Geliş tarihini elle düzenleyebilirsiniz" />` : ''}
               `}
             </span>
           `}
@@ -415,7 +482,7 @@ function renderSatinAlmaDetay(){
 
     h += taslakMi
       ? `<div class="bosMetin">Bu taslak henüz kaydedilmedi. Formu doldurup yukarıdaki "Satın Almayı Gönder" butonuna basın.</div>`
-      : `<div class="bosMetin">Kayıt zamanı: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
+      : `<div class="bosMetin">Yazıldığı tarih: ${esc(sat.eklenmeTarihi)} ${esc(sat.eklenmeSaati)}</div>`;
 
     anaPanelYaz(h);
 }
