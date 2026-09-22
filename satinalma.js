@@ -88,7 +88,18 @@ function satinAlmaSil(id){
   if (sat) kaydetIslem(`Satın alma talebi silindi: ${sat.siparisNo || 'sipariş no yok'}`, { view: "anasayfa" });
   saveData(); render();
 }
-function satinAlmaGoster(){ if (!izinVar('satinAlmalar')) return; ui.view = "satinalma"; ui.saArama = ""; render(); }
+let saIlkGirisYapildi = false;
+function satinAlmaGoster(){
+  if (!izinVar('satinAlmalar')) return;
+  // Onaylama yetkisi olan kişi bu sayfaya bu oturumda İLK kez giriyorsa, varsayılan
+  // olarak "Beklemede" sekmesini açıyoruz (en çok ihtiyaç duyacağı yer) — ama
+  // kendisi elle "Tümü"ye geçerse, sonraki ziyaretlerinde bunu zorla değiştirmiyoruz.
+  if (!saIlkGirisYapildi && satinAlmaOnaylayabilirMi()) {
+    ui.saFiltre = "beklemede";
+  }
+  saIlkGirisYapildi = true;
+  ui.view = "satinalma"; ui.saArama = ""; render();
+}
 function satinAlmaSec(id){ ui.saSecim = id; ui.saDuzenle = false; ui.view = "satinalma-detay"; render(); }
 function satinAlmaDuzenleAcKapat(){ ui.saDuzenle = !ui.saDuzenle; render(); }
 function saAramaGuncelle(deger){ ui.saArama = deger; saListesiRender(); }
