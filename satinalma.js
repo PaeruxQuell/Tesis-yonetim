@@ -48,6 +48,7 @@ function satinAlmaTaslaktanVazgec(){
 function satinAlmaOnayla(satId){
   if (!satinAlmaOnaylayabilirMi()) { toastGoster("Bu işlemi onaylama yetkiniz yok.", "hata"); return; }
   const s = satinAlmaBul(satId); if (!s) return;
+  if (!s.siparisNo || !s.siparisNo.trim()) { toastGoster("Onaylamadan önce Satınalma (Sipariş) No alanını doldurun.", "hata"); return; }
   s.onayDurumu = "onaylandi";
   kaydetIslem(`Satın alma onaylandı: ${s.siparisNo || 'sipariş no yok'}`, { view: "satinalma-detay", satId: s.id });
   toastGoster("Satın alma talebi onaylandı.", "basari");
@@ -167,6 +168,7 @@ function saFiltreliListe(){
     liste = liste.filter(s => s.onayDurumu === "onaylandi");
     if (ui.saFiltre === "gelen") {
       liste = liste.filter(s => s.kalemler.length > 0 && s.kalemler.every(k => k.durum === "Geldi"));
+      liste = [...liste].sort((a, b) => (a.siparisNo || "").localeCompare(b.siparisNo || "", undefined, { numeric: true, sensitivity: "base" }));
     } else if (ui.saFiltre === "gelmeyen") {
       liste = liste.filter(s => s.kalemler.some(k => k.durum === "Gelmedi"));
     }
