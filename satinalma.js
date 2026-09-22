@@ -45,6 +45,20 @@ function satinAlmaTaslaktanVazgec(){
   ui.view = "satinalma"; ui.saSecim = null;
   render();
 }
+// Onay yetkisi olan kişinin EN SON yazdığı/onayladığı sipariş numarasını bulur —
+// kendi işlem geçmişinde (Sistem Kayıtları) en yeni "sipariş no ile ilgili" kaydı
+// bulup, o satın almanın GÜNCEL sipariş no değerini döndürür.
+function sonYazdigimSiparisNo(){
+  if (!mevcutKullanici) return null;
+  const eposta = mevcutKullanici.email;
+  const kayit = (state.sonIslemler || []).find(k =>
+    k.kullanici === eposta && k.hedef && k.hedef.satId &&
+    /Satın alma onaylandı|Sipariş No değiştirildi|Yeni satın alma talebi oluşturuldu/.test(k.aciklama || "")
+  );
+  if (!kayit) return null;
+  const sat = state.satinAlmalar.find(s => s.id === kayit.hedef.satId);
+  return (sat && sat.siparisNo && sat.siparisNo.trim()) ? sat.siparisNo : null;
+}
 function satinAlmaOnayla(satId){
   if (!satinAlmaOnaylayabilirMi()) { toastGoster("Bu işlemi onaylama yetkiniz yok.", "hata"); return; }
   const s = satinAlmaBul(satId); if (!s) return;
@@ -240,6 +254,16 @@ function renderSatinAlma(){
         <button class="eklePrimer ty-btn" onclick="satinAlmaYeniAc()">+ satın alma ekle</button>
       </div>
     </div>`;
+    if (satinAlmaOnaylayabilirMi()) {
+      const sonNo = sonYazdigimSiparisNo();
+      if (sonNo) {
+        h += `<div class="kart" style="padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;border-color:rgba(var(--vurgu-rgb),0.35);background:rgba(var(--vurgu-rgb),0.06)">
+          <span style="font-size:18px">🔢</span>
+          <span class="bosMetin" style="margin:0">Son yazdığınız Sipariş No:</span>
+          <span style="font-weight:800;font-size:15px;color:var(--vurgu);font-family:'JetBrains Mono',monospace">${esc(sonNo)}</span>
+        </div>`;
+      }
+    }
     h += `<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
       <input class="girdi saArama" style="flex:1;min-width:220px" id="saArama" placeholder="🔍  Ürün, sipariş no, tesis, firma... ara" value="${esc(ui.saArama)}" oninput="saAramaGuncelle(this.value)" />
       <select class="girdi" style="width:200px" onchange="saTesisFiltreDegistir(this.value)">
