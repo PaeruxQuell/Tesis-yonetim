@@ -35,7 +35,11 @@ function bildirimleriTopla(tumHaftaMi){
       .slice(0, tumHaftaMi ? undefined : 15)
       .forEach(k => liste.push({ anahtar: "islem:"+k.id, mesaj: k.aciklama, renk: "var(--vurgu)", hedef: k.hedef, tarih: k.tarih }));
   }
-  if (izinVar('satinAlmalar')) {
+  // Onay yetkisi olan kişi, ürün geldiğinde (Gelmeyen -> Geldi) bildirim görmesin —
+  // sadece kendisine ait "onay bekliyor" bildirimini görsün. Onay yetkisi olmayan
+  // ama satın almaları görebilen biri için bu bildirim normal şekilde çalışmaya
+  // devam eder.
+  if (izinVar('satinAlmalar') && !satinAlmaOnaylayabilirMi()) {
     (state.sonIslemler || []).filter(k => k.aciklama && k.aciklama.startsWith("Satın alma durumu değiştirildi") && k.aciklama.endsWith("Geldi"))
       .filter(k => tumHaftaMi ? bildirimSonHaftaIcindeMi(k.tarih, 7) : true)
       .slice(0, tumHaftaMi ? undefined : 15)
