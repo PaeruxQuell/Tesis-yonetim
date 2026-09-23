@@ -1,8 +1,9 @@
 function parcaEkle(){
-  const { t, m, p } = pompaBul(); p.parcalar.push({ id: uid(), ad: "", malzeme: "", adet: 1 });
+  const { t, m, p } = pompaBul(); p.parcalar.push({ id: uid(), ad: "", malzeme: "", adet: 1, not: "" });
   kaydetIslem(`Parça eklendi: ${p.ad} (${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
   saveData(); render();
 }
+function parcaNotAcKapat(parcaId){ ui.parcaNotAcikId = (ui.parcaNotAcikId === parcaId) ? "" : parcaId; render(); }
 function gecmisMalzemeyiParcayaEkle(gecmisId, malzemeId){
   const { t, m, p } = pompaBul();
   const g = p.gecmis.find(x => x.id === gecmisId); if (!g) return;
@@ -17,7 +18,7 @@ function parcaGuncelle(parcaId, alan, deger){
   const { t, m, p } = pompaBul(); const pr = p.parcalar.find(x => x.id === parcaId); if (!pr) return;
   const eski = pr[alan];
   pr[alan] = deger;
-  const alanAdlari = { ad: "Parça adı", malzeme: "Malzeme" };
+  const alanAdlari = { ad: "Parça adı", malzeme: "Malzeme", not: "Not" };
   if (String(eski ?? "") !== String(deger ?? "") && alanAdlari[alan]) {
     kaydetIslem(`${alanAdlari[alan]} değiştirildi: "${eski || '(boş)'}" → "${deger || '(boş)'}" — ${pr.ad || '(isimsiz parça)'} (${p.ad} — ${t.ad} / ${m.ad})`, { view: "pompa", tesisId: t.id, makineId: m.id, pompaId: p.id });
   }
@@ -93,18 +94,28 @@ function renderPompa(){
     h += `<div class="kart"><div class="kartBaslikSatir"><span class="kartBaslik">Parçalar ve malzemeler</span>${ui.duzenle?'<button class="ekleMini ty-btn" onclick="parcaEkle()">+ parça ekle</button>':''}</div>`;
     if (p.parcalar.length === 0) h += `<div class="bosMetin">Henüz parça eklenmedi.</div>`;
     p.parcalar.forEach(pr => {
-      h += `<div class="parcaSatir">`;
+      const notAcik = ui.parcaNotAcikId === pr.id;
+      h += `<div class="parcaSatir" style="flex-wrap:wrap">`;
       if (ui.duzenle) {
         h += `<input class="parcaGirdi" list="malzemeListesi" placeholder="Parça adı" value="${esc(pr.ad)}" onchange="parcaGuncelle('${pr.id}','ad',this.value)" />`;
         h += `<input class="parcaGirdi" placeholder="Malzeme" value="${esc(pr.malzeme)}" onchange="parcaGuncelle('${pr.id}','malzeme',this.value)" />`;
         h += `<input class="parcaGirdi" style="width:70px;flex:none" type="number" placeholder="Adet" value="${esc(pr.adet)}" onchange="parcaGuncelle('${pr.id}','adet',this.value)" />`;
+        h += `<span class="ty-btn" style="flex-shrink:0;font-size:15px;padding:2px 4px;color:${pr.not?'var(--vurgu)':'var(--yazi-soluk)'}" onclick="parcaNotAcKapat('${pr.id}')" title="Not ekle/görüntüle">📝</span>`;
         h += `<span class="silIkon" onclick="silOnayla('Parçayı Sil', ()=>parcaSil('${pr.id}'))">×</span>`;
       } else {
         h += `<span style="flex:1;color:var(--yazi)">${esc(pr.ad) || '(isimsiz)'}</span>`;
         h += `<span style="flex:1;color:var(--yazi-dim)">${esc(pr.malzeme) || '—'}</span>`;
         h += `<span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">× ${esc(pr.adet)}</span>`;
+        h += `<span class="ty-btn" style="flex-shrink:0;font-size:15px;padding:2px 4px;color:${pr.not?'var(--vurgu)':'var(--yazi-soluk)'}" onclick="parcaNotAcKapat('${pr.id}')" title="${pr.not?'Notu görüntüle':'Not yok'}">📝</span>`;
       }
       h += `</div>`;
+      if (notAcik) {
+        h += `<div class="acilirIcerik" style="padding:0 0 12px;width:100%">
+          ${ui.duzenle
+            ? `<textarea class="girdi" rows="2" style="resize:vertical" placeholder="Bu parça/malzeme hakkında not..." onchange="parcaGuncelle('${pr.id}','not',this.value)">${esc(pr.not||'')}</textarea>`
+            : `<div class="bosMetin" style="white-space:pre-wrap">${esc(pr.not) || 'Bu parça için not eklenmemiş.'}</div>`}
+        </div>`;
+      }
     });
     h += `</div>`;
 
