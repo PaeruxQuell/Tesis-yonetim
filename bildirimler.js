@@ -74,7 +74,7 @@ function bildirimleriTopla(tumHaftaMi){
   }
   if (izinVar('stokListesi')) {
     kapsamTesisler().forEach(t => (t.depolar||[]).forEach(d => (d.urunler||[]).forEach(u => {
-      if (u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0)) {
+      if (u.kritikTakip && (parseFloat(u.miktar)||0) < (parseFloat(u.kritikEsik)||0)) {
         liste.push({ anahtar: "kritik:"+t.id+":"+d.id+":"+u.id, mesaj: `Kritik stok: ${u.ad || '(isimsiz)'} (${d.ad} — ${t.ad})`, renk: "var(--kirmizi)", hedef: { view: "stok", tesisId: t.id, depoId: d.id } });
       }
     })));

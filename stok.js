@@ -68,6 +68,12 @@ function stokUrunGuncelle(tesisId, depoId, urunId, alan, deger){
     }
   } else if (alan === "kod" && u?.ad) {
     malzemeGecmisineEkle(u.ad, "", deger);
+  } else if (alan === "kritikEsik") {
+    // Daha önce sadece bir eşik sayısı girmek yetmiyordu — ayrıca "Kritik işaretle"
+    // butonuna da basılması gerekiyordu, aksi halde uyarı hiç çalışmıyordu. Artık
+    // 0'dan büyük bir eşik girildiği an takip otomatik olarak açılıyor.
+    const sayi = parseFloat(deger);
+    u.kritikTakip = !isNaN(sayi) && sayi > 0;
   }
   saveData(); render();
 }
@@ -78,7 +84,7 @@ function stokKritikDegistir(tesisId, depoId, urunId){
   saveData(); render();
 }
 function tesisKritikMi(t){
-  return (t.depolar || []).some(d => (d.urunler || []).some(u => u.kritikTakip && (parseFloat(u.miktar) || 0) <= (parseFloat(u.kritikEsik) || 0)));
+  return (t.depolar || []).some(d => (d.urunler || []).some(u => u.kritikTakip && (parseFloat(u.miktar) || 0) < (parseFloat(u.kritikEsik) || 0)));
 }
 function kritikTesisAdlari(){
   return kapsamTesisler().filter(tesisKritikMi).map(t => t.ad);
@@ -88,7 +94,7 @@ function urunKritikMi(ad){
   const q = ad.trim().toLowerCase();
   if (!q) return false;
   return state.tesisler.some(t => (t.depolar || []).some(d => (d.urunler || []).some(u =>
-    u.ad.trim().toLowerCase() === q && u.kritikTakip && (parseFloat(u.miktar) || 0) <= (parseFloat(u.kritikEsik) || 0)
+    u.ad.trim().toLowerCase() === q && u.kritikTakip && (parseFloat(u.miktar) || 0) < (parseFloat(u.kritikEsik) || 0)
   )));
 }
 
@@ -245,7 +251,7 @@ function renderStok(){
               <span style="width:75px">Kritik Eşik</span><span style="width:135px">Kritik</span>
             </div>`;
             (d.urunler || []).forEach(u => {
-              const kritikRenk = u.kritikTakip && (parseFloat(u.miktar)||0) <= (parseFloat(u.kritikEsik)||0);
+              const kritikRenk = u.kritikTakip && (parseFloat(u.miktar)||0) < (parseFloat(u.kritikEsik)||0);
               const eksiMi = (parseFloat(u.miktar)||0) < 0;
               const miktarFlashSinif = miktarDegisimSinifi(u.id, u.miktar);
               h += `<div class="stokUrunSatirTek ${eksiMi?'stokEksiSatir':''}">
