@@ -103,6 +103,15 @@ function kullaniciTesisErisimiDegistir(kullaniciId, tesisId){
     render();
   }).catch(err => { console.error(err); toastGoster("Erişim güncellenemedi.", "hata"); });
 }
+function kullaniciYetkilendirmeDegistir(kullaniciId, yeniDeger){
+  const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (!k) return;
+  db.collection("kullanicilar").doc(kullaniciId).update({ yetkilendirildi: yeniDeger }).then(() => {
+    k.yetkilendirildi = yeniDeger;
+    kaydetIslem(`Kullanıcı erişimi ${yeniDeger ? 'açıldı' : 'kapatıldı'}: ${k.eposta}`, { view: "kayitlar" });
+    toastGoster(yeniDeger ? "Kullanıcının erişimi açıldı." : "Kullanıcının tüm erişimi kapatıldı — sadece 'Yetki Talep Edin' ekranını görecek.", "basari");
+    saveData(); render();
+  }).catch(err => { console.error(err); toastGoster("Güncellenemedi.", "hata"); });
+}
 function kullaniciIzinDegistir(kullaniciId, izinAdi){
   const k = kullanicilarListesi.find(x => x.id === kullaniciId); if (!k) return;
   const mevcut = { ...(k.izinler || {}) };
@@ -539,12 +548,21 @@ function renderKullanicilar(){
           <div class="bosMetin" style="margin:1px 0 0">${esc(k.eposta)}</div>
         </span>
         <span class="islemRozet" style="color:${rolRenk};background:rgba(${rolRgb},0.14);border-color:rgba(${rolRgb},0.4)">${yoneticiMi?'Yönetici':'Personel'}</span>
+        ${(!yoneticiMi && k.yetkilendirildi === false) ? `<span class="islemRozet" style="color:var(--kirmizi);background:rgba(var(--kirmizi-rgb),0.14);border-color:rgba(var(--kirmizi-rgb),0.4)">🔒 Yetki Bekliyor</span>` : ''}
         <span class="okBuyuk" style="transform:${acikMi?'rotate(90deg)':'none'}">›</span>
       </div>`;
 
     if (acikMi) {
-      h += `<div class="acilirIcerik" style="padding:0 16px 18px 16px;border-top:1px solid var(--sinir-soluk)">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;margin-bottom:18px">
+      h += `<div class="acilirIcerik" style="padding:0 16px 18px 16px;border-top:1px solid var(--sinir-soluk)">`;
+      if (!yoneticiMi && !benMi) {
+        const yetkiliMi = k.yetkilendirildi !== false;
+        h += `<div class="kart" style="margin-top:16px;margin-bottom:0;border-color:${yetkiliMi?'var(--sinir2)':'rgba(var(--kirmizi-rgb),0.4)'};background:${yetkiliMi?'transparent':'rgba(var(--kirmizi-rgb),0.06)'}">
+          <div class="kullaniciAlanBasligi">Sisteme Erişim</div>
+          <div class="bosMetin" style="margin-bottom:10px">Kapalıyken bu kullanıcı hiçbir şeye erişemez — sadece "Yetki Talep Edin" ekranını görür. Açtığınızda, aşağıda verdiğiniz izinler geçerli olur. Değişiklik, kullanıcının bir sonraki girişinde etkili olur.</div>
+          <button class="ty-btn kumImleciToggleBtn ${yetkiliMi?'kumImleciToggleBtnAktif':''}" onclick="kullaniciYetkilendirmeDegistir('${k.id}', ${yetkiliMi?'false':'true'})">${yetkiliMi?'✓ Erişimi Açık — kapatmak için tıklayın':'🔒 Erişimi Kapalı — açmak için tıklayın'}</button>
+        </div>`;
+      }
+      h += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;margin-bottom:18px">
           <div style="flex:1;min-width:160px">
             <div class="kullaniciAlanBasligi">Rol</div>
             <select class="girdi" style="width:100%" ${benMi?'disabled':''} onchange="kullaniciRoluDegistir('${k.id}', this.value)">

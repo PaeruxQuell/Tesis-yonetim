@@ -247,7 +247,7 @@ const ortakRef = db.collection("ortak");
 const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler", "birimListesi"];
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "106";
+const UYGULAMA_SURUM_NO = "107";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -256,6 +256,7 @@ function uygulamaSurumMetni(){
   return `V${UYGULAMA_SURUM_NO} - ${saat} - ${tarih}`;
 }
 let mevcutRol = "personel";
+let mevcutYetkilendirildi = true;
 let mevcutTesisErisimi = null;
 let mevcutIzinler = null;
 let mevcutIsim = "";
@@ -351,11 +352,16 @@ async function kullaniciRoluAyarla(user){
     const hepsi = await db.collection("kullanicilar").get();
     mevcutRol = hepsi.empty ? "yonetici" : "personel";
     const ilkKullaniciMi = hepsi.empty;
-    await ref.set({ eposta: user.email, rol: mevcutRol, anaYonetici: ilkKullaniciMi });
+    // İlk kullanıcı (otomatik yönetici) hariç, YENİ kaydolan her personel
+    // başlangıçta HİÇBİR yetkiye sahip olmadan, kilitli başlar — yönetici
+    // Kullanıcılar sayfasından yetkilendirene kadar sadece "Yetki Talep Edin"
+    // ekranını görür.
+    await ref.set({ eposta: user.email, rol: mevcutRol, anaYonetici: ilkKullaniciMi, yetkilendirildi: ilkKullaniciMi });
     mevcutTesisErisimi = null;
     mevcutIzinler = null;
     mevcutIsim = "";
     mevcutAnaYonetici = ilkKullaniciMi;
+    mevcutYetkilendirildi = ilkKullaniciMi;
   } else {
     mevcutRol = snap.data().rol || "personel";
     const liste = snap.data().tesisErisimi;
@@ -363,6 +369,10 @@ async function kullaniciRoluAyarla(user){
     mevcutIzinler = snap.data().izinler || null;
     mevcutIsim = snap.data().isim || "";
     mevcutAnaYonetici = snap.data().anaYonetici === true;
+    // Geriye dönük uyumluluk: bu alan daha önce hiç yoktu — eski (halihazırda
+    // kullanımda olan) kullanıcılarda alan tanımsızsa, YETKİLİ sayılır (kilitlenmez).
+    // Sadece AÇIKÇA false ise kilitli sayılır.
+    mevcutYetkilendirildi = snap.data().yetkilendirildi !== false;
   }
 }
 function tarayiciAdi(){
@@ -646,7 +656,7 @@ async function girisiTamamla(user){
   veriDinlemeyeBasla();
 }
 function girisEkraniniGoster(){
-  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; mevcutIsim = ""; mevcutAnaYonetici = false; dinleyiciBaslatildi = false; state = null;
+  mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; mevcutIsim = ""; mevcutAnaYonetici = false; mevcutYetkilendirildi = true; dinleyiciBaslatildi = false; state = null;
   document.getElementById("uygulama").style.display = "none";
   document.getElementById("girisEkrani").style.display = "flex";
   document.getElementById("girisSifre").value = "";
@@ -672,7 +682,27 @@ function svgIkon(ad, boyut){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="${s}" height="${s}">${SVG_YOLLARI[ad] || ''}</svg>`;
 }
 
-function render(){ renderSol(); renderAna(); renderSag(); renderUstNav(); logoGuncelle(); guncelleMalzemeListesi(); bildirimGuncelle(); }
+function yetkiKilitliMi(){ return !adminMi() && mevcutYetkilendirildi === false; }
+function renderYetkiKilitli(){
+  const sol = document.getElementById("solMenu"); if (sol) sol.innerHTML = "";
+  const sag = document.getElementById("sagMenu"); if (sag) { sag.innerHTML = ""; sag.style.display = "none"; }
+  const nav = document.getElementById("ustNav"); if (nav) nav.innerHTML = "";
+  ["mobilSagBtn","mobilSolBtn","aramaBtn","lambaBtn","canBtn","ayarlarBtn"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = "none";
+  });
+  const ana = document.getElementById("anaPanel");
+  if (ana) ana.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px">🔒</div>
+      <div style="font-size:22px;font-weight:800;color:var(--yazi);margin-bottom:10px">Yetki Talep Edin</div>
+      <div class="bosMetin" style="max-width:420px;font-size:14px;line-height:1.6">Hesabınıza henüz hiçbir yetki tanımlanmadı. Bu sistemi kullanabilmeniz için yöneticinizden Ayarlar → Kullanıcılar ve Yetkiler bölümünden size erişim vermesini isteyin. Yetkiniz tanımlandığında, bir sonraki girişinizde ilgili bölümleri görebileceksiniz.</div>
+    </div>`;
+  logoGuncelle();
+}
+function render(){
+  if (yetkiKilitliMi()) { renderYetkiKilitli(); return; }
+  renderSol(); renderAna(); renderSag(); renderUstNav(); logoGuncelle(); guncelleMalzemeListesi(); bildirimGuncelle();
+}
 function islemBadge(aciklama){
   const a = (aciklama || "").toLowerCase();
   if (a.includes("silindi")) return { etiket: "Silme", renk: "var(--kirmizi)", renkRgb: "var(--kirmizi-rgb)" };
