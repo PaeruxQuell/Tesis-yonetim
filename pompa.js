@@ -106,14 +106,16 @@ function renderPompa(){
         h += `<span style="flex:1;color:var(--yazi)">${esc(pr.ad) || '(isimsiz)'}</span>`;
         h += `<span style="flex:1;color:var(--yazi-dim)">${esc(pr.malzeme) || '—'}</span>`;
         h += `<span style="width:70px;color:var(--yazi-dim);font-family:'JetBrains Mono',monospace">× ${esc(pr.adet)}</span>`;
-        h += `<span class="ty-btn" style="flex-shrink:0;font-size:15px;padding:2px 4px;color:${pr.not?'var(--vurgu)':'var(--yazi-soluk)'}" onclick="parcaNotAcKapat('${pr.id}')" title="${pr.not?'Notu görüntüle':'Not yok'}">📝</span>`;
+        if (pr.not) {
+          h += `<span class="ty-btn" style="flex-shrink:0;font-size:15px;padding:2px 4px;color:var(--vurgu)" onclick="parcaNotAcKapat('${pr.id}')" title="Bu parçanın notu var — görüntülemek için tıklayın">📝</span>`;
+        }
       }
       h += `</div>`;
-      if (notAcik) {
+      if (notAcik && (ui.duzenle || pr.not)) {
         h += `<div class="acilirIcerik" style="padding:0 0 12px;width:100%">
           ${ui.duzenle
             ? `<textarea class="girdi" rows="2" style="resize:vertical" placeholder="Bu parça/malzeme hakkında not..." onchange="parcaGuncelle('${pr.id}','not',this.value)">${esc(pr.not||'')}</textarea>`
-            : `<div class="bosMetin" style="white-space:pre-wrap">${esc(pr.not) || 'Bu parça için not eklenmemiş.'}</div>`}
+            : `<div class="bosMetin" style="white-space:pre-wrap">${esc(pr.not)}</div>`}
         </div>`;
       }
     });
