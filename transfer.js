@@ -10,8 +10,12 @@ function transferHedefDepoSec(depoId){ ui.transferHedefDepoId = depoId; }
 function transferGonder(){
   const kt = state.tesisler.find(x=>x.id===ui.transferTesisId);
   const kd = kt?.depolar.find(x=>x.id===ui.transferDepoId);
-  const ht = state.tesisler.find(x=>x.id===ui.transferHedefTesisId);
-  const hd = ht?.depolar.find(x=>x.id===ui.transferHedefDepoId);
+  // V108: Hedef tesis, erişimi olmayan bir tesis de olabilir — onun tam verisi
+  // artık indirilmiyor; ad ve depo listesi tesis dizininden (ortak/tesisDizini) gelir.
+  // Gönderen sadece KENDİ (kaynak) tesisine yazar; hedef tesise ürünü, o tesise
+  // erişimi olan kişi "Kabul et" ile ekler.
+  const ht = transferHedefTesisleri().find(x=>x.id===ui.transferHedefTesisId);
+  const hd = ht?.depolar.find(x=>x.id===ui.transferHedefDepoId && !x.gizli);
   const miktar = parseFloat(ui.transferMiktar);
   if (!kd) { toastGoster("Lütfen kaynak depo seçin.", "hata"); return; }
   if (!ui.transferUrunId) { toastGoster("Lütfen bir ürün seçin.", "hata"); return; }
@@ -140,10 +144,10 @@ function renderTransfer(){
   h += `<div style="display:flex;gap:10px;flex-wrap:wrap">
     <select class="girdi" style="width:190px" onchange="transferHedefTesisSec(this.value)">
       <option value="">Hedef tesis</option>
-      ${siraliTesisler().map(t=>`<option value="${t.id}" ${ui.transferHedefTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
+      ${transferHedefTesisleri().map(t=>`<option value="${t.id}" ${ui.transferHedefTesisId===t.id?'selected':''}>${esc(t.ad)}</option>`).join('')}
     </select>`;
   if (ui.transferHedefTesisId) {
-    const ht = state.tesisler.find(x=>x.id===ui.transferHedefTesisId);
+    const ht = transferHedefTesisleri().find(x=>x.id===ui.transferHedefTesisId);
     const hdepolar = (ht?.depolar||[]).filter(d=>!d.gizli);
     h += `<select class="girdi" style="width:190px" onchange="transferHedefDepoSec(this.value)">
       <option value="">Hedef depo</option>

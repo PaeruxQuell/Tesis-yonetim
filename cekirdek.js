@@ -63,6 +63,30 @@ const suAn = () => {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 function esc(str){ return (str ?? "").toString().replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+// GÜVENLİK (V108): Kullanıcı verisini onclick="..." gibi satır içi bir olay
+// işleyicisine METİN argümanı olarak koymak için. esc() burada TEK BAŞINA
+// yetmez: tarayıcı &#39; kodunu JS çalışmadan önce tekrar ' karakterine
+// çevirir ve metin dizeden kaçabilir. Kullanım (tırnaksız!):
+//   onclick="fonksiyon(${jsArg(deger)})"
+function jsArg(deger){ return esc(JSON.stringify(String(deger ?? ""))); }
+// GÜVENLİK (V108): Uygulama kimlikleri (id, tesisId, makineId...) yüzlerce yerde
+// onclick="pompaSec('${t.id}')" şeklinde HTML'e basılıyor. Normalde uid() sadece
+// harf/rakam üretir; ama biri F12'den tırnak içeren bir kimlik yazarsa bu,
+// script enjeksiyonuna dönüşür. Veri sunucudan gelir gelmez, adı "id" olan ya da
+// "Id" ile biten tüm alanlardan harf/rakam/-/_ dışındaki karakterler atılır.
+const KIMLIK_DISI_KARAKTER = /[^A-Za-z0-9_-]/g;
+function kimlikleriTemizle(nesne){
+  if (Array.isArray(nesne)) { nesne.forEach(kimlikleriTemizle); return nesne; }
+  if (nesne && typeof nesne === "object") {
+    Object.keys(nesne).forEach(k => {
+      const v = nesne[k];
+      if (typeof v === "string" && (k === "id" || /Id$/.test(k))) nesne[k] = v.replace(KIMLIK_DISI_KARAKTER, "");
+      else if (v && typeof v === "object") kimlikleriTemizle(v);
+    });
+  }
+  return nesne;
+}
+function yetkiHatasiMi(err){ return !!(err && err.code === "permission-denied"); }
 function konfetiPatlat(){
   const renkler = ['#e2a33d','#3fae74','#5b8fe2','#a586e8','#4ec4c9','#e2694d'];
   const kapsayici = document.createElement("div");
@@ -245,9 +269,18 @@ const eskiVeriRef = db.collection("veri").doc("ana");
 const tesislerRef = db.collection("tesisler");
 const ortakRef = db.collection("ortak");
 const ORTAK_ALANLAR = ["satinAlmalar", "malzemeGecmisi", "sonIslemler", "transferler", "silinenler", "birimListesi"];
+// GÜVENLİK (V108): Bu iki belgeye HERKES yeni kayıt düşer (her işlem bir log,
+// her silme bir çöp kopyası). Bunlar artık listenin tamamı baştan yazılarak
+// DEĞİL, arrayUnion ile SADECE SONA EKLENEREK kaydediliyor. Böylece:
+//  - Silinenleri okuma izni olmayan biri de silme yapabiliyor (listeyi okumadan),
+//  - Kimse başkasının kaydını ezemiyor/silemiyor (kurallar da bunu zorluyor).
+// Listeden ÇIKARMA (geri getirme, temizleme, kırpma) sadece ortakTamYaz() ile,
+// yetkisi olanlar tarafından yapılır.
+const EKLEMELI_ALANLAR = ["sonIslemler", "silinenler"];
+const EKLEMELI_SINIR = { sonIslemler: 2000, silinenler: 300 };
 
 let mevcutKullanici = null;
-const UYGULAMA_SURUM_NO = "107";
+const UYGULAMA_SURUM_NO = "108";
 function uygulamaSurumMetni(){
   const lm = new Date(document.lastModified);
   const p = (n) => String(n).padStart(2, "0");
@@ -269,26 +302,137 @@ function satinAlmaOnaylayabilirMi(){
   return !!(mevcutKullanici && mevcutIzinler && mevcutIzinler.satinAlmaOnay === true);
 }
 
+
+// GÜVENLİK (V108): Personelin hangi ortak belgeleri OKUYABİLECEĞİ — firestore.rules
+// içindeki ortakOkunabilir() ile BİREBİR aynı olmalı. Okuyamadığı belgeye hiç
+// dinleyici açılmaz (veri istemciye hiç gelmez) ve o belgeye asla yazılmaz.
+function ortakOkunabilirMi(alan){
+  if (adminMi()) return true;
+  if (alan === "satinAlmalar") return izinVar('satinAlmalar') || satinAlmaOnaylayabilirMi();
+  if (alan === "transferler" || alan === "tesisDizini") return izinVar('transfer');
+  if (alan === "silinenler") return izinVar('silinenGeriGetir');
+  return true; // malzemeGecmisi, sonIslemler, birimListesi
+}
+
+// Son okunan/yazılan hâllerin JSON'u — saveData() sadece DEĞİŞEN belgeleri yazar.
+// ("t:<tesisId>" ve "o:<alan>" anahtarlarıyla)
+let sonKayitliJSON = {};
+let bekleyenEklemeler = { sonIslemler: [], silinenler: [] };
+let aktifDinleyiciler = [];
+function dinleyicileriKapat(){
+  aktifDinleyiciler.forEach(kapat => { try { kapat(); } catch(e){} });
+  aktifDinleyiciler = [];
+}
+
 function saveData(){
   if (!state) return;
+  if (yetkiKilitliMi()) return;
+  // 1) Tesisler — sadece bu kullanıcının yüklediği ve DEĞİŞEN tesisler yazılır.
+  //    (Eskiden her kayıtta TÜM tesisler baştan yazılıyordu.)
   (state.tesisler || []).forEach(t => {
+    const anahtar = "t:" + t.id;
+    const json = JSON.stringify(t);
+    if (sonKayitliJSON[anahtar] === json) return;
+    sonKayitliJSON[anahtar] = json;
     tesislerRef.doc(t.id).set(t).catch(err => {
       console.error(`Tesis kaydetme hatası (${t.ad}):`, err);
-      toastGoster(`"${t.ad}" tesisi kaydedilemedi — bu tesisin verisi 1MB sınırına yaklaşmış olabilir.`, "hata");
+      delete sonKayitliJSON[anahtar];
+      toastGoster(yetkiHatasiMi(err)
+        ? `"${t.ad}" tesisinde bu değişikliği yapma yetkiniz yok.`
+        : `"${t.ad}" tesisi kaydedilemedi — bu tesisin verisi 1MB sınırına yaklaşmış olabilir.`, "hata");
     });
   });
+  // 2) Ortak belgeler — sadece OKUYABİLDİĞİ ve DEĞİŞEN belgeler baştan yazılır.
+  //    Okuyamadığı bir belgeyi (elindeki boş listeyle) ezmesi böylece imkânsız.
   ORTAK_ALANLAR.forEach(alan => {
+    if (EKLEMELI_ALANLAR.includes(alan)) return;
+    if (!ortakOkunabilirMi(alan)) return;
+    const anahtar = "o:" + alan;
+    const json = JSON.stringify(state[alan] || []);
+    if (sonKayitliJSON[anahtar] === json) return;
+    sonKayitliJSON[anahtar] = json;
     ortakRef.doc(alan).set({ [alan]: state[alan] || [] }).catch(err => {
       console.error(`"${alan}" kaydetme hatası:`, err);
-      toastGoster("Değişiklik kaydedilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.", "hata");
+      delete sonKayitliJSON[anahtar];
+      toastGoster(yetkiHatasiMi(err) ? "Bu işlem için yetkiniz yok." : "Değişiklik kaydedilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.", "hata");
     });
   });
+  // 3) Sistem kayıtları ve silinenler — kuyruktaki yeni kayıtlar SONA eklenir.
+  EKLEMELI_ALANLAR.forEach(alan => {
+    const kuyruk = bekleyenEklemeler[alan];
+    if (!kuyruk || kuyruk.length === 0) return;
+    bekleyenEklemeler[alan] = [];
+    ortakRef.doc(alan).update({ [alan]: firebase.firestore.FieldValue.arrayUnion(...kuyruk) }).catch(err => {
+      console.error(`"${alan}" ekleme hatası:`, err);
+      toastGoster(yetkiHatasiMi(err) ? "Bu işlem için yetkiniz yok." : "Değişiklik kaydedilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.", "hata");
+    });
+  });
+  if (adminMi()) tesisDiziniGuncelle();
+}
+// Eklemeli bir listeyi (sonIslemler/silinenler) çıkarma/temizleme sonrası
+// baştan yazar. Kurallar bunu sadece yetkisi olana izin verir.
+function ortakTamYaz(alan){
+  const liste = state[alan] || [];
+  sonKayitliJSON["o:" + alan] = JSON.stringify(liste);
+  return ortakRef.doc(alan).set({ [alan]: liste }).catch(err => {
+    console.error(`"${alan}" yazma hatası:`, err);
+    toastGoster(yetkiHatasiMi(err) ? "Bu işlem için yetkiniz yok." : "Değişiklik kaydedilemedi.", "hata");
+  });
+}
+// Eklemeli listelerde sıra: yeni kayıtlar arrayUnion ile SONA eklendiği için
+// ekranda en yeni üstte olsun diye "zaman" alanına göre sıralanır. "zaman" alanı
+// olmayan eski (V107 ve öncesi) kayıtlar zaten en yeni üstte saklıydı —
+// sıralarını koruyarak en alta konur.
+function eklemeliSirala(liste){
+  const zamanli = liste.filter(x => x && typeof x.zaman === "number").sort((a, b) => b.zaman - a.zaman);
+  const eski = liste.filter(x => !(x && typeof x.zaman === "number"));
+  return [...zamanli, ...eski];
+}
+
+// ---------------------------------------------------------------------
+// TESİS DİZİNİ (V108): Kısıtlı personel artık erişimi olmayan tesislerin
+// verisini hiç indirmiyor. Ama Transfer'de HEDEF olarak başka bir tesisin
+// deposunu seçebilmesi gerekiyor. Bunun için sadece ad + depo adlarını içeren
+// küçük bir özet belge (ortak/tesisDizini) tutuluyor — stok, makine, rapor
+// gibi hiçbir içerik yok. Sadece Transfer izni olanlar okuyabilir, sadece
+// yönetici yazabilir (yönetici oturumu açıkken otomatik güncellenir).
+// ---------------------------------------------------------------------
+let tesisDizini = [];
+let sonTesisDiziniJSON = null;
+function diziniNormallestir(liste){
+  return [...(liste || [])].sort((a, b) => (a.id || "").localeCompare(b.id || "")).map(t => ({
+    id: t.id, ad: t.ad || "", gizli: !!t.gizli,
+    depolar: (t.depolar || []).map(d => ({ id: d.id, ad: d.ad || "", gizli: !!d.gizli }))
+  }));
+}
+function tesisDiziniOlustur(){ return diziniNormallestir(state.tesisler); }
+function tesisDiziniGuncelle(){
+  if (!adminMi() || !state || sonTesisDiziniJSON === null) return;
+  const yeni = tesisDiziniOlustur();
+  const json = JSON.stringify(yeni);
+  if (json === sonTesisDiziniJSON) return;
+  sonTesisDiziniJSON = json;
+  ortakRef.doc("tesisDizini").set({ tesisler: yeni }).catch(err => console.error("Tesis dizini yazılamadı:", err));
+}
+// Transfer hedef listesi: erişebildiği tesisler güncel hâliyle state'ten,
+// diğerleri dizinden gelir.
+function transferHedefTesisleri(){
+  const harita = {};
+  (tesisDizini || []).forEach(t => { if (!t.gizli) harita[t.id] = t; });
+  (state.tesisler || []).forEach(t => {
+    if (t.gizli) { delete harita[t.id]; return; }
+    harita[t.id] = { id: t.id, ad: t.ad, depolar: (t.depolar || []).map(d => ({ id: d.id, ad: d.ad, gizli: !!d.gizli })) };
+  });
+  const idSirasi = siraliListe(Object.keys(harita).sort(), siraOku().tesisler);
+  return idSirasi.map(id => harita[id]).filter(Boolean);
 }
 
 // Eski tek-belgeli veriyi yeni (bölünmüş) yapıya BİR KEZ aktarır.
 // "tesisler" koleksiyonu zaten doluysa (göç daha önce yapılmışsa) hiçbir
 // şey yapmaz — bu yüzden yanlışlıkla üzerine yazma riski yoktur.
+// V108: Sadece yönetici çalıştırır (veri/ana artık sadece yöneticiye açık).
 async function eskiVeridenGocEt(){
+  if (!adminMi()) return;
   const kontrol = await tesislerRef.limit(1).get();
   if (!kontrol.empty) return; // zaten göç edilmiş
   const eskiSnap = await eskiVeriRef.get();
@@ -309,59 +453,128 @@ function stateBirlestirVeRenderla(){
     tesisler: [...sonTesislerHam].sort((a,b) => (a.id||"").localeCompare(b.id||"")),
     satinAlmalar: sonOrtakHam.satinAlmalar || [],
     malzemeGecmisi: sonOrtakHam.malzemeGecmisi || [],
-    sonIslemler: sonOrtakHam.sonIslemler || [],
+    sonIslemler: eklemeliSirala(sonOrtakHam.sonIslemler || []),
     transferler: sonOrtakHam.transferler || [],
-    silinenler: sonOrtakHam.silinenler || [],
+    silinenler: eklemeliSirala(sonOrtakHam.silinenler || []),
     birimListesi: sonOrtakHam.birimListesi || [],
     logoUrl: "", logoUrlKoyu: "", logoUrlAcik: "", satinAlmaOnaycisiId: ""
   };
-  state = sanitizeVeri(ham);
+  state = kimlikleriTemizle(sanitizeVeri(ham));
+  // Değişiklik takibi için "sunucudaki hâl" referansı
+  sonKayitliJSON = {};
+  state.tesisler.forEach(t => { sonKayitliJSON["t:" + t.id] = JSON.stringify(t); });
+  ORTAK_ALANLAR.forEach(alan => { sonKayitliJSON["o:" + alan] = JSON.stringify(state[alan] || []); });
+  if (adminMi()) yoneticiBakimIsleri();
   if (document.getElementById("uygulama").style.display !== "none") {
     if (!ui.acikTesis || ui.acikTesis.size === 0) ui.acikTesis.add(state.tesisler[0]?.id);
     render();
   }
   if (window.yedeklemeBaslat) window.yedeklemeBaslat();
 }
+// Sadece yönetici oturumunda: eklemeli listeleri sınırda tut, tesis dizinini güncelle.
+function yoneticiBakimIsleri(){
+  EKLEMELI_ALANLAR.forEach(alan => {
+    const sinir = EKLEMELI_SINIR[alan];
+    if ((sonOrtakHam[alan] || []).length > sinir) {
+      state[alan] = state[alan].slice(0, sinir);
+      ortakTamYaz(alan);
+    }
+  });
+  tesisDiziniGuncelle();
+}
+
+function tesisDinlemeyeBasla(){
+  const hataOldu = (err) => {
+    console.error("Tesisler dinleme hatası:", err);
+    toastGoster(yetkiHatasiMi(err) ? "Tesis verisine erişim yetkiniz yok." : "Veri sunucusuna bağlanılamadı. İnternet bağlantınızı kontrol edin.", "hata");
+  };
+  // Tüm tesislere erişimi olan: koleksiyonun tamamı.
+  if (adminMi() || !mevcutTesisErisimi) {
+    aktifDinleyiciler.push(tesislerRef.onSnapshot(snap => {
+      sonTesislerHam = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      tesislerYuklendi = true;
+      stateBirlestirVeRenderla();
+    }, err => { hataOldu(err); sonTesislerHam = []; tesislerYuklendi = true; stateBirlestirVeRenderla(); }));
+    return;
+  }
+  // GÜVENLİK (V108): Kısıtlı personel — SADECE erişimi olan tesis belgeleri tek
+  // tek dinlenir. Diğer tesislerin verisi tarayıcıya hiç gelmez.
+  const idler = mevcutTesisErisimi.filter(id => typeof id === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(id));
+  if (idler.length === 0) { sonTesislerHam = []; tesislerYuklendi = true; stateBirlestirVeRenderla(); return; }
+  const beklenen = new Set(idler);
+  const gelenler = {};
+  const tamamla = (id) => {
+    beklenen.delete(id);
+    sonTesislerHam = Object.values(gelenler);
+    if (beklenen.size === 0) { tesislerYuklendi = true; stateBirlestirVeRenderla(); }
+  };
+  idler.forEach(id => {
+    aktifDinleyiciler.push(tesislerRef.doc(id).onSnapshot(snap => {
+      if (snap.exists) gelenler[id] = { id: snap.id, ...snap.data() };
+      else delete gelenler[id];
+      tamamla(id);
+    }, err => { hataOldu(err); delete gelenler[id]; tamamla(id); }));
+  });
+}
 
 function veriDinlemeyeBasla(){
   if (dinleyiciBaslatildi) return;
   dinleyiciBaslatildi = true;
-  eskiVeridenGocEt().catch(err => console.error("Göç hatası:", err)).finally(() => {
-    tesislerRef.onSnapshot(snap => {
-      sonTesislerHam = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      tesislerYuklendi = true;
-      stateBirlestirVeRenderla();
-    }, err => {
-      console.error("Tesisler dinleme hatası:", err);
-      toastGoster("Veri sunucusuna bağlanılamadı. İnternet bağlantınızı kontrol edin.", "hata");
-    });
+  // GÜVENLİK (V108): Yetkilendirilmemiş (kilitli) hesap HİÇBİR veri çekmez.
+  if (yetkiKilitliMi()) {
+    state = sanitizeVeri({ tesisler: [] });
+    render();
+    return;
+  }
+  const baslat = () => {
+    tesisDinlemeyeBasla();
     ORTAK_ALANLAR.forEach(alan => {
-      ortakRef.doc(alan).onSnapshot(snap => {
+      if (!ortakOkunabilirMi(alan)) {
+        // Yetkisi olmayan belge hiç istenmez — boş kabul edilir.
+        sonOrtakHam[alan] = [];
+        ortakYuklenenler.add(alan);
+        return;
+      }
+      aktifDinleyiciler.push(ortakRef.doc(alan).onSnapshot(snap => {
         sonOrtakHam[alan] = snap.exists ? (snap.data()[alan] || []) : [];
         ortakYuklenenler.add(alan);
         stateBirlestirVeRenderla();
-      }, err => console.error(`"${alan}" dinleme hatası:`, err));
+      }, err => {
+        console.error(`"${alan}" dinleme hatası:`, err);
+        sonOrtakHam[alan] = [];
+        ortakYuklenenler.add(alan);
+        stateBirlestirVeRenderla();
+      }));
     });
-  });
+    if (ortakOkunabilirMi("tesisDizini")) {
+      aktifDinleyiciler.push(ortakRef.doc("tesisDizini").onSnapshot(snap => {
+        tesisDizini = diziniNormallestir(kimlikleriTemizle(snap.exists ? (snap.data().tesisler || []) : []));
+        sonTesisDiziniJSON = JSON.stringify(tesisDizini);
+        if (adminMi()) tesisDiziniGuncelle();
+        if (state && ui.view === "transfer") render();
+      }, err => console.error("Tesis dizini dinleme hatası:", err)));
+    }
+  };
+  eskiVeridenGocEt().catch(err => console.error("Göç hatası:", err)).finally(baslat);
 }
 async function kullaniciRoluAyarla(user){
   mevcutKullanici = user;
   const ref = db.collection("kullanicilar").doc(user.uid);
   const snap = await ref.get();
   if (!snap.exists) {
-    const hepsi = await db.collection("kullanicilar").get();
-    mevcutRol = hepsi.empty ? "yonetici" : "personel";
-    const ilkKullaniciMi = hepsi.empty;
-    // İlk kullanıcı (otomatik yönetici) hariç, YENİ kaydolan her personel
-    // başlangıçta HİÇBİR yetkiye sahip olmadan, kilitli başlar — yönetici
-    // Kullanıcılar sayfasından yetkilendirene kadar sadece "Yetki Talep Edin"
-    // ekranını görür.
-    await ref.set({ eposta: user.email, rol: mevcutRol, anaYonetici: ilkKullaniciMi, yetkilendirildi: ilkKullaniciMi });
+    // GÜVENLİK (V108): YENİ kaydolan her kullanıcı kilitli personel olarak başlar.
+    // Eskiden "ilk kullanıcı mıyım?" diye tüm kullanıcı listesi okunuyordu —
+    // artık liste sadece yöneticiye açık ve yönetici zaten mevcut. (Boş bir
+    // projede ilk yönetici, Firebase Console'dan rol: "yonetici" yazılarak atanır.)
+    // Kurallar da bu belgenin sadece bu alanlarla ve bu değerlerle
+    // oluşturulmasına izin veriyor.
+    mevcutRol = "personel";
+    await ref.set({ eposta: user.email, rol: "personel", anaYonetici: false, yetkilendirildi: false });
     mevcutTesisErisimi = null;
     mevcutIzinler = null;
     mevcutIsim = "";
-    mevcutAnaYonetici = ilkKullaniciMi;
-    mevcutYetkilendirildi = ilkKullaniciMi;
+    mevcutAnaYonetici = false;
+    mevcutYetkilendirildi = false;
   } else {
     mevcutRol = snap.data().rol || "personel";
     const liste = snap.data().tesisErisimi;
@@ -384,15 +597,11 @@ function tarayiciAdi(){
   if (ua.includes("Safari/") && !ua.includes("Chrome/")) return "Safari";
   return "Bilinmeyen tarayıcı";
 }
-async function girisKaydiTut(user){
+// V108: Kullanıcının IP adresi artık üçüncü taraf bir servise (ipify) gönderilip
+// toplanmıyor. Kurallar da kullanıcının kendi kaydında SADECE bu üç alanı
+// değiştirmesine izin veriyor.
+function girisKaydiTut(user){
   const bilgi = { sonGirisTarihi: bugun(), sonGirisSaati: suAn(), tarayici: tarayiciAdi() };
-  try {
-    const yanit = await fetch("https://api.ipify.org?format=json");
-    const veri = await yanit.json();
-    bilgi.sonGirisIp = veri.ip || "bilinmiyor";
-  } catch(e) {
-    bilgi.sonGirisIp = "alınamadı";
-  }
   db.collection("kullanicilar").doc(user.uid).set(bilgi, { merge: true }).catch(err => console.error(err));
 }
 // İki depo ürününün "aynı ürün" sayılması için ad YETMEZ — kod da eşleşmeli.
@@ -442,10 +651,11 @@ function urunKodlariGetir(urunAdi){
 function kaydetIslem(aciklama, hedef){
   if (!state.sonIslemler) state.sonIslemler = [];
   const kullanici = mevcutKullanici ? mevcutKullanici.email : "";
-  state.sonIslemler.unshift({ id: uid(), aciklama, kullanici, hedef, tarih: bugun(), saat: suAn() });
-  // Sistem Kayıtları artık kendi ayrı Firestore belgesinde (ortak/sonIslemler) —
-  // kendi 1MB'lık bütçesi var. Ortalama bir kaydın ~300-400 bayt tuttuğunu
-  // varsayarsak, 2000 kayıt bu sınırın güvenli bir payla (~%50-60) altında kalır.
+  const kayit = { id: uid(), aciklama, kullanici, hedef: hedef || null, tarih: bugun(), saat: suAn(), zaman: Date.now() };
+  state.sonIslemler.unshift(kayit);
+  // V108: Kayıt listenin tamamı yeniden yazılarak DEĞİL, sona eklenerek kaydedilir
+  // (bkz. EKLEMELI_ALANLAR). 2000 sınırını yönetici oturumu korur.
+  bekleyenEklemeler.sonIslemler.push(kayit);
   if (state.sonIslemler.length > 2000) state.sonIslemler.length = 2000;
   saveData();
 }
@@ -502,11 +712,15 @@ function tesisDepoUrunAdlari(tesisId){
 // pompanın altına konması gerektiğini hatırlamak için kullanılır.
 function copeAt(tip, veri, baglam){
   if (!state.silinenler) state.silinenler = [];
-  state.silinenler.unshift({
+  const kayit = {
     id: uid(), tip, veri: JSON.parse(JSON.stringify(veri)), baglam: baglam || {},
     silenKullanici: mevcutIsim || (mevcutKullanici ? mevcutKullanici.email : ""),
-    tarih: bugun(), saat: suAn()
-  });
+    tarih: bugun(), saat: suAn(), zaman: Date.now()
+  };
+  state.silinenler.unshift(kayit);
+  // V108: Silinenleri OKUMA izni olmayan biri de silme yapabildiği için kopya
+  // listeyi okumadan, sona eklenerek kaydedilir. 300 sınırını yönetici oturumu korur.
+  bekleyenEklemeler.silinenler.push(kayit);
   if (state.silinenler.length > 300) state.silinenler.length = 300;
 }
 // Bir çöp kaydının, GÖRÜNTÜLEYEN kişiye gösterilip gösterilmeyeceğine karar verir.
@@ -585,6 +799,7 @@ function silinenGeriGetir(id){
       toastGoster("Bilinmeyen kayıt türü, geri getirilemiyor.", "hata"); return;
     }
     state.silinenler = state.silinenler.filter(x => x.id !== id);
+    ortakTamYaz("silinenler");
     kaydetIslem(`Silinen veri geri getirildi: ${silinenBaslikHesapla(kayit)}`, { view: "silinenler" });
     toastGoster("Geri getirildi.", "basari");
     saveData(); render();
@@ -656,6 +871,12 @@ async function girisiTamamla(user){
   veriDinlemeyeBasla();
 }
 function girisEkraniniGoster(){
+  // V108: Çıkışta tüm Firestore dinleyicileri kapatılır ve bellekteki veri silinir.
+  dinleyicileriKapat();
+  tesislerYuklendi = false; ortakYuklenenler = new Set(); sonTesislerHam = []; sonOrtakHam = {};
+  sonKayitliJSON = {}; bekleyenEklemeler = { sonIslemler: [], silinenler: [] };
+  tesisDizini = []; sonTesisDiziniJSON = null;
+  if (typeof kullanicilarListesi !== "undefined") kullanicilarListesi = [];
   mevcutKullanici = null; mevcutRol = "personel"; mevcutTesisErisimi = null; mevcutIzinler = null; mevcutIsim = ""; mevcutAnaYonetici = false; mevcutYetkilendirildi = true; dinleyiciBaslatildi = false; state = null;
   document.getElementById("uygulama").style.display = "none";
   document.getElementById("girisEkrani").style.display = "flex";

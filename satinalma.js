@@ -290,11 +290,11 @@ function disaAktar(){
   URL.revokeObjectURL(url);
 }
 function iceAktar(dosya){
-  if (!dosya) return;
+  if (!dosya || !adminMi()) return; // V108: toplu veri yükleme sadece yönetici
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      const veri = JSON.parse(reader.result);
+      const veri = kimlikleriTemizle(JSON.parse(reader.result));
       if (veri.tesisler) state.tesisler = veri.tesisler;
       if (veri.satinAlmalar) state.satinAlmalar = veri.satinAlmalar;
       toastGoster("Yedek başarıyla geri yüklendi.", "basari");
@@ -425,7 +425,7 @@ function renderSatinAlmaDetay(){
             <datalist id="kodListesi-${k.id}">${urunKodlariGetir(k.urun).map(kd => `<option value="${esc(kd)}"></option>`).join('')}</datalist>
             <input class="parcaGirdi" style="flex:1" placeholder="Miktar" value="${esc(k.miktar)}" onchange="saKalemGuncelle('${sat.id}','${k.id}','miktar',this.value)" />
             <select class="parcaGirdi" style="flex:1" onchange="saKalemGuncelle('${sat.id}','${k.id}','birim',this.value)">
-              ${(state.birimListesi||["adet","koli","tane","kg","litre","metre","milimetre"]).map(b => `<option value="${b}" ${(k.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+              ${(state.birimListesi||["adet","koli","tane","kg","litre","metre","milimetre"]).map(b => `<option value="${esc(b)}" ${(k.birim||'adet')===b?'selected':''}>${esc(b)}</option>`).join('')}
             </select>
             <span style="width:150px"></span>
           ` : `

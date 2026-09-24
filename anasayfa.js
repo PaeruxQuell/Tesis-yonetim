@@ -130,7 +130,7 @@ function genelAramaSonucRender(kapId){
     h += `<div class="aramaKategoriKutusu">
       <div class="aramaKategoriBaslik">"${esc(ui.genelArama.trim())}" kategorisindeki kodlar</div>
       <div class="aramaKategoriKodListesi">
-        ${kategoriKodlari.map(kd => `<span class="aramaKategoriKodu ty-btn" onclick="genelAramaGirdiDoldur('${esc(kd)}')">${esc(kd)}</span>`).join('')}
+        ${kategoriKodlari.map(kd => `<span class="aramaKategoriKodu ty-btn" onclick="genelAramaGirdiDoldur(${jsArg(kd)})">${esc(kd)}</span>`).join('')}
       </div>
     </div>`;
   }

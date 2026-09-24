@@ -61,7 +61,8 @@ function kayitTesisFiltreDegistir(deger){ ui.kayitTesisFiltre = deger; render();
 function sonIslemleriTemizle(){
   if (!adminMi()) return;
   state.sonIslemler = [];
-  saveData(); render();
+  ortakTamYaz("sonIslemler"); // V108: eklemeli liste — temizleme tam yazma ile
+  render();
   toastGoster("Aktivite günlüğü temizlendi.", "basari");
 }
 function ayarlarGoster(){
@@ -128,6 +129,7 @@ function kullaniciIzinDegistir(kullaniciId, izinAdi){
   }).catch(err => { console.error(err); toastGoster("İzin güncellenemedi.", "hata"); });
 }
 function tesisGizleDegistir(tesisId){
+  if (!adminMi()) return; // V108: tesisi herkesten gizlemek yönetici işlemi (kurallar da zorluyor)
   const t = state.tesisler.find(x => x.id === tesisId); if (!t) return;
   t.gizli = !t.gizli;
   kaydetIslem(`Tesis ${t.gizli?'gizlendi':'gösterildi'}: ${t.ad}`, { view: "kayitlar" });
@@ -248,7 +250,7 @@ function renderAyarlar(){
       <div class="kartBaslik" style="margin-bottom:10px">📏 Birim Listesi</div>
       <div class="bosMetin" style="margin-bottom:12px">Satın Alma, Rapor Ekle, Stok Listesi ve Kullanılan Malzemeler'deki "Birim" seçeneklerini buradan yönetebilirsiniz — buraya eklediğiniz her birim, sitedeki tüm birim seçim listelerinde otomatik olarak görünür.</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-        ${(state.birimListesi||[]).map(b => `<span class="tesisErisimBtn tesisErisimBtnAktif" style="display:inline-flex;align-items:center;gap:6px">${esc(b)}${adminMi()?`<span class="ty-btn" style="color:var(--kirmizi);font-weight:800;cursor:pointer" onclick="birimListesindenSil('${esc(b)}')" title="Bu birimi kaldır">×</span>`:''}</span>`).join('')}
+        ${(state.birimListesi||[]).map(b => `<span class="tesisErisimBtn tesisErisimBtnAktif" style="display:inline-flex;align-items:center;gap:6px">${esc(b)}${adminMi()?`<span class="ty-btn" style="color:var(--kirmizi);font-weight:800;cursor:pointer" onclick="birimListesindenSil(${jsArg(b)})" title="Bu birimi kaldır">×</span>`:''}</span>`).join('')}
       </div>
       ${adminMi() ? `<div style="display:flex;gap:8px">
         <input class="girdi" id="yeniBirimGirdi" style="flex:1;max-width:220px" placeholder="Yeni birim (örn: paket, ton)" onkeydown="if(event.key==='Enter'){birimListesineEkle(this.value);this.value='';}" />
@@ -377,7 +379,7 @@ function renderAyarlar(){
         </span>
         <span class="tesisIkon" style="font-size:14px">🏭</span>
         <span style="flex:1;font-size:12.5px;color:${t.gizli?'var(--yazi-soluk)':'var(--yazi)'}">${esc(t.ad)}${t.gizli?' (gizli)':''}</span>
-        <button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" style="padding:3px 10px;font-size:11px" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>
+        ${adminMi() ? `<button class="ty-btn ayarToggleBtn ${!t.gizli?'ayarToggleAktif':''}" style="padding:3px 10px;font-size:11px" onclick="tesisGizleDegistir('${t.id}')">${t.gizli?'Göster':'Gizle'}</button>` : ''}
       </div>`;
     });
     h += `<div class="bosMetin" style="margin-top:8px;font-size:11px">Gizlenenler sol menü ve Stok Listesi'nde görünmez. ▲▼ ile sıralarını değiştirebilirsiniz — bu sıra, Rapor Ekle gibi tesis seçilen tüm yerlerde aynı şekilde uygulanır.</div>
@@ -484,7 +486,7 @@ function renderMalzemeler(){
               ? `<span class="bosMetin" style="margin:0">— kod yok —</span>`
               : kodlar.map(kd => {
                   const manuelMi = manuelKodlar.includes(kd);
-                  return `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--turkuaz);background:rgba(var(--turkuaz-rgb),0.14);border-radius:5px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px">${esc(kd)}${manuelMi?`<span class="ty-btn" style="color:var(--kirmizi);cursor:pointer;font-weight:800" onclick="malzemeManuelKodSil('${m.id}','${esc(kd)}')" title="Manuel eklenen bu kodu kaldır">×</span>`:''}</span>`;
+                  return `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--turkuaz);background:rgba(var(--turkuaz-rgb),0.14);border-radius:5px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px">${esc(kd)}${manuelMi?`<span class="ty-btn" style="color:var(--kirmizi);cursor:pointer;font-weight:800" onclick="malzemeManuelKodSil('${m.id}',${jsArg(kd)})" title="Manuel eklenen bu kodu kaldır">×</span>`:''}</span>`;
                 }).join('')}
           </span>
           <span style="display:flex;gap:4px">
@@ -492,7 +494,7 @@ function renderMalzemeler(){
           </span>
         </span>
         <select class="parcaGirdi" style="width:120px;flex:none;margin-top:2px" onchange="malzemeListesiGuncelle('${m.id}','birim',this.value)">
-          ${(state.birimListesi||["adet","koli","tane","kg","litre","metre","milimetre"]).map(b => `<option value="${b}" ${(m.birim||'adet')===b?'selected':''}>${b}</option>`).join('')}
+          ${(state.birimListesi||["adet","koli","tane","kg","litre","metre","milimetre"]).map(b => `<option value="${esc(b)}" ${(m.birim||'adet')===b?'selected':''}>${esc(b)}</option>`).join('')}
         </select>
         <span class="silIkon" onclick="silOnayla('Malzemeyi Sil', ()=>malzemeListesindenSil('${m.id}'))">×</span>
       </div>`;
@@ -609,7 +611,7 @@ function renderKullanicilar(){
         </div>`;
       }
 
-      h += `<div class="bosMetin" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sinir-soluk)">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} · IP: ${esc(k.sonGirisIp||'—')}` : 'Henüz giriş kaydı yok'}</div>`;
+      h += `<div class="bosMetin" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--sinir-soluk)">${k.sonGirisTarihi ? `Son giriş: ${esc(k.sonGirisTarihi)} ${esc(k.sonGirisSaati||'')} · ${esc(k.tarayici||'—')} ${k.sonGirisIp ? ` · IP: ${esc(k.sonGirisIp)}` : ''}` : 'Henüz giriş kaydı yok'}</div>`;
       h += `</div>`;
     }
     h += `</div>`;
